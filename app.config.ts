@@ -63,6 +63,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-localization',
   ],
   extra: {
-    eas: { projectId: process.env.EAS_PROJECT_ID ?? '' },
+    // Identificador público do projeto no EAS (@vendra74/cuidar). Não é segredo.
+    eas: { projectId: process.env.EAS_PROJECT_ID ?? '0df6abf4-c3a7-451a-8a04-ff234ea85853' },
   },
+  owner: 'vendra74',
 });
