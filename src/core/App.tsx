@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, AppState, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer, createNavigationContainerRef, DefaultTheme } from '@react-navigation/native';
@@ -66,7 +66,13 @@ function MainTabs() {
   );
 }
 
+/** Evita processar duas vezes a mesma resposta (listener + última resposta ao abrir o app). */
+const handledResponses = new Set<string>();
+
 async function handleResponse(response: Notifications.NotificationResponse) {
+  const key = `${response.notification.request.identifier}|${response.actionIdentifier}|${response.notification.date}`;
+  if (handledResponses.has(key)) return;
+  handledResponses.add(key);
   const routed = await routeResponse(response);
   const store = useAppStore.getState();
   if (!navigationRef.isReady()) return;
@@ -108,7 +114,6 @@ export default function App() {
   const prefs = profile?.accessibility ?? DEFAULT_PREFS;
   const theme = useMemo(() => buildTheme(prefs), [prefs]);
   const [navReady, setNavReady] = useState(false);
-  const handled = useRef<string | null>(null);
 
   useEffect(() => {
     void bootstrap().then(() => registerBackgroundTasks());
@@ -140,10 +145,7 @@ export default function App() {
     if (!navReady || !ready) return;
     const sub = Notifications.addNotificationResponseReceivedListener((r) => void handleResponse(r));
     void Notifications.getLastNotificationResponseAsync().then((r) => {
-      if (r && handled.current !== r.notification.request.identifier) {
-        handled.current = r.notification.request.identifier;
-        void handleResponse(r);
-      }
+      if (r) void handleResponse(r);
     });
     return () => sub.remove();
   }, [navReady, ready]);
