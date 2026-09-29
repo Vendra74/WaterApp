@@ -132,14 +132,21 @@ export interface Reconciliation {
  */
 export function reconcile(existingIdentifiers: string[], plan: PlannedNotification[]): Reconciliation {
   const wanted = new Map(plan.map((p) => [p.identifier, p]));
-  const existing = new Set(existingIdentifiers.filter(isOwnedIdentifier));
+  // Só reconcilia o que o plano gerencia; avisos únicos ("lembrar depois" da água, testes) não são cancelados aqui.
+  const existing = new Set(existingIdentifiers.filter(isPlanManagedIdentifier));
   const toCancel = [...existing].filter((id) => !wanted.has(id));
   const toSchedule = plan.filter((p) => !existing.has(p.identifier));
   return { toCancel, toSchedule, unchanged: plan.length - toSchedule.length };
 }
 
+/** Identificadores criados por este app (inclui avisos únicos e testes). */
 export function isOwnedIdentifier(id: string): boolean {
-  return /^(hyd|med|review|test)@/.test(id);
+  return /^(hyd|med|review|test|snooze)@/.test(id);
+}
+
+/** Identificadores que o planejador controla e reconcilia a cada reagendamento. */
+export function isPlanManagedIdentifier(id: string): boolean {
+  return /^(hyd|med|review)@/.test(id);
 }
 
 function dedupeByIdentifier(list: PlannedNotification[]): PlannedNotification[] {
