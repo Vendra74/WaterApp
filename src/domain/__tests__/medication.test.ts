@@ -1,0 +1,73 @@
+import { confirmTaken, materializeOccurrences, occurrenceId, plannedTimesFor, snooze, markUnconfirmedIfLate, correctStatus } from '../medication/occurrences';
+import { formatTimeBR } from '../time/time';
+import { makeMedication, NOW } from './fixtures';
+
+describe('ocorrências de medicamentos', () => {
+  it('gera horários fixos, inclusive noturnos, independentemente da pausa de hidratação', () => {
+    const med = makeMedication({ times: ['08:00', '23:00'] });
+    const planned = plannedTimesFor(med, NOW, 1).map(formatTimeBR);
+    expect(planned).toEqual(['08:00', '23:00']);
+  });
+
+  it('gera intervalos prescritos a partir de um horário âncora', () => {
+    const med = makeMedication({ scheduleType: 'interval_hours', times: [], intervalHours: 8, intervalAnchor: '06:00' });
+    expect(plannedTimesFor(med, NOW, 1).map(formatTimeBR)).toEqual(['06:00', '14:00', '22:00']);
+  });
+
+  it('respeita datas de início/fim e dias de uso', () => {
+    const med = makeMedication({ startDate: '2026-09-30', endDate: '2026-09-30', times: ['10:00'] });
+    const planned = plannedTimesFor(med, NOW, 5);
+    expect(planned).toHaveLength(1);
+    expect(planned[0]!.getDate()).toBe(30);
+    const seg = makeMedication({ weekdays: [1], times: ['10:00'] });
+    expect(plannedTimesFor(seg, NOW, 7).every((d) => d.getDay() === 1)).toBe(true);
+  });
+
+  it('identificador determinístico impede ocorrência duplicada ao rematerializar', () => {
+    const med = makeMedication();
+    const first = materializeOccurrences(med, [], NOW, 2, NOW);
+    const confirmed = confirmTaken(first[0]!, NOW).occ;
+    const second = materializeOccurrences(med, [confirmed, ...first.slice(1)], NOW, 2, NOW);
+    expect(second).toHaveLength(first.length);
+    expect(new Set(second.map((o) => o.id)).size).toBe(second.length);
+    expect(second[0]!.status).toBe('taken');
+    expect(second[0]!.id).toBe(occurrenceId(med.id, new Date(2026, 8, 29, 8, 0)));
+  });
+
+  it('confirmar duas vezes não duplica e sinaliza que já estava confirmada', () => {
+    const med = makeMedication();
+    const [occ] = materializeOccurrences(med, [], NOW, 1, NOW);
+    const r1 = confirmTaken(occ!, NOW);
+    const r2 = confirmTaken(r1.occ, new Date(NOW.getTime() + 60_000));
+    expect(r1.alreadyConfirmed).toBe(false);
+    expect(r2.alreadyConfirmed).toBe(true);
+    expect(r2.occ.history).toHaveLength(r1.occ.history.length);
+  });
+
+  it('adiar altera apenas a ocorrência adiada; próximas doses permanecem iguais', () => {
+    const med = makeMedication({ times: ['08:00', '20:00'] });
+    const occs = materializeOccurrences(med, [], NOW, 2, NOW);
+    const before = occs.slice(1).map((o) => o.plannedAt);
+    const at8 = new Date(2026, 8, 29, 8, 5);
+    const snoozed = snooze(occs[0]!, at8, 15);
+    expect(snoozed.status).toBe('snoozed');
+    expect(snoozed.plannedAt).toBe(occs[0]!.plannedAt); // horário prescrito não muda
+    expect(new Date(snoozed.snoozedUntil!).getTime()).toBe(at8.getTime() + 15 * 60_000);
+    const after = materializeOccurrences(med, [snoozed, ...occs.slice(1)], NOW, 2, at8);
+    expect(after.slice(1).map((o) => o.plannedAt)).toEqual(before);
+  });
+
+  it('sem confirmação após tolerância; correção manual mantém histórico', () => {
+    const med = makeMedication({ times: ['08:00'] });
+    const [occ] = materializeOccurrences(med, [], NOW, 1, NOW);
+    const late = markUnconfirmedIfLate(occ!, new Date(2026, 8, 29, 10, 30), 120);
+    expect(late.status).toBe('unconfirmed');
+    const fixed = correctStatus(late, 'taken', new Date(2026, 8, 29, 11), 'tomei às 8h e esqueci de marcar');
+    expect(fixed.status).toBe('taken');
+    expect(fixed.history.map((h) => h.to)).toEqual(['scheduled', 'unconfirmed', 'taken']);
+  });
+
+  it('medicamento inativo não gera ocorrências', () => {
+    expect(plannedTimesFor(makeMedication({ active: false }), NOW, 3)).toEqual([]);
+  });
+});

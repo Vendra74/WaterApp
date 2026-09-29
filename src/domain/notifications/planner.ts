@@ -1,0 +1,154 @@
+import type { HydrationSettings, Medication, MedicationOccurrence, PlannedNotification } from '../types';
+import { iso } from '../time/time';
+import type { HydrationSlot } from '../hydration/schedule';
+
+export const CATEGORY_HYDRATION = 'cuidar.hydration';
+export const CATEGORY_MEDICATION = 'cuidar.medication';
+export const CATEGORY_GENERIC = 'cuidar.generic';
+
+export const CHANNEL_HYDRATION = 'hydration';
+export const CHANNEL_MEDICATION = 'medication';
+export const CHANNEL_GENERIC = 'general';
+
+export const ACTION_LOG_WATER = 'log_water';
+export const ACTION_SNOOZE = 'snooze';
+export const ACTION_HELP = 'help';
+export const ACTION_TAKEN = 'taken';
+
+/**
+ * Limites reais das plataformas:
+ *  - iOS mantém no máximo 64 notificações locais pendentes por app (as demais são descartadas).
+ *  - Android não tem limite fixo de notificações, mas alarmes exatos são limitados e o sistema
+ *    pode adiar em modo de economia de bateria.
+ * Usamos um orçamento único e conservador e reagendamos ao abrir o app ou em tarefa periódica.
+ */
+export const DEFAULT_BUDGET = 60;
+
+export interface PlanInput {
+  now: Date;
+  hydrationSlots: HydrationSlot[];
+  medications: Medication[];
+  occurrences: MedicationOccurrence[];
+  settings: Pick<HydrationSettings, 'showDetailsOnLockScreen'>;
+  preferredName: string;
+  budget?: number;
+  healthReviewDue?: Date | null;
+}
+
+/**
+ * Constrói a lista priorizada de notificações a agendar no sistema.
+ * Prioridade: medicamentos (inclusive noturnos) > hidratação > revisão periódica.
+ * Nunca depende de a tela estar aberta: o resultado é entregue ao agendador nativo.
+ */
+export function buildNotificationPlan(input: PlanInput): PlannedNotification[] {
+  const budget = input.budget ?? DEFAULT_BUDGET;
+  const nowMs = input.now.getTime();
+  const medsById = new Map(input.medications.map((m) => [m.id, m]));
+
+  const medication: PlannedNotification[] = [];
+  for (const occ of input.occurrences) {
+    const med = medsById.get(occ.medicationId);
+    if (!med || !med.active) continue;
+    let fireAt: Date | null = null;
+    if (occ.status === 'scheduled') fireAt = new Date(occ.plannedAt);
+    else if (occ.status === 'snoozed' && occ.snoozedUntil) fireAt = new Date(occ.snoozedUntil);
+    if (!fireAt || fireAt.getTime() <= nowMs) continue;
+
+    const detailed = input.settings.showDetailsOnLockScreen;
+    const title = detailed ? `Medicamento: ${med.name}` : 'Hora do seu medicamento';
+    const body = detailed
+      ? `${med.doseAmount} ${med.doseUnit}${med.instructions ? ` · ${med.instructions}` : ''}`.trim()
+      : 'Toque para ver os detalhes e confirmar.';
+    const content = `${title}|${body}`;
+    medication.push({
+      identifier: `med@${occ.id}@${fireAt.toISOString()}@${hash(content)}`,
+      kind: 'medication',
+      fireAt: iso(fireAt),
+      title,
+      body,
+      categoryId: CATEGORY_MEDICATION,
+      channelId: CHANNEL_MEDICATION,
+      data: { kind: 'medication', occurrenceId: occ.id, medicationId: med.id },
+    });
+  }
+  medication.sort((a, b) => a.fireAt.localeCompare(b.fireAt));
+
+  const hydration: PlannedNotification[] = [];
+  for (const slot of input.hydrationSlots) {
+    if (slot.at.getTime() <= nowMs) continue;
+    const title = 'Hora de beber água';
+    const body = input.preferredName ? `${input.preferredName}, que tal um copo de água agora?` : 'Que tal um copo de água agora?';
+    hydration.push({
+      identifier: `hyd@${slot.at.toISOString()}@${hash(title + body)}`,
+      kind: 'hydration',
+      fireAt: iso(slot.at),
+      title,
+      body,
+      categoryId: CATEGORY_HYDRATION,
+      channelId: CHANNEL_HYDRATION,
+      data: { kind: 'hydration', slotAt: slot.at.toISOString() },
+    });
+  }
+
+  const extras: PlannedNotification[] = [];
+  if (input.healthReviewDue && input.healthReviewDue.getTime() > nowMs) {
+    extras.push({
+      identifier: `review@${input.healthReviewDue.toISOString()}`,
+      kind: 'health_review',
+      fireAt: iso(input.healthReviewDue),
+      title: 'Suas orientações mudaram?',
+      body: 'De tempos em tempos vale conferir se as orientações da sua equipe de saúde continuam as mesmas.',
+      categoryId: CATEGORY_GENERIC,
+      channelId: CHANNEL_GENERIC,
+      data: { kind: 'health_review' },
+    });
+  }
+
+  // Orçamento: medicamentos primeiro (até 70% do orçamento, mínimo 1 por dia próximo),
+  // depois hidratação em ordem cronológica, depois extras se sobrar espaço.
+  const medBudget = Math.min(medication.length, Math.max(Math.floor(budget * 0.7), 1));
+  const plan: PlannedNotification[] = medication.slice(0, medBudget);
+  const remaining = budget - plan.length;
+  plan.push(...hydration.slice(0, Math.max(0, remaining - (extras.length > 0 ? 1 : 0))));
+  if (plan.length < budget) plan.push(...extras.slice(0, budget - plan.length));
+  // Se ainda houver espaço, completa com mais medicamentos.
+  if (plan.length < budget && medication.length > medBudget) {
+    plan.push(...medication.slice(medBudget, medBudget + (budget - plan.length)));
+  }
+
+  plan.sort((a, b) => a.fireAt.localeCompare(b.fireAt));
+  return dedupeByIdentifier(plan);
+}
+
+export interface Reconciliation {
+  toCancel: string[];
+  toSchedule: PlannedNotification[];
+  unchanged: number;
+}
+
+/**
+ * Compara o que já está agendado no sistema (identificadores do app) com o plano desejado.
+ * Só cancela/agenda a diferença: evita duplicidade após sincronização ou edição de horários.
+ */
+export function reconcile(existingIdentifiers: string[], plan: PlannedNotification[]): Reconciliation {
+  const wanted = new Map(plan.map((p) => [p.identifier, p]));
+  const existing = new Set(existingIdentifiers.filter(isOwnedIdentifier));
+  const toCancel = [...existing].filter((id) => !wanted.has(id));
+  const toSchedule = plan.filter((p) => !existing.has(p.identifier));
+  return { toCancel, toSchedule, unchanged: plan.length - toSchedule.length };
+}
+
+export function isOwnedIdentifier(id: string): boolean {
+  return /^(hyd|med|review|test)@/.test(id);
+}
+
+function dedupeByIdentifier(list: PlannedNotification[]): PlannedNotification[] {
+  const seen = new Set<string>();
+  return list.filter((n) => (seen.has(n.identifier) ? false : (seen.add(n.identifier), true)));
+}
+
+export function hash(s: string): string {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
