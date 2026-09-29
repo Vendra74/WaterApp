@@ -10,7 +10,8 @@ import * as Notifications from 'expo-notifications';
 import type { RootStackParamList, TabParamList } from './navigation';
 import { ThemeContext, buildTheme, DEFAULT_PREFS } from '@/ui/theme';
 import { useAppStore } from '@/state/appStore';
-import { configureNotificationHandler, recordHydrationFired, routeResponse } from '@/services/notifications/notificationService';
+import { configureNotificationHandler, recordHydrationFired, routeResponse, scheduleHydrationSnooze } from '@/services/notifications/notificationService';
+import { createResponseDeduper, responseKey } from '@/domain/notifications/responseDedupe';
 import { registerBackgroundTasks } from '@/services/background/backgroundTasks';
 import { speak } from '@/services/speech/speech';
 
@@ -67,26 +68,31 @@ function MainTabs() {
 }
 
 /** Evita processar duas vezes a mesma resposta (listener + última resposta ao abrir o app). */
-const handledResponses = new Set<string>();
+const deduper = createResponseDeduper();
 
 async function handleResponse(response: Notifications.NotificationResponse) {
-  const key = `${response.notification.request.identifier}|${response.actionIdentifier}|${response.notification.date}`;
-  if (handledResponses.has(key)) return;
-  handledResponses.add(key);
+  const key = responseKey(response);
+  if (!deduper.begin(key)) return;
+  try {
+    await processResponse(response);
+    deduper.commit(key);
+    // Limpa a resposta guardada pelo módulo nativo para que um recarregamento do JS não a repita.
+    await Notifications.clearLastNotificationResponseAsync();
+  } catch (e) {
+    deduper.rollback(key);
+    console.warn('Falha ao tratar resposta de notificação', e instanceof Error ? e.message : String(e));
+  }
+}
+
+async function processResponse(response: Notifications.NotificationResponse) {
   const routed = await routeResponse(response);
   const store = useAppStore.getState();
-  if (!navigationRef.isReady()) return;
+  if (!navigationRef.isReady()) throw new Error('navegação ainda não pronta');
   switch (routed.kind) {
     case 'hydration':
       if (routed.action === 'help') navigationRef.navigate('Help');
       else if (routed.action === 'snooze') {
-        // "Lembrar depois" da água: agenda um aviso único daqui a N minutos, sem alterar a grade.
-        const minutes = store.settings?.snoozeMinutes ?? 15;
-        await Notifications.scheduleNotificationAsync({
-          identifier: `snooze@hyd@${Date.now()}`,
-          content: { title: 'Hora de beber água', body: 'Lembrete adiado. Que tal agora?', data: { kind: 'hydration', slotAt: new Date().toISOString() }, categoryIdentifier: 'cuidar.hydration', sound: 'default' },
-          trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: minutes * 60, channelId: 'hydration' },
-        });
+        await scheduleHydrationSnooze(store.settings?.snoozeMinutes ?? 15, store.settings?.sound ?? true);
         navigationRef.navigate('Main');
       } else navigationRef.navigate('HydrationLog', { fromNotification: true });
       break;
@@ -144,9 +150,8 @@ export default function App() {
   useEffect(() => {
     if (!navReady || !ready) return;
     const sub = Notifications.addNotificationResponseReceivedListener((r) => void handleResponse(r));
-    void Notifications.getLastNotificationResponseAsync().then((r) => {
-      if (r) void handleResponse(r);
-    });
+    const last = Notifications.getLastNotificationResponse();
+    if (last) void handleResponse(last);
     return () => sub.remove();
   }, [navReady, ready]);
 

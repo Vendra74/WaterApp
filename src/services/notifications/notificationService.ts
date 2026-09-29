@@ -234,6 +234,26 @@ async function scheduleOne(n: PlannedNotification, sound: boolean): Promise<void
   });
 }
 
+/**
+ * "Lembrar depois" de um lembrete de água: aviso único daqui a N minutos.
+ * Não altera a grade de lembretes (o planejador não gerencia identificadores `snooze@`).
+ */
+export async function scheduleHydrationSnooze(minutes: number, sound: boolean): Promise<string> {
+  const id = `snooze@hyd@${Date.now()}`;
+  await Notifications.scheduleNotificationAsync({
+    identifier: id,
+    content: {
+      title: 'Hora de beber água',
+      body: 'Lembrete adiado. Que tal agora?',
+      data: { kind: 'hydration', slotAt: new Date().toISOString() },
+      categoryIdentifier: CATEGORY_HYDRATION,
+      sound: sound ? 'default' : false,
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: Math.max(60, minutes * 60), channelId: CHANNEL_HYDRATION },
+  });
+  return id;
+}
+
 /** Notificação de teste em N segundos (tela "Testar notificações"). */
 export async function scheduleTestNotification(seconds: number, kind: 'hydration' | 'medication'): Promise<string> {
   const id = `test@${Date.now()}`;
