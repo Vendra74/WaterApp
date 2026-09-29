@@ -50,7 +50,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-sqlite',
     'expo-secure-store',
     'expo-background-task',
-    ['expo-image-picker', { cameraPermission: 'Fotografar a embalagem ou a receita de um medicamento.' }],
+    [
+      'expo-image-picker',
+      {
+        cameraPermission: 'Fotografar a embalagem ou a receita de um medicamento.',
+        photosPermission: 'Anexar uma imagem da embalagem ou da receita de um medicamento.',
+        // Sem gravação de vídeo/áudio: evita a permissão RECORD_AUDIO no Android.
+        microphonePermission: false,
+      },
+    ],
+    'expo-system-ui',
     'expo-localization',
   ],
   extra: {
