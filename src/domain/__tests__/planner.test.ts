@@ -1,4 +1,4 @@
-import { buildNotificationPlan, reconcile, isOwnedIdentifier } from '../notifications/planner';
+import { buildNotificationPlan, reconcile, isOwnedIdentifier, isPlanManagedIdentifier } from '../notifications/planner';
 import { generateHydrationSlots } from '../hydration/schedule';
 import { materializeOccurrences, snooze } from '../medication/occurrences';
 import { makeMedication, makeSettings, NOW } from './fixtures';
@@ -49,9 +49,11 @@ describe('planejador de notificações', () => {
   it('reconciliação só agenda/cancela a diferença e não toca identificadores de terceiros', () => {
     const slots = generateHydrationSlots({ settings, naps: [], now: NOW, days: 1 });
     const plan = buildNotificationPlan({ now: NOW, hydrationSlots: slots, medications: [], occurrences: [], settings, preferredName: '' });
-    const existing = [plan[0]!.identifier, plan[1]!.identifier, 'hyd@obsoleto@x', 'other-app-id'];
+    const existing = [plan[0]!.identifier, plan[1]!.identifier, 'hyd@obsoleto@x', 'snooze@hyd@123', 'test@1', 'other-app-id'];
     const r = reconcile(existing, plan);
-    expect(r.toCancel).toEqual(['hyd@obsoleto@x']);
+    expect(r.toCancel).toEqual(['hyd@obsoleto@x']); // avisos únicos e testes não são cancelados pela reconciliação
+    expect(isOwnedIdentifier('snooze@hyd@123')).toBe(true);
+    expect(isPlanManagedIdentifier('snooze@hyd@123')).toBe(false);
     expect(r.toSchedule).toHaveLength(plan.length - 2);
     expect(r.unchanged).toBe(2);
     expect(isOwnedIdentifier('other-app-id')).toBe(false);

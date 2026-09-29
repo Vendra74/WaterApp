@@ -17,7 +17,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: './assets/icon.png',
   scheme: APP_SLUG,
   userInterfaceStyle: 'automatic',
-  newArchEnabled: true,
   ios: {
     bundleIdentifier: BUNDLE_ID,
     supportsTablet: true,
