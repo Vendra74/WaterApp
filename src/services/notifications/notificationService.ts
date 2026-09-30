@@ -271,6 +271,24 @@ export async function scheduleHydrationSnooze(minutes: number, sound: boolean): 
   return id;
 }
 
+/**
+ * Abre a tela do sistema para permitir alarmes exatos (Android 12+). Sem essa permissão o sistema
+ * agrupa e atrasa os lembretes em vários minutos. Retorna false se não foi possível abrir.
+ */
+export async function openExactAlarmSettings(): Promise<boolean> {
+  if (Platform.OS !== 'android') return false;
+  try {
+    const IntentLauncher = await import('expo-intent-launcher');
+    const Application = await import('expo-application');
+    await IntentLauncher.startActivityAsync('android.settings.REQUEST_SCHEDULE_EXACT_ALARM', {
+      data: `package:${Application.applicationId ?? ''}`,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Notificação de teste em N segundos (tela "Testar notificações"). */
 export async function scheduleTestNotification(seconds: number, kind: 'hydration' | 'medication'): Promise<string> {
   const id = `test@${Date.now()}`;

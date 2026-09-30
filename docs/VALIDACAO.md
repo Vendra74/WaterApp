@@ -70,9 +70,14 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
 - iOS mantém no máximo 64 notificações pendentes por app. O planejador prioriza medicamentos e
   completa com hidratação; o restante é agendado quando o app abre ou na tarefa periódica. A tela de
   teste mostra quando houve truncamento.
+- Android 12+: sem permissão de alarme exato, o expo-notifications usa alarmes inexatos
+  (`setAndAllowWhileIdle`), que o sistema agrupa e atrasa em minutos (verificado em aparelho: o teste
+  de 10 s não aparecia). O app declara `SCHEDULE_EXACT_ALARM` (Android 12) e `USE_EXACT_ALARM`
+  (Android 13+, concedida na instalação) e oferece o botão “Permitir alarmes exatos” na tela de teste.
+  Política da Play Store: `USE_EXACT_ALARM` é aceita para apps cuja função central são alarmes ou
+  lembretes com horário; na publicação, justificar como lembrete de medicamentos.
 - Android pode atrasar notificações em economia de bateria/Doze; alguns fabricantes exigem liberar o
-  app nas configurações de bateria. `SCHEDULE_EXACT_ALARM` está declarado; o uso efetivo de alarmes
-  exatos depende do sistema e da versão do expo-notifications.
+  app nas configurações de bateria.
 - Avisos falados só com o app aberto.
 - “Lembrar depois” da água agenda um aviso único; não altera a grade.
 - Aviso ao cuidador exige que o app do titular processe o lembrete (primeiro plano ou tarefa em
@@ -81,6 +86,13 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
   cifragem via SecureStore é pendência.
 - Conformidade legal (LGPD) completa exige revisão jurídica específica; estão implementados os
   controles técnicos de consentimento, exportação, exclusão e autorização no servidor.
+
+## Resultados em aparelho (2026-09-30, Android, development build via EAS)
+
+- Build EAS concluído e instalado; avaliação inicial e tela Hoje funcionam.
+- Corrigido em campo: categoria de notificação sem ações era rejeitada pelo Android e abortava o
+  agendamento; som `'default'` no canal era tratado como arquivo personalizado.
+- Corrigido em campo: alarmes inexatos atrasavam o teste de 10 s (ver limitação acima).
 
 ## Roteiro sugerido de teste em dispositivo
 

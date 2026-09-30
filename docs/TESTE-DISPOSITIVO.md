@@ -22,6 +22,7 @@ diferente. Aparelho: ______________ · Sistema: ______________ · Data: ____/___
 
 ## 3. Notificações — teste rápido (Mais → Testar notificações)
 - [ ] Permissão aparece como “concedida”.
+- [ ] Android: “Permitir alarmes exatos” abre a tela do sistema com a opção ativada (ou ative-a).
 - [ ] “Testar lembrete de água (10 s)” → bloquear a tela → a notificação aparece com som/vibração.
 - [ ] Expandir a notificação mostra os botões “Registrar água”, “Lembrar depois”, “Preciso de ajuda”.
 - [ ] Tocar em “Registrar água” abre a tela de registro **sem** registrar nada sozinho.

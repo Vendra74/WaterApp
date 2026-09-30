@@ -7,7 +7,7 @@ import { BigButton } from '@/ui/components/BigButton';
 import { Card } from '@/ui/components/Card';
 import { Banner } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
-import { listOwnedScheduled, requestPermission, scheduleTestNotification } from '@/services/notifications/notificationService';
+import { listOwnedScheduled, openExactAlarmSettings, requestPermission, scheduleTestNotification } from '@/services/notifications/notificationService';
 import { formatDateBR, formatTimeBR } from '@/domain/time/time';
 import { registerBackgroundTasks } from '@/services/background/backgroundTasks';
 
@@ -43,6 +43,17 @@ export function NotificationTestScreen() {
         {permission === 'denied' ? <BigButton compact kind="secondary" label="Abrir configurações do sistema" onPress={() => void Linking.openSettings()} /> : null}
         {!Device.isDevice ? <AppText muted variant="small">Você está em um emulador/simulador. Teste em um aparelho físico para validar de verdade.</AppText> : null}
       </Card>
+      {Platform.OS === 'android' ? (
+        <Card tone="warning">
+          <AppText variant="heading">Alarmes exatos (Android)</AppText>
+          <AppText variant="small">
+            Sem esta permissão, o Android agrupa os lembretes e pode atrasá-los em vários minutos, e o teste de 10 segundos não aparece.
+            Toque abaixo e, na tela do sistema, ative “Permitir definir alarmes e lembretes” para o {'\u201C'}Cuidar{'\u201D'}. Se a opção já estiver ativa, não precisa mudar nada.
+          </AppText>
+          <BigButton compact label="Permitir alarmes exatos" onPress={() => void openExactAlarmSettings().then((ok) => !ok && setMsg('Não foi possível abrir a tela do sistema. Procure “Alarmes e lembretes” nas configurações do aparelho.'))} />
+          <BigButton compact kind="secondary" label="Configurações de bateria e notificações do app" onPress={() => void Linking.openSettings()} />
+        </Card>
+      ) : null}
       <BigButton label="Testar lembrete de água (10 s)" icon="💧" onPress={() => void test('hydration')} />
       <BigButton kind="secondary" label="Testar lembrete de medicamento (10 s)" icon="💊" onPress={() => void test('medication')} />
       {msg ? <Banner tone="info">{msg}</Banner> : null}

@@ -38,7 +38,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     permissions: [
       'android.permission.POST_NOTIFICATIONS',
+      // Lembretes de medicamento precisam de horário exato. SCHEDULE_EXACT_ALARM cobre Android 12;
+      // em Android 13+ USE_EXACT_ALARM é concedida na instalação para apps de alarme/lembrete
+      // (a Play Store pode pedir justificativa na revisão: ver docs/VALIDACAO.md).
       'android.permission.SCHEDULE_EXACT_ALARM',
+      'android.permission.USE_EXACT_ALARM',
       'android.permission.RECEIVE_BOOT_COMPLETED',
       'android.permission.VIBRATE',
     ],
