@@ -7,10 +7,9 @@ import { BigButton } from '@/ui/components/BigButton';
 import { Card } from '@/ui/components/Card';
 import { Banner } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
-import { listOwnedScheduled, openExactAlarmSettings, presentTestNotificationNow, requestPermission, scheduleTestNotification } from '@/services/notifications/notificationService';
+import { ensureCategories, listOwnedScheduled, openExactAlarmSettings, presentTestNotificationNow, requestPermission, scheduleTestNotification } from '@/services/notifications/notificationService';
 import { formatDateBR, formatTimeBR } from '@/domain/time/time';
 import { registerBackgroundTasks } from '@/services/background/backgroundTasks';
-import { ensureCategories } from '@/services/notifications/notificationService';
 
 async function ensureCategoriesSafe() {
   try {
