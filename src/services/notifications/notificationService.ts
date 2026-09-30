@@ -62,10 +62,12 @@ export async function ensureChannels(showDetailsOnLockScreen: boolean, sound: bo
   const visibility = showDetailsOnLockScreen
     ? Notifications.AndroidNotificationVisibility.PUBLIC
     : Notifications.AndroidNotificationVisibility.PRIVATE;
+  // Canal Android: sem a chave `sound` o sistema usa o som padrão; `null` significa silencioso.
+  // Um nome de arquivo (inclusive 'default') seria procurado como som personalizado.
   const base = {
     importance: Notifications.AndroidImportance.HIGH,
     lockscreenVisibility: visibility,
-    sound: sound ? 'default' : null,
+    ...(sound ? {} : { sound: null }),
     vibrationPattern: vibrate ? [0, 300, 200, 300] : undefined,
     enableVibrate: vibrate,
     bypassDnd: false,
@@ -85,6 +87,16 @@ export async function ensureChannels(showDetailsOnLockScreen: boolean, sound: bo
   });
 }
 
+/**
+ * Som no conteúdo: no Android um booleano usa o som do canal; no iOS 'default' é o som do sistema.
+ * Uma string no Android é tratada como arquivo de som personalizado.
+ */
+export function contentSound(enabled: boolean): boolean | 'default' {
+  if (Platform.OS === 'ios') return enabled ? 'default' : false;
+  return enabled;
+}
+
+/** Categorias com botões. Android rejeita categorias sem ações, por isso não há categoria "genérica". */
 export async function ensureCategories(): Promise<void> {
   await Notifications.setNotificationCategoryAsync(CATEGORY_HYDRATION, [
     { identifier: ACTION_LOG_WATER, buttonTitle: 'Registrar água', options: { opensAppToForeground: true } },
@@ -96,7 +108,6 @@ export async function ensureCategories(): Promise<void> {
     { identifier: ACTION_SNOOZE, buttonTitle: 'Lembrar depois', options: { opensAppToForeground: true } },
     { identifier: ACTION_HELP, buttonTitle: 'Preciso de ajuda', options: { opensAppToForeground: true } },
   ]);
-  await Notifications.setNotificationCategoryAsync(CATEGORY_GENERIC, []);
 }
 
 export type PermissionState = 'granted' | 'denied' | 'undetermined' | 'unsupported';
@@ -167,8 +178,14 @@ async function doReschedule(): Promise<NotificationState> {
       return next;
     }
 
-    await ensureChannels(settings.showDetailsOnLockScreen, settings.sound, settings.vibrate);
-    await ensureCategories();
+    let setupError: string | null = null;
+    try {
+      await ensureChannels(settings.showDetailsOnLockScreen, settings.sound, settings.vibrate);
+      await ensureCategories();
+    } catch (e) {
+      // Falha em canal/categoria não deve impedir o agendamento dos lembretes.
+      setupError = e instanceof Error ? e.message : String(e);
+    }
 
     const hydrationSlots = profile.assessmentCompleted
       ? generateHydrationSlots({ settings, naps: profile.naps, now, days: HYDRATION_HORIZON_DAYS })
@@ -205,7 +222,7 @@ async function doReschedule(): Promise<NotificationState> {
       scheduledCount: ours,
       plannedCount: plan.length,
       truncated: totalWanted > plan.length || ours < plan.length,
-      lastError: null,
+      lastError: setupError,
       lastCancelled: diff.toCancel.length,
       lastScheduled: diff.toSchedule.length,
     };
@@ -225,8 +242,8 @@ async function scheduleOne(n: PlannedNotification, sound: boolean): Promise<void
       title: n.title,
       body: n.body,
       data: n.data,
-      sound: sound ? 'default' : false,
-      categoryIdentifier: n.categoryId,
+      sound: contentSound(sound),
+      ...(n.categoryId === CATEGORY_GENERIC ? {} : { categoryIdentifier: n.categoryId }),
       interruptionLevel: n.kind === 'medication' ? 'timeSensitive' : 'active',
       ...(Platform.OS === 'android' ? { priority: Notifications.AndroidNotificationPriority.HIGH } : {}),
     },
@@ -247,7 +264,7 @@ export async function scheduleHydrationSnooze(minutes: number, sound: boolean): 
       body: 'Lembrete adiado. Que tal agora?',
       data: { kind: 'hydration', slotAt: new Date().toISOString() },
       categoryIdentifier: CATEGORY_HYDRATION,
-      sound: sound ? 'default' : false,
+      sound: contentSound(sound),
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: Math.max(60, minutes * 60), channelId: CHANNEL_HYDRATION },
   });
@@ -265,7 +282,7 @@ export async function scheduleTestNotification(seconds: number, kind: 'hydration
       body: 'Esta é uma notificação de teste. Você pode usar os botões para conferir as ações.',
       data: { kind: 'test' },
       categoryIdentifier: kind === 'hydration' ? CATEGORY_HYDRATION : CATEGORY_MEDICATION,
-      sound: 'default',
+      sound: contentSound(true),
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
