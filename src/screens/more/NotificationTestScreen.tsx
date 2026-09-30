@@ -7,9 +7,18 @@ import { BigButton } from '@/ui/components/BigButton';
 import { Card } from '@/ui/components/Card';
 import { Banner } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
-import { listOwnedScheduled, openExactAlarmSettings, requestPermission, scheduleTestNotification } from '@/services/notifications/notificationService';
+import { listOwnedScheduled, openExactAlarmSettings, presentTestNotificationNow, requestPermission, scheduleTestNotification } from '@/services/notifications/notificationService';
 import { formatDateBR, formatTimeBR } from '@/domain/time/time';
 import { registerBackgroundTasks } from '@/services/background/backgroundTasks';
+import { ensureCategories } from '@/services/notifications/notificationService';
+
+async function ensureCategoriesSafe() {
+  try {
+    await ensureCategories();
+  } catch {
+    // erro de categoria não impede o teste; o agendamento reporta separadamente
+  }
+}
 
 export function NotificationTestScreen() {
   const { permission, notificationState, reschedule } = useAppStore();
@@ -31,8 +40,24 @@ export function NotificationTestScreen() {
         return;
       }
     }
-    await scheduleTestNotification(10, kind);
-    setMsg('Notificação de teste agendada para daqui a 10 segundos. Bloqueie a tela ou saia do aplicativo para conferir.');
+    try {
+      await ensureCategoriesSafe();
+      await scheduleTestNotification(10, kind);
+      const list = await listOwnedScheduled();
+      const pending = list.filter((s) => s.identifier.startsWith('test@')).length;
+      setMsg(`Agendada para daqui a 10 segundos (${pending} teste(s) pendente(s) no sistema). Bloqueie a tela ou saia do aplicativo para conferir.`);
+    } catch (e) {
+      setMsg(`Erro ao agendar: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const testNow = async () => {
+    try {
+      await presentTestNotificationNow();
+      setMsg('Notificação imediata enviada. Se ela não apareceu na barra de status, o problema é de permissão/canal, não do alarme.');
+    } catch (e) {
+      setMsg(`Erro ao apresentar: ${e instanceof Error ? e.message : String(e)}`);
+    }
   };
 
   return (
@@ -54,6 +79,7 @@ export function NotificationTestScreen() {
           <BigButton compact kind="secondary" label="Configurações de bateria e notificações do app" onPress={() => void Linking.openSettings()} />
         </Card>
       ) : null}
+      <BigButton kind="secondary" label="Mostrar notificação agora (sem alarme)" icon="⚡" onPress={() => void testNow()} />
       <BigButton label="Testar lembrete de água (10 s)" icon="💧" onPress={() => void test('hydration')} />
       <BigButton kind="secondary" label="Testar lembrete de medicamento (10 s)" icon="💊" onPress={() => void test('medication')} />
       {msg ? <Banner tone="info">{msg}</Banner> : null}

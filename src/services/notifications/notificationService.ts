@@ -289,6 +289,22 @@ export async function openExactAlarmSettings(): Promise<boolean> {
   }
 }
 
+/** Apresenta uma notificação imediatamente, sem alarme (isola problemas de exibição/canal). */
+export async function presentTestNotificationNow(): Promise<string> {
+  const id = `test@now@${Date.now()}`;
+  await Notifications.scheduleNotificationAsync({
+    identifier: id,
+    content: {
+      title: 'Teste imediato',
+      body: 'Se você está vendo isto, o canal e a permissão funcionam. Falta só o alarme.',
+      data: { kind: 'test' },
+      sound: contentSound(true),
+    },
+    trigger: Platform.OS === 'android' ? { channelId: CHANNEL_HYDRATION } : null,
+  });
+  return id;
+}
+
 /** Notificação de teste em N segundos (tela "Testar notificações"). */
 export async function scheduleTestNotification(seconds: number, kind: 'hydration' | 'medication'): Promise<string> {
   const id = `test@${Date.now()}`;
