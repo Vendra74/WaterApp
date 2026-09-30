@@ -74,7 +74,7 @@ export function NotificationTestScreen() {
             Sem esta permissão, o Android agrupa os lembretes e pode atrasá-los em vários minutos, e o teste de 10 segundos não aparece.
             Toque abaixo e, na tela do sistema, ative “Permitir definir alarmes e lembretes” para o {'\u201C'}Cuidar{'\u201D'}. Se a opção já estiver ativa, não precisa mudar nada.
           </AppText>
-          <BigButton compact label="Permitir alarmes exatos" onPress={() => void openExactAlarmSettings().then((ok) => !ok && setMsg('Não foi possível abrir a tela do sistema. Procure “Alarmes e lembretes” nas configurações do aparelho.'))} />
+          <BigButton compact label="Permitir alarmes exatos" onPress={() => void openExactAlarmSettings().then((err) => err && setMsg(`Não foi possível abrir a tela do sistema (${err}). Procure “Alarmes e lembretes” nas configurações do aparelho.`))} />
           <BigButton compact kind="secondary" label="Configurações de bateria e notificações do app" onPress={() => void Linking.openSettings()} />
         </Card>
       ) : null}
@@ -85,7 +85,7 @@ export function NotificationTestScreen() {
             Com o Não perturbe ligado (ícone ⊖ na barra de status), o Android silencia o som, a vibração e o aviso na tela de todos os apps.
             Você pode autorizar o {'\u201C'}Cuidar{'\u201D'} a tocar os lembretes de medicamento mesmo assim: toque abaixo e ative o Cuidar na lista.
           </AppText>
-          <BigButton compact label="Permitir tocar no Não perturbe (medicamentos)" onPress={() => void openDndAccessSettings().then((ok) => !ok && setMsg('Não foi possível abrir a tela do sistema. Procure “Acesso a Não perturbe” nas configurações.'))} />
+          <BigButton compact label="Permitir tocar no Não perturbe (medicamentos)" onPress={() => void openDndAccessSettings().then((err) => err && setMsg(`Não foi possível abrir a tela do sistema (${err}). Procure “Acesso a Não perturbe” nas configurações.`))} />
         </Card>
       ) : null}
       <BigButton kind="secondary" label="Mostrar notificação agora (sem alarme)" icon="⚡" onPress={() => void testNow()} />

@@ -1,5 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import * as Application from 'expo-application';
+import * as IntentLauncher from 'expo-intent-launcher';
 import { Platform } from 'react-native';
 import { getDb } from '@/data/db';
 import { DOC_NOTIFICATION_STATE, getDocument, setDocument } from '@/data/repositories/documents';
@@ -299,19 +301,19 @@ export async function scheduleHydrationSnooze(minutes: number, sound: boolean): 
 
 /**
  * Abre a tela do sistema para permitir alarmes exatos (Android 12+). Sem essa permissão o sistema
- * agrupa e atrasa os lembretes em vários minutos. Retorna false se não foi possível abrir.
+ * agrupa e atrasa os lembretes em vários minutos. Retorna a mensagem de erro se não foi possível abrir.
+ * Importações estáticas: o `import()` dinâmico de expo-application falhava no development build
+ * ("Cannot read property 'reload' of undefined") e o botão não abria nada.
  */
-export async function openExactAlarmSettings(): Promise<boolean> {
-  if (Platform.OS !== 'android') return false;
+export async function openExactAlarmSettings(): Promise<string | null> {
+  if (Platform.OS !== 'android') return 'Disponível apenas no Android.';
   try {
-    const IntentLauncher = await import('expo-intent-launcher');
-    const Application = await import('expo-application');
     await IntentLauncher.startActivityAsync('android.settings.REQUEST_SCHEDULE_EXACT_ALARM', {
       data: `package:${Application.applicationId ?? ''}`,
     });
-    return true;
-  } catch {
-    return false;
+    return null;
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
   }
 }
 
@@ -332,14 +334,13 @@ export async function presentTestNotificationNow(): Promise<string> {
 }
 
 /** Abre a tela do sistema para permitir que lembretes de medicamento ignorem o modo Não perturbe. */
-export async function openDndAccessSettings(): Promise<boolean> {
-  if (Platform.OS !== 'android') return false;
+export async function openDndAccessSettings(): Promise<string | null> {
+  if (Platform.OS !== 'android') return 'Disponível apenas no Android.';
   try {
-    const IntentLauncher = await import('expo-intent-launcher');
     await IntentLauncher.startActivityAsync('android.settings.NOTIFICATION_POLICY_ACCESS_SETTINGS');
-    return true;
-  } catch {
-    return false;
+    return null;
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
   }
 }
 
@@ -405,7 +406,8 @@ export async function routeResponse(response: Notifications.NotificationResponse
 
 /**
  * Dispensa da barra as notificações que a recém-chegada torna obsoletas (ver `selectSuperseded`).
- * Só roda com o processo do app vivo; com ele encerrado, o sistema agrupa as antigas normalmente.
+ * Só roda com o app em primeiro plano (o listener de recebimento não dispara em segundo plano);
+ * fora disso o sistema agrupa as antigas normalmente.
  */
 export async function dismissSuperseded(received: Notifications.Notification): Promise<string[]> {
   const presented = await Notifications.getPresentedNotificationsAsync();

@@ -15,6 +15,9 @@ export function plannedTimesFor(med: Medication, from: Date, days: number): Date
   const result: Date[] = [];
   const start = med.startDate ? parseISODate(med.startDate) : null;
   const end = med.endDate ? parseISODate(med.endDate) : null;
+  // Sem data de início, nenhuma dose é esperada antes do cadastro: senão as de ontem (e as de hoje
+  // já passadas) apareceriam como "sem confirmação" para um remédio recém-cadastrado.
+  const notBefore = start ? null : new Date(med.createdAt);
 
   for (let d = 0; d < days; d++) {
     const day = addDays(startOfLocalDay(from), d);
@@ -33,7 +36,7 @@ export function plannedTimesFor(med: Medication, from: Date, days: number): Date
     }
   }
   result.sort((a, b) => a.getTime() - b.getTime());
-  return result.filter((t, i) => i === 0 || t.getTime() !== result[i - 1]!.getTime());
+  return result.filter((t, i) => (!notBefore || t.getTime() >= notBefore.getTime()) && (i === 0 || t.getTime() !== result[i - 1]!.getTime()));
 }
 
 /**

@@ -46,6 +46,15 @@ function TabIcon({ label, focused, color }: { label: string; focused: boolean; c
   return <Text style={{ fontSize: focused ? 26 : 22, color }} importantForAccessibility="no">{label}</Text>;
 }
 
+/** Rótulo da aba em uma linha: com letras grandes, "Medicamentos" e "Histórico" reduzem em vez de truncar. */
+function TabLabel({ label, color, fontSize }: { label: string; color: string; fontSize: number }) {
+  return (
+    <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={{ fontSize, fontWeight: '700', color, textAlign: 'center' }}>
+      {label}
+    </Text>
+  );
+}
+
 function MainTabs() {
   const prefs = useAppStore((s) => s.profile?.accessibility ?? DEFAULT_PREFS);
   const theme = buildTheme(prefs);
@@ -55,7 +64,8 @@ function MainTabs() {
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,
-        tabBarLabelStyle: { fontSize: theme.font(13), fontWeight: '700' },
+        tabBarLabel: ({ color, children }) => <TabLabel label={String(children)} color={color} fontSize={theme.font(13)} />,
+        tabBarItemStyle: { paddingHorizontal: 2 },
         tabBarStyle: { height: 76, paddingBottom: 10, paddingTop: 6, backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border },
       }}
     >
@@ -109,6 +119,13 @@ async function processResponse(response: Notifications.NotificationResponse) {
       break;
     case 'health_review':
       navigationRef.navigate('Profile');
+      break;
+    case 'test':
+      // Notificação da tela "Testar notificações": os botões levam às mesmas telas do lembrete real,
+      // sem registrar nem adiar nada.
+      if (routed.action === 'help') navigationRef.navigate('Help');
+      else if (routed.action === 'log_water') navigationRef.navigate('HydrationLog', { fromNotification: true });
+      else navigationRef.navigate('Main');
       break;
     default:
       navigationRef.navigate('Main');

@@ -37,7 +37,11 @@ export function AssessmentSummaryScreen() {
     { key: 'containers', label: 'Recipientes', value: draft.containers.map((c) => `${c.label} ${c.volumeMl} ml`).join(', ') },
     { key: 'fruits', label: 'Frutas', value: draft.fruitPreferences.join(', ') || 'Nenhuma' },
     { key: 'allergies', label: 'Alergias / restrições', value: [...draft.allergies, ...draft.dietaryRestrictions].join(', ') || 'Nenhuma' },
-    { key: 'restriction', label: 'Orientação profissional de líquidos', value: tri(draft.fluidRestriction) + (draft.professionalGoalMl ? ` — ${draft.professionalGoalMl} ml/dia` : '') },
+    { key: 'restriction', label: 'Orientação profissional de líquidos', value: tri(draft.fluidRestriction) },
+    // A quantidade só vale (e só é editável) quando houve orientação; antes ela não aparecia no resumo.
+    ...(draft.fluidRestriction === 'yes'
+      ? [{ key: 'goal', label: 'Quantidade orientada', value: draft.professionalGoalMl ? `${draft.professionalGoalMl} ml/dia` : 'Não informada' }]
+      : []),
     { key: 'swallow', label: 'Dificuldade para engolir', value: tri(draft.swallowingDifficulty) },
     { key: 'help_needs', label: 'Precisa de ajuda', value: `Beber: ${tri(draft.needsHelpToDrink)} · Banheiro: ${tri(draft.needsHelpToBathroom)}` },
     { key: 'extras', label: 'Medicamentos / cuidador', value: `${draft.wantsMedications ? 'Sim' : 'Não'} / ${draft.wantsCaregiver ? 'Sim' : 'Não'}` },
@@ -51,7 +55,10 @@ export function AssessmentSummaryScreen() {
       const saved: Profile = { ...draft, assessmentCompleted: true, assessmentStep: 0, lastHealthReviewPromptAt: new Date().toISOString() };
       await updateProfile(saved);
       const base = settings ?? defaultHydrationSettings(saved);
-      await updateSettings({ ...base, enabled: true, windowStart: saved.wakeTime, windowEnd: saved.sleepTime });
+      // O período dos lembretes segue acordar/dormir na primeira avaliação e quando esses horários
+      // mudam; fora disso, preserva o período que a pessoa ajustou em "Lembretes de água".
+      const routineChanged = !settings || !profile.assessmentCompleted || profile.wakeTime !== saved.wakeTime || profile.sleepTime !== saved.sleepTime;
+      await updateSettings(routineChanged ? { ...base, enabled: true, windowStart: saved.wakeTime, windowEnd: saved.sleepTime } : { ...base, enabled: true });
       await requestPermission();
       nav.reset({ index: 0, routes: [{ name: 'Main' }] });
     } finally {

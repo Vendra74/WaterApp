@@ -106,6 +106,12 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
 - Corrigido em campo (30/09): após a migração de canais, os lembretes já agendados continuavam no
   canal antigo apagado e eram entregues no canal genérico do Expo (importância menor, sem ignorar
   Não perturbe). O reconciliador agora refaz agendamentos cujo canal difere do planejado.
+- Sessão pela interface (30/09, adb + uiautomator): seções 1–6 e 9–12 do checklist exercitadas.
+  Corrigidos em campo: botões de configurações do sistema mudos (import dinâmico de
+  expo-application), discador (`canOpenURL('tel:')` falso no Android 11+), roteamento dos botões da
+  notificação de teste, layout em letras “Máximo”, período de lembretes sobrescrito ao atualizar a
+  avaliação, linha de quantidade no resumo, ordem das doses nos detalhes e doses geradas antes do
+  cadastro do medicamento. Detalhes em `docs/TESTE-DISPOSITIVO.md`.
 
 ## Roteiro sugerido de teste em dispositivo
 

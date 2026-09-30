@@ -52,7 +52,8 @@ export function TodayScreen() {
 
   return (
     <Screen>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+      {/* Com letras muito grandes o botão não cabe ao lado da hora: empilha em vez de cortar. */}
+      <View style={t.fontScale >= 1.5 ? { gap: t.space(1) } : { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <View>
           <AppText muted>{WEEKDAY_LONG_PT[weekdayOf(now)]}</AppText>
           <AppText variant="big" accessibilityLabel={`Agora são ${formatTimeBR(now)}`}>{formatTimeBR(now)}</AppText>

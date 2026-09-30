@@ -17,9 +17,13 @@ export function HelpScreen() {
 
   const call = async (phone: string) => {
     const url = `tel:${phone.replace(/[^\d+]/g, '')}`;
-    const ok = await Linking.canOpenURL(url);
-    if (ok) await Linking.openURL(url);
-    else setNotice('Este aparelho não conseguiu abrir o discador. Use o telefone para ligar.');
+    // Sem `canOpenURL`: no Android 11+ ele responde "não" para tel: a menos que o manifesto declare
+    // <queries> para o discador, e o botão ficava mudo. Abrir direto funciona; o erro é tratado.
+    try {
+      await Linking.openURL(url);
+    } catch {
+      setNotice('Este aparelho não conseguiu abrir o discador. Use o telefone para ligar.');
+    }
   };
 
   const notifyCaregiver = async () => {
