@@ -1,7 +1,10 @@
 # Checklist de teste em aparelho físico
 
 Preencha e devolva. Marque `[x]` quando o resultado esperado ocorrer; anote o que aconteceu de
-diferente. Aparelho: ______________ · Sistema: ______________ · Data: ____/____/______
+diferente. Aparelho: Motorola Edge 50 Pro · Sistema: Android 16 (API 36) · Data: 30/09/2026
+
+Sessão de 30/09/2026 (via adb, aparelho travado com PIN; itens sem marca não foram exercitados nesta sessão):
+`[x]` verificado · `[~]` verificado com ressalva (ver Observações).
 
 ## 0. Instalação e primeira abertura
 - [ ] O app abre na tela de boas-vindas (“Cuidar”).
@@ -21,12 +24,12 @@ diferente. Aparelho: ______________ · Sistema: ______________ · Data: ____/___
 - [ ] Sem plano profissional, **não** aparece percentual de meta.
 
 ## 3. Notificações — teste rápido (Mais → Testar notificações)
-- [ ] Permissão aparece como “concedida”.
-- [ ] Android: “Permitir alarmes exatos” abre a tela do sistema com a opção ativada (ou ative-a).
-- [ ] Modo Não perturbe desligado durante o teste (ícone ⊖ na barra de status = ligado). Com ele ligado, o Android silencia tudo; “Permitir tocar no Não perturbe” libera só os medicamentos.
-- [ ] Lembrete aparece como banner no topo da tela (não só na barra), com som e vibração.
-- [ ] “Testar lembrete de água (10 s)” → bloquear a tela → a notificação aparece com som/vibração.
-- [ ] Expandir a notificação mostra os botões “Registrar água”, “Lembrar depois”, “Preciso de ajuda”.
+- [x] Permissão aparece como “concedida”. (dumpsys: `importance=DEFAULT`, canais `hydration_v2`/`medication_v2` com importância 5 e `bypassDnd=true`)
+- [x] Android: “Permitir alarmes exatos” abre a tela do sistema com a opção ativada (ou ative-a). (dumpsys alarm: `exactAllowReason=policy_permission`)
+- [x] Modo Não perturbe desligado durante o teste (ícone ⊖ na barra de status = ligado). Com ele ligado, o Android silencia tudo; “Permitir tocar no Não perturbe” libera só os medicamentos.
+- [x] Lembrete aparece como banner no topo da tela (não só na barra), com som e vibração. (`heads_up_notifications_enabled=1`; som e vibração confirmados pelo testador)
+- [~] “Testar lembrete de água (10 s)” → bloquear a tela → a notificação aparece com som/vibração. Aparece, mas como **ícone** no carrossel da tela bloqueada (Motorola), não como cartão; ver Observações.
+- [x] Expandir a notificação mostra os botões “Registrar água”, “Lembrar depois”, “Preciso de ajuda”. (dumpsys: `actions=3` com esses títulos)
 - [ ] Tocar em “Registrar água” abre a tela de registro **sem** registrar nada sozinho.
 - [ ] Tocar em “Preciso de ajuda” abre a tela de ajuda.
 - [ ] “Testar lembrete de medicamento (10 s)” → botões “Tomei”, “Lembrar depois”, “Preciso de ajuda”.
@@ -35,7 +38,7 @@ diferente. Aparelho: ______________ · Sistema: ______________ · Data: ____/___
 ## 4. Hidratação de hora em hora
 - [ ] Mais → Lembretes de água: intervalo 1 h, período curto (ex.: da hora atual até +3 h). Salvar.
 - [ ] Voltar à tela de teste: os horários listados são de hora em hora **dentro** do período.
-- [ ] Aguardar o primeiro lembrete com o app fechado: ele chega no horário (anote o atraso, se houver): ______ min.
+- [x] Aguardar o primeiro lembrete com o app fechado: ele chega no horário (anote o atraso, se houver): 0 min. (lembrete das 17:30 postado às 17:30:00, processo do app congelado até então; tela apagada acordou com o aviso)
 - [ ] Registrar água pela notificação → aparece em Histórico → Hoje com hora e quantidade.
 - [ ] Registrar a mesma quantidade de novo em menos de 1 min → app pergunta se é duplicado.
 - [ ] “Desfazer” remove; em Histórico, “Restaurar” traz de volta.
@@ -90,4 +93,34 @@ diferente. Aparelho: ______________ · Sistema: ______________ · Data: ____/___
 - [ ] A revoga; B não vê mais (e recebe erro ao atualizar).
 
 ## Observações livres
-_________________________________________________________________________
+**Tela bloqueada (30/09/2026, Motorola Edge 50 Pro, Android 16).** Investigado com `adb shell settings`
+e `dumpsys notification`/SystemUI. Nada bloqueia o app: `lock_screen_show_notifications=1`,
+`lock_screen_allow_private_notifications=1`, `zen_mode=0`; o SystemUI não filtra as notificações do
+Cuidar no keyguard (só a de USB). O que acontece é a apresentação da Motorola (`KeyguardStyle=PEEK`):
+a tela bloqueada mostra um **carrossel com 4 ícones por página**, e a seção “Pessoas” (SMS, chamada
+perdida, WhatsApp) vem sempre antes da seção “Alertas”, onde ficam os lembretes. Com 3 conversas
+pendentes sobra 1 vaga na primeira página, ocupada pela notificação de alerta mais recente; lembretes
+mais antigos vão para a 2ª página (deslizar a fileira). Tocando na gota, a tela bloqueada mostra o
+lembrete inteiro (título, texto e, expandindo, os botões) sem desbloquear.
+
+Detalhe de plataforma: `lockscreenVisibility` definido pelo app no canal é ignorado pelo Android
+(o dumpsys mostra `mLockscreenVisibility=-1000`, valor imposto pelo sistema). Não há configuração
+adicional que o app possa fazer; o comentário do código foi corrigido.
+
+Ajuste feito no código: quando chega um lembrete novo com o app em execução, os anteriores do mesmo
+tipo (água substitui água; repetição de dose substitui o aviso original da mesma dose; teste substitui
+teste) são dispensados da barra. Isso evita o agrupamento automático do Android 16, que na tela
+bloqueada mostrava um grupo recolhido em vez do lembrete atual com os botões.
+
+**Lembrete real das 17:30 (app em segundo plano, processo congelado, tela apagada).** Entregue às
+17:30:00 pelo alarme exato; a tela acordou e a gota ficou na 1ª página do carrossel. Porém o dumpsys
+mostrou a notificação no canal `expo_notifications_fallback_notification_channel` (importância 4,
+sem ignorar Não perturbe, sem o padrão de vibração), e não em `hydration_v2`. Causa: os agendamentos
+gravados antes da migração dos canais (`hydration` → `hydration_v2`) continuam apontando para o canal
+apagado; o reconciliador só comparava identificadores e os mantinha. No aparelho, os 22 agendamentos
+guardados estavam nessa situação. **Corrigido:** o reconciliador agora cancela e refaz qualquer
+agendamento cujo canal difira do planejado. Verificado no aparelho após recarregar o app: os 22
+agendamentos passaram para `hydration_v2`/`general_v2` e o alarme seguinte (19:30) continua marcado.
+Conferir no próximo lembrete: deve chegar com importância máxima (banner) e, no medicamento,
+ignorando o Não perturbe se autorizado.
+

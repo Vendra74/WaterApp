@@ -152,16 +152,37 @@ export interface Reconciliation {
   unchanged: number;
 }
 
+/** Agendamento já existente no sistema. `channelId` é o canal Android gravado no gatilho (ausente no iOS). */
+export interface ExistingScheduled {
+  identifier: string;
+  channelId?: string | null;
+}
+
 /**
  * Compara o que já está agendado no sistema (identificadores do app) com o plano desejado.
  * Só cancela/agenda a diferença: evita duplicidade após sincronização ou edição de horários.
+ * Um agendamento cujo canal difere do planejado (por exemplo, canal antigo apagado após uma
+ * migração) é refeito: o Android entregaria a notificação num canal genérico, sem a importância,
+ * o som e a vibração configurados.
  */
-export function reconcile(existingIdentifiers: string[], plan: PlannedNotification[]): Reconciliation {
+export function reconcile(existingScheduled: (string | ExistingScheduled)[], plan: PlannedNotification[]): Reconciliation {
   const wanted = new Map(plan.map((p) => [p.identifier, p]));
   // Só reconcilia o que o plano gerencia; avisos únicos ("lembrar depois" da água, testes) não são cancelados aqui.
-  const existing = new Set(existingIdentifiers.filter(isPlanManagedIdentifier));
-  const toCancel = [...existing].filter((id) => !wanted.has(id));
-  const toSchedule = plan.filter((p) => !existing.has(p.identifier));
+  const existing = new Map(
+    existingScheduled
+      .map((e) => (typeof e === 'string' ? { identifier: e } : e))
+      .filter((e) => isPlanManagedIdentifier(e.identifier))
+      .map((e) => [e.identifier, e] as const),
+  );
+  const stale = (e: ExistingScheduled): boolean => {
+    const p = wanted.get(e.identifier);
+    return !p || (typeof e.channelId === 'string' && e.channelId !== p.channelId);
+  };
+  const toCancel = [...existing.values()].filter(stale).map((e) => e.identifier);
+  const toSchedule = plan.filter((p) => {
+    const e = existing.get(p.identifier);
+    return !e || stale(e);
+  });
   return { toCancel, toSchedule, unchanged: plan.length - toSchedule.length };
 }
 

@@ -110,6 +110,7 @@ export function NotificationTestScreen() {
         <AppText variant="heading">Limitações conhecidas</AppText>
         <AppText variant="small">• iOS mantém no máximo 64 notificações pendentes por aplicativo. Medicamentos têm prioridade; o restante é agendado quando você abre o aplicativo.</AppText>
         <AppText variant="small">• Android pode atrasar notificações em economia de bateria ou modo “Não perturbe”. Em alguns aparelhos (Xiaomi, Samsung etc.) é preciso liberar o aplicativo nas configurações de bateria.</AppText>
+        <AppText variant="small">• Tela bloqueada: alguns aparelhos (Motorola, por exemplo) mostram só uma fileira de ícones, com as mensagens e chamadas na frente. Se a gota do Cuidar não estiver visível, deslize a fileira para o lado e toque na gota para ver o lembrete e os botões.</AppText>
         <AppText variant="small">• Os botões da notificação abrem o aplicativo para confirmar. Nenhum consumo é registrado só por abrir a notificação.</AppText>
         <AppText variant="small">• Leitura em voz alta funciona apenas com o aplicativo aberto.</AppText>
         <AppText variant="small">• Tarefa periódica em segundo plano: {bg ? (bg.periodic ? 'registrada (o sistema decide quando executar)' : `indisponível — ${bg.reason ?? 'sem detalhes'}`) : 'verificando…'}. {Platform.OS === 'ios' ? 'No iOS ela roda a critério do sistema.' : ''}</AppText>

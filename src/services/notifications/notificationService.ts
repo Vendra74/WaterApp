@@ -22,6 +22,7 @@ import {
   isOwnedIdentifier,
   reconcile,
 } from '@/domain/notifications/planner';
+import { selectSuperseded } from '@/domain/notifications/supersede';
 import { addDays } from '@/domain/time/time';
 import { loadHydrationSettings, loadProfile } from '@/services/usecases/profile';
 import { loadMedications, refreshOccurrences } from '@/services/usecases/medications';
@@ -61,8 +62,10 @@ export function configureNotificationHandler(): void {
 
 export async function ensureChannels(_showDetailsOnLockScreen: boolean, sound: boolean, vibrate: boolean): Promise<void> {
   if (Platform.OS !== 'android') return;
-  // A privacidade do conteúdo (nome do medicamento) já é controlada no texto da notificação;
-  // o canal fica PUBLIC para que o lembrete apareça inteiro na tela bloqueada.
+  // A privacidade do conteúdo (nome do medicamento) é controlada no texto da notificação.
+  // `lockscreenVisibility` no canal é ignorado pelo Android (o sistema sobrescreve com a
+  // preferência do usuário; no dumpsys aparece como -1000). Fica aqui só por documentação:
+  // quem decide a exibição na tela bloqueada é a configuração do sistema.
   // Canal Android: sem a chave `sound` o sistema usa o som padrão; `null` significa silencioso.
   // Um nome de arquivo (inclusive 'default') seria procurado como som personalizado.
   const base = {
@@ -220,7 +223,10 @@ async function doReschedule(): Promise<NotificationState> {
     });
 
     const existing = await Notifications.getAllScheduledNotificationsAsync();
-    const diff = reconcile(existing.map((n) => n.identifier), plan);
+    const diff = reconcile(
+      existing.map((n) => ({ identifier: n.identifier, channelId: triggerChannelId(n.trigger) })),
+      plan,
+    );
 
     for (const id of diff.toCancel) await Notifications.cancelScheduledNotificationAsync(id);
     for (const n of diff.toSchedule) await scheduleOne(n, settings.sound);
@@ -244,6 +250,13 @@ async function doReschedule(): Promise<NotificationState> {
     await setDocument(db, DOC_NOTIFICATION_STATE, next);
     return next;
   }
+}
+
+/** Canal Android gravado no gatilho de um agendamento existente (undefined no iOS ou se ausente). */
+function triggerChannelId(trigger: Notifications.NotificationTrigger | null): string | undefined {
+  if (!trigger || typeof trigger !== 'object') return undefined;
+  const c = (trigger as { channelId?: unknown }).channelId;
+  return typeof c === 'string' ? c : undefined;
 }
 
 async function scheduleOne(n: PlannedNotification, sound: boolean): Promise<void> {
@@ -388,6 +401,20 @@ export async function routeResponse(response: Notifications.NotificationResponse
   const db = await getDb();
   if (kind === 'hydration') await recordReminderResponse(db, 'hydration', data.slotAt ?? '', action === 'open' ? 'opened' : action === 'log_water' ? 'opened' : action === 'snooze' ? 'snoozed' : 'help');
   return { kind, action, occurrenceId: data.occurrenceId, slotAt: data.slotAt };
+}
+
+/**
+ * Dispensa da barra as notificações que a recém-chegada torna obsoletas (ver `selectSuperseded`).
+ * Só roda com o processo do app vivo; com ele encerrado, o sistema agrupa as antigas normalmente.
+ */
+export async function dismissSuperseded(received: Notifications.Notification): Promise<string[]> {
+  const presented = await Notifications.getPresentedNotificationsAsync();
+  const ids = selectSuperseded(
+    { identifier: received.request.identifier, data: received.request.content.data },
+    presented.map((p) => ({ identifier: p.request.identifier, data: p.request.content.data })),
+  );
+  for (const id of ids) await Notifications.dismissNotificationAsync(id);
+  return ids;
 }
 
 /** Registra que um lembrete de hidratação foi exibido (para contar "sem confirmação"). */

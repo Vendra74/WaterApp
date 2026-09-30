@@ -97,6 +97,15 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
   botões de ação. Com o modo Não perturbe ligado o lembrete ficou apenas na barra de status; canais
   passaram a importância máxima e visíveis na tela bloqueada, e há opção de os medicamentos
   ignorarem o Não perturbe (exige autorização do usuário nas configurações do sistema).
+- Verificado em campo (30/09, adb + dumpsys): a tela bloqueada da Motorola (estilo Peek) mostra um
+  carrossel de ícones com 4 vagas por página, conversas na frente; a gota do Cuidar pode cair na 2ª
+  página. Tocando nela o lembrete aparece inteiro sem desbloquear. Nenhuma configuração do sistema
+  bloqueava o app; `lockscreenVisibility` do canal é ignorado pelo Android. O app passou a dispensar
+  lembretes anteriores do mesmo tipo quando chega um novo (com o processo vivo), para evitar o
+  agrupamento que escondia os botões. Detalhes em `docs/TESTE-DISPOSITIVO.md`.
+- Corrigido em campo (30/09): após a migração de canais, os lembretes já agendados continuavam no
+  canal antigo apagado e eram entregues no canal genérico do Expo (importância menor, sem ignorar
+  Não perturbe). O reconciliador agora refaz agendamentos cujo canal difere do planejado.
 
 ## Roteiro sugerido de teste em dispositivo
 

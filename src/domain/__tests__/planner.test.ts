@@ -70,4 +70,26 @@ describe('planejador de notificações', () => {
     expect(r.unchanged).toBe(2);
     expect(isOwnedIdentifier('other-app-id')).toBe(false);
   });
+
+  it('reagenda o que aponta para canal diferente do planejado (migração de canais)', () => {
+    const slots = generateHydrationSlots({ settings, naps: [], now: NOW, days: 1 });
+    const plan = buildNotificationPlan({ now: NOW, hydrationSlots: slots, medications: [], occurrences: [], settings, preferredName: 'Maria' });
+    expect(plan.length).toBeGreaterThan(2);
+    const at = (i: number) => {
+      const p = plan[i];
+      if (!p) throw new Error(`plano sem posição ${i}`);
+      return p;
+    };
+    const [a, b, c] = [at(0), at(1), at(2)];
+    const existing = [
+      { identifier: a.identifier, channelId: 'hydration' }, // canal antigo, apagado
+      { identifier: b.identifier, channelId: b.channelId }, // correto
+      { identifier: c.identifier }, // sem canal (iOS): mantido
+      { identifier: 'test@1', channelId: 'hydration' }, // aviso único: fora da reconciliação
+    ];
+    const r = reconcile(existing, plan);
+    expect(r.toCancel).toEqual([a.identifier]);
+    expect(r.toSchedule.map((p) => p.identifier)).toEqual([a.identifier, ...plan.slice(3).map((p) => p.identifier)]);
+    expect(r.unchanged).toBe(2);
+  });
 });

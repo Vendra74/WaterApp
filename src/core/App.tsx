@@ -10,7 +10,7 @@ import * as Notifications from 'expo-notifications';
 import type { RootStackParamList, TabParamList } from './navigation';
 import { ThemeContext, buildTheme, DEFAULT_PREFS } from '@/ui/theme';
 import { useAppStore } from '@/state/appStore';
-import { configureNotificationHandler, recordHydrationFired, routeResponse, scheduleHydrationSnooze } from '@/services/notifications/notificationService';
+import { configureNotificationHandler, dismissSuperseded, recordHydrationFired, routeResponse, scheduleHydrationSnooze } from '@/services/notifications/notificationService';
 import { createResponseDeduper, responseKey } from '@/domain/notifications/responseDedupe';
 import { registerBackgroundTasks } from '@/services/background/backgroundTasks';
 import { speak } from '@/services/speech/speech';
@@ -135,11 +135,13 @@ export default function App() {
     return () => sub.remove();
   }, [refresh, reschedule, checkCaregiverAlert]);
 
-  // Notificação recebida com o app aberto: registra exibição e, se configurado, lê em voz alta.
+  // Notificação recebida com o app aberto: registra exibição, dispensa as que ficaram obsoletas
+  // (evita o agrupamento que esconde os botões na tela bloqueada) e, se configurado, lê em voz alta.
   useEffect(() => {
     const sub = Notifications.addNotificationReceivedListener((n) => {
       const data = (n.request.content.data ?? {}) as Record<string, string>;
       if (data.kind === 'hydration' && data.slotAt) void recordHydrationFired(data.slotAt);
+      void dismissSuperseded(n).catch(() => undefined);
       if (useAppStore.getState().profile?.accessibility.speakReminders) speak(`${n.request.content.title ?? ''}. ${n.request.content.body ?? ''}`);
       void useAppStore.getState().checkCaregiverAlert();
     });
