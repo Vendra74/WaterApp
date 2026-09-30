@@ -7,7 +7,7 @@ import { BigButton } from '@/ui/components/BigButton';
 import { Card } from '@/ui/components/Card';
 import { Banner } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
-import { ensureCategories, listOwnedScheduled, openExactAlarmSettings, presentTestNotificationNow, requestPermission, scheduleTestNotification } from '@/services/notifications/notificationService';
+import { ensureCategories, listOwnedScheduled, openDndAccessSettings, openExactAlarmSettings, presentTestNotificationNow, requestPermission, scheduleTestNotification } from '@/services/notifications/notificationService';
 import { formatDateBR, formatTimeBR } from '@/domain/time/time';
 import { registerBackgroundTasks } from '@/services/background/backgroundTasks';
 
@@ -76,6 +76,16 @@ export function NotificationTestScreen() {
           </AppText>
           <BigButton compact label="Permitir alarmes exatos" onPress={() => void openExactAlarmSettings().then((ok) => !ok && setMsg('Não foi possível abrir a tela do sistema. Procure “Alarmes e lembretes” nas configurações do aparelho.'))} />
           <BigButton compact kind="secondary" label="Configurações de bateria e notificações do app" onPress={() => void Linking.openSettings()} />
+        </Card>
+      ) : null}
+      {Platform.OS === 'android' ? (
+        <Card>
+          <AppText variant="heading">Modo Não perturbe</AppText>
+          <AppText variant="small">
+            Com o Não perturbe ligado (ícone ⊖ na barra de status), o Android silencia o som, a vibração e o aviso na tela de todos os apps.
+            Você pode autorizar o {'\u201C'}Cuidar{'\u201D'} a tocar os lembretes de medicamento mesmo assim: toque abaixo e ative o Cuidar na lista.
+          </AppText>
+          <BigButton compact label="Permitir tocar no Não perturbe (medicamentos)" onPress={() => void openDndAccessSettings().then((ok) => !ok && setMsg('Não foi possível abrir a tela do sistema. Procure “Acesso a Não perturbe” nas configurações.'))} />
         </Card>
       ) : null}
       <BigButton kind="secondary" label="Mostrar notificação agora (sem alarme)" icon="⚡" onPress={() => void testNow()} />

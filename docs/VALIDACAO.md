@@ -93,6 +93,10 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
 - Corrigido em campo: categoria de notificação sem ações era rejeitada pelo Android e abortava o
   agendamento; som `'default'` no canal era tratado como arquivo personalizado.
 - Corrigido em campo: alarmes inexatos atrasavam o teste de 10 s (ver limitação acima).
+- Verificado em campo (Motorola Edge 50 Pro): lembrete de água entregue com ícone, texto e os três
+  botões de ação. Com o modo Não perturbe ligado o lembrete ficou apenas na barra de status; canais
+  passaram a importância máxima e visíveis na tela bloqueada, e há opção de os medicamentos
+  ignorarem o Não perturbe (exige autorização do usuário nas configurações do sistema).
 
 ## Roteiro sugerido de teste em dispositivo
 

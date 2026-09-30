@@ -79,6 +79,19 @@ export function ReminderSettingsScreen() {
         <ChoiceGroup label='Tempo de "Lembrar depois"' options={[{ value: '10', label: '10 minutos' }, { value: '15', label: '15 minutos' }, { value: '30', label: '30 minutos' }]} value={String(s.snoozeMinutes)} onChange={(v) => set({ snoozeMinutes: Number(v) })} />
       </Card>
       <Card>
+        <AppText variant="heading">Medicamento não confirmado</AppText>
+        <ChoiceGroup
+          label="Repetir o lembrete enquanto não confirmar"
+          hint="Repete o aviso da mesma dose. Não altera horários nem orienta dose extra."
+          options={[{ value: '0', label: 'Não repetir' }, { value: '5', label: 'A cada 5 minutos' }, { value: '10', label: 'A cada 10 minutos' }, { value: '15', label: 'A cada 15 minutos' }]}
+          value={String(s.medicationRepeatMinutes)}
+          onChange={(v) => set({ medicationRepeatMinutes: Number(v) })}
+        />
+        {s.medicationRepeatMinutes > 0 ? (
+          <ChoiceGroup label="Quantas vezes" options={[{ value: '1', label: '1 vez' }, { value: '2', label: '2 vezes' }, { value: '3', label: '3 vezes' }]} value={String(s.medicationRepeatCount)} onChange={(v) => set({ medicationRepeatCount: Number(v) })} />
+        ) : null}
+      </Card>
+      <Card>
         <AppText variant="heading">Privacidade</AppText>
         <Toggle label="Mostrar nome do medicamento na notificação" hint="Desligado por padrão: a tela bloqueada mostra apenas 'Hora do seu medicamento'." value={s.showDetailsOnLockScreen} onChange={(v) => set({ showDetailsOnLockScreen: v })} />
       </Card>

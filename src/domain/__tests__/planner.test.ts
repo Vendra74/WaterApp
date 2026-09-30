@@ -46,6 +46,18 @@ describe('planejador de notificações', () => {
     expect(new Date(plan[0]!.fireAt).getTime()).toBe(at8.getTime() + 10 * 60_000);
   });
 
+  it('repete o lembrete de medicamento enquanto não confirmado e para ao confirmar', () => {
+    const m = makeMedication({ times: ['08:00'] });
+    const [occ] = materializeOccurrences(m, [], NOW, 1, NOW);
+    const withRepeat = { ...settings, medicationRepeatMinutes: 10, medicationRepeatCount: 2 };
+    const plan = buildNotificationPlan({ now: NOW, hydrationSlots: [], medications: [m], occurrences: [occ!], settings: withRepeat, preferredName: '' });
+    expect(plan.map((p) => new Date(p.fireAt).getMinutes())).toEqual([0, 10, 20]);
+    expect(plan[1]!.title).toMatch(/não confirmado/i);
+    const snoozed = snooze(occ!, new Date(2026, 8, 29, 8, 1), 15);
+    const afterSnooze = buildNotificationPlan({ now: new Date(2026, 8, 29, 8, 1), hydrationSlots: [], medications: [m], occurrences: [snoozed], settings: withRepeat, preferredName: '' });
+    expect(afterSnooze).toHaveLength(1); // adiada: só o novo aviso, sem repetições
+  });
+
   it('reconciliação só agenda/cancela a diferença e não toca identificadores de terceiros', () => {
     const slots = generateHydrationSlots({ settings, naps: [], now: NOW, days: 1 });
     const plan = buildNotificationPlan({ now: NOW, hydrationSlots: slots, medications: [], occurrences: [], settings, preferredName: '' });

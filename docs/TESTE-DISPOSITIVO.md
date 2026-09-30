@@ -23,6 +23,8 @@ diferente. Aparelho: ______________ · Sistema: ______________ · Data: ____/___
 ## 3. Notificações — teste rápido (Mais → Testar notificações)
 - [ ] Permissão aparece como “concedida”.
 - [ ] Android: “Permitir alarmes exatos” abre a tela do sistema com a opção ativada (ou ative-a).
+- [ ] Modo Não perturbe desligado durante o teste (ícone ⊖ na barra de status = ligado). Com ele ligado, o Android silencia tudo; “Permitir tocar no Não perturbe” libera só os medicamentos.
+- [ ] Lembrete aparece como banner no topo da tela (não só na barra), com som e vibração.
 - [ ] “Testar lembrete de água (10 s)” → bloquear a tela → a notificação aparece com som/vibração.
 - [ ] Expandir a notificação mostra os botões “Registrar água”, “Lembrar depois”, “Preciso de ajuda”.
 - [ ] Tocar em “Registrar água” abre a tela de registro **sem** registrar nada sozinho.
@@ -50,6 +52,7 @@ diferente. Aparelho: ______________ · Sistema: ______________ · Data: ____/___
 - [ ] Cadastrar medicamento com dois horários (ex.: agora+2 min e agora+30 min).
 - [ ] Na primeira notificação, “Lembrar depois” → chega novo aviso em 15 min (ou o valor escolhido).
 - [ ] O segundo horário **não** muda (conferir em Medicamentos → detalhes).
+- [ ] Sem confirmar, chega “Medicamento ainda não confirmado” após 10 min (repetição configurável em Lembretes).
 - [ ] “Tomei” → situação “Tomada”. Tocar de novo na dose → mensagem “já estava confirmada”, sem duplicar.
 - [ ] Deixar uma dose passar 2 h sem ação → situação “Sem confirmação”.
 - [ ] “Corrigir registro” → “Marcar como tomada” → histórico mostra as duas alterações.

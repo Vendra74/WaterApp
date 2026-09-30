@@ -93,5 +93,7 @@ export function defaultHydrationSettings(profile: Pick<Profile, 'wakeTime' | 'sl
     snoozeMinutes: 15,
     showDetailsOnLockScreen: false,
     caregiverAlertAfterUnconfirmed: 0,
+    medicationRepeatMinutes: 10,
+    medicationRepeatCount: 2,
   };
 }

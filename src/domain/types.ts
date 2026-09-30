@@ -89,6 +89,10 @@ export interface HydrationSettings {
   showDetailsOnLockScreen: boolean;
   /** Após N lembretes seguidos sem confirmação, avisar cuidador autorizado. 0 = desligado. */
   caregiverAlertAfterUnconfirmed: number;
+  /** Repetir o lembrete de medicamento a cada N minutos enquanto não confirmado. 0 = não repetir. */
+  medicationRepeatMinutes: number;
+  /** Quantas repetições no máximo por dose. */
+  medicationRepeatCount: number;
 }
 
 export type BeverageKind = 'water' | 'tea' | 'juice' | 'milk' | 'coffee' | 'soup' | 'other';

@@ -17,6 +17,7 @@ import {
   CHANNEL_GENERIC,
   CHANNEL_HYDRATION,
   CHANNEL_MEDICATION,
+  LEGACY_CHANNELS,
   buildNotificationPlan,
   isOwnedIdentifier,
   reconcile,
@@ -53,32 +54,42 @@ export function configureNotificationHandler(): void {
       shouldShowList: true,
       shouldPlaySound: true,
       shouldSetBadge: false,
+      priority: Notifications.AndroidNotificationPriority.MAX,
     }),
   });
 }
 
-export async function ensureChannels(showDetailsOnLockScreen: boolean, sound: boolean, vibrate: boolean): Promise<void> {
+export async function ensureChannels(_showDetailsOnLockScreen: boolean, sound: boolean, vibrate: boolean): Promise<void> {
   if (Platform.OS !== 'android') return;
-  const visibility = showDetailsOnLockScreen
-    ? Notifications.AndroidNotificationVisibility.PUBLIC
-    : Notifications.AndroidNotificationVisibility.PRIVATE;
+  // A privacidade do conteúdo (nome do medicamento) já é controlada no texto da notificação;
+  // o canal fica PUBLIC para que o lembrete apareça inteiro na tela bloqueada.
   // Canal Android: sem a chave `sound` o sistema usa o som padrão; `null` significa silencioso.
   // Um nome de arquivo (inclusive 'default') seria procurado como som personalizado.
   const base = {
-    importance: Notifications.AndroidImportance.HIGH,
-    lockscreenVisibility: visibility,
+    importance: Notifications.AndroidImportance.MAX,
+    lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
     ...(sound ? {} : { sound: null }),
-    vibrationPattern: vibrate ? [0, 300, 200, 300] : undefined,
+    vibrationPattern: vibrate ? [0, 400, 250, 400, 250, 400] : undefined,
     enableVibrate: vibrate,
-    bypassDnd: false,
+    enableLights: true,
+    lightColor: '#0B5FA5',
+    showBadge: true,
   };
-  await Notifications.setNotificationChannelAsync(CHANNEL_HYDRATION, { ...base, name: 'Lembretes de água', description: 'Lembretes para beber água.' });
+  await Notifications.setNotificationChannelAsync(CHANNEL_HYDRATION, { ...base, bypassDnd: false, name: 'Lembretes de água', description: 'Lembretes para beber água.' });
   await Notifications.setNotificationChannelAsync(CHANNEL_MEDICATION, {
     ...base,
-    importance: Notifications.AndroidImportance.MAX,
+    // Só tem efeito se o usuário conceder acesso ao "Não perturbe" nas configurações do sistema.
+    bypassDnd: true,
     name: 'Lembretes de medicamentos',
-    description: 'Horários dos medicamentos cadastrados. Independente da pausa noturna da água.',
+    description: 'Horários dos medicamentos cadastrados. Independente da pausa noturna da água e, se autorizado, do modo Não perturbe.',
   });
+  for (const legacy of LEGACY_CHANNELS) {
+    try {
+      await Notifications.deleteNotificationChannelAsync(legacy);
+    } catch {
+      // canal antigo pode não existir
+    }
+  }
   await Notifications.setNotificationChannelAsync(CHANNEL_GENERIC, {
     ...base,
     importance: Notifications.AndroidImportance.DEFAULT,
@@ -245,7 +256,9 @@ async function scheduleOne(n: PlannedNotification, sound: boolean): Promise<void
       sound: contentSound(sound),
       ...(n.categoryId === CATEGORY_GENERIC ? {} : { categoryIdentifier: n.categoryId }),
       interruptionLevel: n.kind === 'medication' ? 'timeSensitive' : 'active',
-      ...(Platform.OS === 'android' ? { priority: Notifications.AndroidNotificationPriority.HIGH } : {}),
+      ...(Platform.OS === 'android'
+        ? { priority: n.kind === 'medication' ? Notifications.AndroidNotificationPriority.MAX : Notifications.AndroidNotificationPriority.HIGH, vibrate: [0, 400, 250, 400] }
+        : {}),
     },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(n.fireAt), channelId: n.channelId },
   });
@@ -305,6 +318,18 @@ export async function presentTestNotificationNow(): Promise<string> {
   return id;
 }
 
+/** Abre a tela do sistema para permitir que lembretes de medicamento ignorem o modo Não perturbe. */
+export async function openDndAccessSettings(): Promise<boolean> {
+  if (Platform.OS !== 'android') return false;
+  try {
+    const IntentLauncher = await import('expo-intent-launcher');
+    await IntentLauncher.startActivityAsync('android.settings.NOTIFICATION_POLICY_ACCESS_SETTINGS');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Notificação de teste em N segundos (tela "Testar notificações"). */
 export async function scheduleTestNotification(seconds: number, kind: 'hydration' | 'medication'): Promise<string> {
   const id = `test@${Date.now()}`;
@@ -317,6 +342,8 @@ export async function scheduleTestNotification(seconds: number, kind: 'hydration
       data: { kind: 'test' },
       categoryIdentifier: kind === 'hydration' ? CATEGORY_HYDRATION : CATEGORY_MEDICATION,
       sound: contentSound(true),
+      interruptionLevel: 'timeSensitive',
+      ...(Platform.OS === 'android' ? { priority: Notifications.AndroidNotificationPriority.MAX, vibrate: [0, 400, 250, 400] } : {}),
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,

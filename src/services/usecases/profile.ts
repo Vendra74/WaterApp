@@ -66,7 +66,9 @@ export async function saveProfile(profile: Profile): Promise<Profile> {
 
 export async function loadHydrationSettings(profile: Profile): Promise<HydrationSettings> {
   const db = await getDb();
-  return (await getDocument<HydrationSettings>(db, DOC_HYDRATION_SETTINGS)) ?? defaultHydrationSettings(profile);
+  const stored = await getDocument<Partial<HydrationSettings>>(db, DOC_HYDRATION_SETTINGS);
+  // Campos novos recebem o padrão sem exigir migração do documento.
+  return { ...defaultHydrationSettings(profile), ...(stored ?? {}) } as HydrationSettings;
 }
 
 export async function saveHydrationSettings(settings: HydrationSettings): Promise<void> {
