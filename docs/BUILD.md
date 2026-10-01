@@ -32,12 +32,23 @@ Se a rede bloquear, use `npx expo start --dev-client --tunnel`.
 
 ## Caminho B — Build local
 
-Android: instale o Android Studio (SDK 35+, NDK e JDK 17 embutidos), conecte o celular com
-**depuração USB** ativada e rode:
+Android, sem Android Studio (caminho usado no Mac do Andre em 01/10/2026, build em ~12 min):
 
 ```bash
-npx expo run:android --device
+brew install openjdk@17 android-commandlinetools
+export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
+export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+npx eas-cli@latest build --local --profile development --platform android --output cuidar-dev.apk
+adb install -r cuidar-dev.apk
 ```
+
+`eas build --local` assina com a mesma chave do EAS, então o APK instala por cima do anterior sem
+perder os dados do app. Um `npx expo run:android` comum assina com outra chave: o Android recusa a
+atualização e seria preciso desinstalar o app (apagando os dados).
+
+Android com Android Studio (SDK 35+, NDK e JDK 17 embutidos): conecte o celular com
+**depuração USB** ativada e rode `npx expo run:android --device` (vale a observação da chave acima).
 
 iOS (somente macOS com Xcode): conecte o iPhone, confie no computador e rode:
 
