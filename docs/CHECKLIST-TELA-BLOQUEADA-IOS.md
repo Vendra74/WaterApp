@@ -92,6 +92,7 @@ dependem dele. Som e vibração foram relatados por quem estava com o aparelho, 
 - Entitlement de Time Sensitive declarado em `app.config.ts`. **Não verificado no aparelho** (achado 3).
 - Lembrete de teste de água passa a usar o nível comum.
 - “Lembrar depois” mostra uma confirmação (“Lembrete adiado… em N min”, ou que o teste não adia nada).
+  Conferido no iPhone com a versão corrigida (commit 5f040ac, mesma assinatura gratuita): o aviso aparece no lembrete de teste.
 
-Estado deixado no aparelho: Não Perturbe desligado, Modo de Desenvolvedor ligado, medicamento “Teste”
-ainda cadastrado (dose diária às 17:45), dados do perfil intactos.
+Estado deixado no aparelho: Não Perturbe desligado, Modo de Desenvolvedor ligado, versão corrigida instalada
+por cima (sem o entitlement de Time Sensitive), medicamento “Teste” apagado por Andre, dados do perfil intactos.
