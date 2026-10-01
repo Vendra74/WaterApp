@@ -15,9 +15,11 @@ export function plannedTimesFor(med: Medication, from: Date, days: number): Date
   const result: Date[] = [];
   const start = med.startDate ? parseISODate(med.startDate) : null;
   const end = med.endDate ? parseISODate(med.endDate) : null;
-  // Sem data de início, nenhuma dose é esperada antes do cadastro: senão as de ontem (e as de hoje
-  // já passadas) apareceriam como "sem confirmação" para um remédio recém-cadastrado.
-  const notBefore = start ? null : new Date(med.createdAt);
+  // Sem data de início, nenhuma dose é esperada em dias anteriores ao cadastro (as de ontem
+  // apareceriam como "sem confirmação" para um remédio recém-cadastrado). As doses do próprio dia
+  // do cadastro continuam existindo, inclusive as já passadas: a pessoa pode ter tomado antes de
+  // cadastrar e precisa poder registrar/corrigir.
+  const notBefore = start ? null : startOfLocalDay(new Date(med.createdAt));
 
   for (let d = 0; d < days; d++) {
     const day = addDays(startOfLocalDay(from), d);
@@ -54,8 +56,10 @@ export function materializeOccurrences(
   const byId = new Map(existing.map((o) => [o.id, o]));
   const planned = plannedTimesFor(med, from, days);
   const out: MedicationOccurrence[] = [];
+  const plannedIds = new Set<string>();
   for (const at of planned) {
     const id = occurrenceId(med.id, at);
+    plannedIds.add(id);
     const current = byId.get(id);
     if (current) {
       out.push(markUnconfirmedIfLate(current, now, unconfirmedAfterMinutes));
@@ -72,6 +76,13 @@ export function materializeOccurrences(
         updatedAt: iso(now),
       });
     }
+  }
+  // Ocorrências já existentes que a prescrição atual não prevê mais (edição, ou criadas por uma
+  // versão anterior) permanecem como histórico e continuam sujeitas a "sem confirmação" se passadas.
+  for (const o of existing) {
+    if (plannedIds.has(o.id)) continue;
+    if (new Date(o.plannedAt).getTime() > now.getTime()) continue;
+    out.push(markUnconfirmedIfLate(o, now, unconfirmedAfterMinutes));
   }
   return out;
 }

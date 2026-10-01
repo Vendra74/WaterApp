@@ -165,15 +165,10 @@ export interface ExistingScheduled {
  * migração) é refeito: o Android entregaria a notificação num canal genérico, sem a importância,
  * o som e a vibração configurados.
  */
-export function reconcile(existingScheduled: (string | ExistingScheduled)[], plan: PlannedNotification[]): Reconciliation {
+export function reconcile(existingScheduled: ExistingScheduled[], plan: PlannedNotification[]): Reconciliation {
   const wanted = new Map(plan.map((p) => [p.identifier, p]));
   // Só reconcilia o que o plano gerencia; avisos únicos ("lembrar depois" da água, testes) não são cancelados aqui.
-  const existing = new Map(
-    existingScheduled
-      .map((e) => (typeof e === 'string' ? { identifier: e } : e))
-      .filter((e) => isPlanManagedIdentifier(e.identifier))
-      .map((e) => [e.identifier, e] as const),
-  );
+  const existing = new Map(existingScheduled.filter((e) => isPlanManagedIdentifier(e.identifier)).map((e) => [e.identifier, e] as const));
   const stale = (e: ExistingScheduled): boolean => {
     const p = wanted.get(e.identifier);
     return !p || (typeof e.channelId === 'string' && e.channelId !== p.channelId);

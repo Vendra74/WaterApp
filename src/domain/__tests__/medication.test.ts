@@ -67,14 +67,25 @@ describe('ocorrências de medicamentos', () => {
     expect(fixed.history.map((h) => h.to)).toEqual(['scheduled', 'unconfirmed', 'taken']);
   });
 
-  it('sem data de início, não gera doses anteriores ao cadastro', () => {
+  it('sem data de início, não gera doses de dias anteriores ao cadastro; as do próprio dia continuam', () => {
     const createdAt = new Date(2026, 8, 29, 18, 42).toISOString(); // cadastrado hoje às 18:42
     const med = makeMedication({ times: ['18:00', '18:45', '19:15'], createdAt });
     const from = new Date(2026, 8, 28, 0, 0); // desde ontem
-    expect(plannedTimesFor(med, from, 2).map((d) => `${d.getDate()} ${formatTimeBR(d)}`)).toEqual(['29 18:45', '29 19:15']);
+    // A dose das 18:00 de hoje existe (pode ter sido tomada antes de cadastrar e ser corrigida); as de ontem não.
+    expect(plannedTimesFor(med, from, 2).map((d) => `${d.getDate()} ${formatTimeBR(d)}`)).toEqual(['29 18:00', '29 18:45', '29 19:15']);
     // Com data de início explícita, ela manda (dias inteiros).
     const withStart = makeMedication({ times: ['18:00'], createdAt, startDate: '2026-09-28' });
     expect(plannedTimesFor(withStart, from, 2)).toHaveLength(2);
+  });
+
+  it('ocorrência existente que a prescrição não prevê mais vira histórico e ainda recebe "sem confirmação"', () => {
+    const med = makeMedication({ times: ['08:00'] });
+    const stale = materializeOccurrences(makeMedication({ times: ['06:00'] }), [], NOW, 1, NOW)[0]!; // criada por prescrição antiga
+    const later = new Date(2026, 8, 29, 9, 0);
+    const out = materializeOccurrences(med, [stale], NOW, 1, later);
+    const kept = out.find((o) => o.id === stale.id);
+    expect(kept?.status).toBe('unconfirmed');
+    expect(out.some((o) => o.plannedAt === new Date(2026, 8, 29, 8, 0).toISOString())).toBe(true);
   });
 
   it('medicamento inativo não gera ocorrências', () => {

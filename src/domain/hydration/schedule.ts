@@ -93,7 +93,23 @@ export function defaultHydrationSettings(profile: Pick<Profile, 'wakeTime' | 'sl
     snoozeMinutes: 15,
     showDetailsOnLockScreen: false,
     caregiverAlertAfterUnconfirmed: 0,
+    windowFollowsRoutine: true,
     medicationRepeatMinutes: 10,
     medicationRepeatCount: 2,
   };
+}
+
+/**
+ * Configurações após a avaliação (inicial ou atualização): ativa os lembretes e, se a janela
+ * acompanha a rotina, alinha início/fim a acordar/dormir. Uma janela ajustada manualmente é preservada.
+ */
+export function settingsAfterAssessment(current: HydrationSettings | null, profile: Pick<Profile, 'wakeTime' | 'sleepTime'>): HydrationSettings {
+  const base = current ?? defaultHydrationSettings(profile);
+  if (!base.windowFollowsRoutine) return { ...base, enabled: true };
+  return { ...base, enabled: true, windowStart: profile.wakeTime, windowEnd: profile.sleepTime };
+}
+
+/** Ao salvar a tela de lembretes: a janela só "segue a rotina" se continuar igual a acordar/dormir. */
+export function settingsAfterManualEdit(edited: HydrationSettings, profile: Pick<Profile, 'wakeTime' | 'sleepTime'>): HydrationSettings {
+  return { ...edited, windowFollowsRoutine: edited.windowStart === profile.wakeTime && edited.windowEnd === profile.sleepTime };
 }

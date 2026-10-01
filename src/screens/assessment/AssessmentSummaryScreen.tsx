@@ -8,7 +8,7 @@ import { Card } from '@/ui/components/Card';
 import { Banner } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
 import { evaluateIndividualPlan } from '@/domain/safety/plan';
-import { defaultHydrationSettings } from '@/domain/hydration/schedule';
+import { settingsAfterAssessment } from '@/domain/hydration/schedule';
 import { requestPermission } from '@/services/notifications/notificationService';
 import { useTheme } from '@/ui/theme';
 import { STEPS } from './steps';
@@ -54,11 +54,7 @@ export function AssessmentSummaryScreen() {
     try {
       const saved: Profile = { ...draft, assessmentCompleted: true, assessmentStep: 0, lastHealthReviewPromptAt: new Date().toISOString() };
       await updateProfile(saved);
-      const base = settings ?? defaultHydrationSettings(saved);
-      // O período dos lembretes segue acordar/dormir na primeira avaliação e quando esses horários
-      // mudam; fora disso, preserva o período que a pessoa ajustou em "Lembretes de água".
-      const routineChanged = !settings || !profile.assessmentCompleted || profile.wakeTime !== saved.wakeTime || profile.sleepTime !== saved.sleepTime;
-      await updateSettings(routineChanged ? { ...base, enabled: true, windowStart: saved.wakeTime, windowEnd: saved.sleepTime } : { ...base, enabled: true });
+      await updateSettings(settingsAfterAssessment(settings, saved));
       await requestPermission();
       nav.reset({ index: 0, routes: [{ name: 'Main' }] });
     } finally {

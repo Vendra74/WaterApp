@@ -10,7 +10,7 @@ import * as Notifications from 'expo-notifications';
 import type { RootStackParamList, TabParamList } from './navigation';
 import { ThemeContext, buildTheme, DEFAULT_PREFS } from '@/ui/theme';
 import { useAppStore } from '@/state/appStore';
-import { configureNotificationHandler, dismissSuperseded, recordHydrationFired, routeResponse, scheduleHydrationSnooze } from '@/services/notifications/notificationService';
+import { configureNotificationHandler, dismissSuperseded, recordHydrationFired, routeResponse, scheduleHydrationSnooze, type RoutedResponse } from '@/services/notifications/notificationService';
 import { createResponseDeduper, responseKey } from '@/domain/notifications/responseDedupe';
 import { registerBackgroundTasks } from '@/services/background/backgroundTasks';
 import { speak } from '@/services/speech/speech';
@@ -94,17 +94,23 @@ async function handleResponse(response: Notifications.NotificationResponse) {
   }
 }
 
+/** Tela de destino de uma ação de lembrete de água (real ou de teste). */
+function navigateForHydrationAction(action: RoutedResponse['action']) {
+  if (action === 'help') navigationRef.navigate('Help');
+  else if (action === 'log_water') navigationRef.navigate('HydrationLog', { fromNotification: true });
+  else navigationRef.navigate('Main');
+}
+
 async function processResponse(response: Notifications.NotificationResponse) {
   const routed = await routeResponse(response);
   const store = useAppStore.getState();
   if (!navigationRef.isReady()) throw new Error('navegação ainda não pronta');
   switch (routed.kind) {
     case 'hydration':
-      if (routed.action === 'help') navigationRef.navigate('Help');
-      else if (routed.action === 'snooze') {
+      if (routed.action === 'snooze') {
         await scheduleHydrationSnooze(store.settings?.snoozeMinutes ?? 15, store.settings?.sound ?? true);
         navigationRef.navigate('Main');
-      } else navigationRef.navigate('HydrationLog', { fromNotification: true });
+      } else navigateForHydrationAction(routed.action === 'open' ? 'log_water' : routed.action); // toque simples abre o registro
       break;
     case 'medication':
       if (routed.action === 'help') navigationRef.navigate('Help');
@@ -121,11 +127,8 @@ async function processResponse(response: Notifications.NotificationResponse) {
       navigationRef.navigate('Profile');
       break;
     case 'test':
-      // Notificação da tela "Testar notificações": os botões levam às mesmas telas do lembrete real,
-      // sem registrar nem adiar nada.
-      if (routed.action === 'help') navigationRef.navigate('Help');
-      else if (routed.action === 'log_water') navigationRef.navigate('HydrationLog', { fromNotification: true });
-      else navigationRef.navigate('Main');
+      // Notificação da tela "Testar notificações": mesmas telas do lembrete real, sem registrar nem adiar.
+      navigateForHydrationAction(routed.action);
       break;
     default:
       navigationRef.navigate('Main');

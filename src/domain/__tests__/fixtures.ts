@@ -57,6 +57,7 @@ export function makeSettings(overrides: Partial<HydrationSettings> = {}): Hydrat
     snoozeMinutes: 15,
     showDetailsOnLockScreen: false,
     caregiverAlertAfterUnconfirmed: 0,
+    windowFollowsRoutine: true,
     medicationRepeatMinutes: 0,
     medicationRepeatCount: 0,
     ...overrides,

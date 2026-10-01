@@ -9,7 +9,7 @@ import { Banner, ChoiceGroup, TimeField, Toggle } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
 import type { HydrationSettings, Weekday } from '@/domain/types';
 import { WEEKDAY_LABELS_PT } from '@/domain/time/time';
-import { generateHydrationSlots } from '@/domain/hydration/schedule';
+import { generateHydrationSlots, settingsAfterManualEdit } from '@/domain/hydration/schedule';
 
 export function ReminderSettingsScreen() {
   const nav = useNavigation();
@@ -24,7 +24,7 @@ export function ReminderSettingsScreen() {
       title="Lembretes de água"
       footer={
         <View style={{ gap: 8 }}>
-          <BigButton label="Salvar" icon="✓" onPress={() => void updateSettings(s).then(() => nav.goBack())} />
+          <BigButton label="Salvar" icon="✓" onPress={() => void updateSettings(profile ? settingsAfterManualEdit(s, profile) : s).then(() => nav.goBack())} />
           <BigButton kind="ghost" compact label="Cancelar" onPress={() => nav.goBack()} />
         </View>
       }

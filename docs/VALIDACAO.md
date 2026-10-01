@@ -53,17 +53,15 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
 | Push para o cuidador (aviso em tempo real) | Edge Function + Expo Push/FCM/APNs e credenciais | **Não implementado** |
 | Builds nativos / lojas | Android Studio/Xcode ou conta EAS | Perfis em `eas.json`; `expo prebuild` não pôde ser executado aqui |
 
-## Não pôde ser testado neste ambiente (precisa de dispositivo físico)
+## Ainda não testado (após as sessões em aparelho de 30/09)
 
-- Entrega real de notificações e comportamento dos botões de ação em Android e iOS.
-- Comportamento com permissão negada em tempo de execução, reinício do aparelho (as notificações
-  agendadas por data persistem no sistema; a tarefa periódica e a reabertura do app repõem o
-  horizonte) e mudança de fuso horário (o reagendamento recalcula a partir do horário local).
-- Execução da tarefa em segundo plano (`expo-background-task`), que fica a critério do sistema.
-- Leitura de tela (TalkBack/VoiceOver) — os componentes têm papéis, rótulos e estados, mas a
-  navegação real não foi verificada.
-- Câmera/galeria para foto do medicamento.
-- Compartilhamento do arquivo de exportação.
+- iOS: nada foi testado em iPhone (build exige conta Apple Developer ou Xcode local).
+- Android: reinício do aparelho; mudança de fuso horário (exige root para automatizar); TalkBack;
+  “Apagar todos os meus dados”; primeira abertura em instalação limpa; permissão negada em tempo
+  de execução; execução efetiva da tarefa periódica em segundo plano (a critério do sistema).
+- Compartilhamento com cuidador (build sem Supabase configurado).
+- Câmera/galeria para foto do medicamento e compartilhamento do arquivo de exportação só foram
+  exercitados até a abertura do seletor/diálogo do sistema.
 
 ## Limitações conscientes
 
@@ -112,6 +110,15 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
   notificação de teste, layout em letras “Máximo”, período de lembretes sobrescrito ao atualizar a
   avaliação, linha de quantidade no resumo, ordem das doses nos detalhes e doses geradas antes do
   cadastro do medicamento. Detalhes em `docs/TESTE-DISPOSITIVO.md`.
+- Entregas pontuais confirmadas em aparelho: água às 18:00, 18:05 e 18:30; medicamento às 18:45 e
+  19:15; dose adiada entregue às 20:28 com o nome (opção ligada); repetições “ainda não confirmado”
+  aos +10 e +20 min.
+- Revisão de código posterior (01/10): doses do dia do cadastro voltam a existir (podem ter sido
+  tomadas antes de cadastrar e precisam ser corrigíveis); só dias anteriores ficam de fora.
+  Ocorrências que a prescrição não prevê mais permanecem como histórico e recebem “sem confirmação”.
+  A decisão “janela de lembretes segue acordar/dormir” passou para o domínio
+  (`windowFollowsRoutine`), com testes; a dispensa de avisos obsoletos também roda na tarefa de
+  notificação em segundo plano (melhor esforço).
 
 ## Roteiro sugerido de teste em dispositivo
 
