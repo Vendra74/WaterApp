@@ -49,7 +49,7 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
 | Conta e login por código de e-mail | Supabase configurado + Email OTP ativado | Implementado; não testado contra servidor real |
 | Convite, consentimento, ver/editar, revogação | Migração `0001_init.sql` aplicada (RLS) | Implementado; isolamento e revogação validados por revisão das políticas, não por teste automatizado |
 | Sincronização com fila e pendências visíveis | Supabase + rede | Implementado (`sync_outbox`) |
-| Aviso “sem confirmação” ao cuidador | Supabase; app do titular precisa ser aberto ou receber notificação em primeiro plano/segundo plano | Implementado como registro em `care_alerts`, visto pelo cuidador ao abrir o app |
+| Aviso “sem confirmação” ao cuidador (água e doses de medicamento) | Supabase; app do titular precisa ser aberto ou rodar em segundo plano | Implementado como registro em `care_alerts`, visto pelo cuidador ao abrir o app; não testado contra servidor real (roteiro em `docs/TESTE-CUIDADOR.md`) |
 | Push para o cuidador (aviso em tempo real) | Edge Function + Expo Push/FCM/APNs e credenciais | **Não implementado** |
 | Builds nativos / lojas | Android Studio/Xcode ou conta EAS | Perfis em `eas.json`; `expo prebuild` não pôde ser executado aqui |
 
