@@ -28,11 +28,13 @@ TaskManager.defineTask(RESCHEDULE_TASK, async () => {
 TaskManager.defineTask<Notifications.NotificationTaskPayload>(NOTIFICATION_TASK, async ({ data }) => {
   try {
     if (!data || 'actionIdentifier' in data) return Notifications.BackgroundNotificationTaskResult.NoData;
-    const raw = data as unknown as { request?: { content?: { data?: Record<string, unknown> } }; data?: Record<string, unknown> };
+    const raw = data as unknown as { request?: { identifier?: string; content?: { data?: Record<string, unknown> } }; data?: Record<string, unknown> };
     const payload = (raw.request?.content?.data ?? raw.data ?? {}) as Record<string, string>;
-    if (payload.kind === 'hydration' && payload.slotAt) {
-      const { recordHydrationFired } = await import('@/services/notifications/notificationService');
-      await recordHydrationFired(payload.slotAt);
+    const svc = await import('@/services/notifications/notificationService');
+    if (payload.kind === 'hydration' && payload.slotAt) await svc.recordHydrationFired(payload.slotAt);
+    if (raw.request?.identifier) {
+      // Dispensa avisos obsoletos também com o app em segundo plano (melhor esforço).
+      await svc.dismissSuperseded(data as unknown as Notifications.Notification).catch(() => undefined);
     }
     return Notifications.BackgroundNotificationTaskResult.NewData;
   } catch {

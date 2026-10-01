@@ -17,7 +17,14 @@ export function MedicationDetailScreen() {
   const { medications, occurrences, deleteMedication } = useAppStore();
   const m = medications.find((x) => x.id === route.params.id);
   if (!m) return <Screen title="Medicamento"><AppText>Não encontrado.</AppText></Screen>;
-  const occs = occurrences.filter((o) => o.medicationId === m.id).sort((a, b) => b.plannedAt.localeCompare(a.plannedAt)).slice(0, 20);
+  // Doses em ordem cronológica: as últimas 5 (inclusive as de hoje que já passaram) e depois as
+  // próximas. Antes, a lista vinha do mais distante para o mais próximo e cortava em 20: com 14 dias
+  // de doses, as de hoje ficavam de fora.
+  const all = occurrences.filter((o) => o.medicationId === m.id).sort((a, b) => a.plannedAt.localeCompare(b.plannedAt));
+  const nowMs = Date.now();
+  const firstUpcoming = all.findIndex((o) => new Date(o.plannedAt).getTime() >= nowMs);
+  const start = Math.max(0, (firstUpcoming === -1 ? all.length : firstUpcoming) - 5);
+  const occs = all.slice(start, start + 20);
 
   const remove = () =>
     Alert.alert('Apagar medicamento?', 'O cadastro e o histórico de doses deste medicamento serão apagados deste aparelho.', [

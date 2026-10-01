@@ -1,4 +1,4 @@
-import { generateHydrationSlots, isDuringNap } from '../hydration/schedule';
+import { generateHydrationSlots, isDuringNap, settingsAfterAssessment, settingsAfterManualEdit } from '../hydration/schedule';
 import { looksLikeDuplicate, totalForDay, totalsByDay } from '../hydration/logs';
 import { formatTimeBR } from '../time/time';
 import { makeSettings, NOW } from './fixtures';
@@ -66,6 +66,27 @@ describe('lembretes de hidratação', () => {
 
   it('desativado não gera nada', () => {
     expect(generateHydrationSlots({ settings: makeSettings({ enabled: false }), naps: [], now: NOW, days: 3 })).toEqual([]);
+  });
+});
+
+describe('janela de lembretes e rotina', () => {
+  const profile = { wakeTime: '07:00', sleepTime: '22:00' };
+  it('primeira avaliação: ativa lembretes com a janela igual a acordar/dormir', () => {
+    const s = settingsAfterAssessment(null, profile);
+    expect(s.enabled).toBe(true);
+    expect([s.windowStart, s.windowEnd]).toEqual(['07:00', '22:00']);
+  });
+  it('mudança de acordar/dormir na reavaliação move a janela quando ela segue a rotina', () => {
+    const s = settingsAfterAssessment(makeSettings({ windowStart: '07:00', windowEnd: '22:00', windowFollowsRoutine: true }), { wakeTime: '09:00', sleepTime: '23:00' });
+    expect([s.windowStart, s.windowEnd]).toEqual(['09:00', '23:00']);
+  });
+  it('janela ajustada manualmente é preservada na reavaliação', () => {
+    const manual = settingsAfterManualEdit(makeSettings({ windowStart: '10:00', windowEnd: '18:00' }), profile);
+    expect(manual.windowFollowsRoutine).toBe(false);
+    const s = settingsAfterAssessment(manual, { wakeTime: '09:00', sleepTime: '23:00' });
+    expect([s.windowStart, s.windowEnd]).toEqual(['10:00', '18:00']);
+    // Se a pessoa voltar a janela para a rotina, ela passa a segui-la de novo.
+    expect(settingsAfterManualEdit(makeSettings({ windowStart: '07:00', windowEnd: '22:00' }), profile).windowFollowsRoutine).toBe(true);
   });
 });
 

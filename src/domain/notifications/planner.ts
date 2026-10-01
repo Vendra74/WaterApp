@@ -6,9 +6,14 @@ export const CATEGORY_HYDRATION = 'cuidar.hydration';
 export const CATEGORY_MEDICATION = 'cuidar.medication';
 export const CATEGORY_GENERIC = 'cuidar.generic';
 
-export const CHANNEL_HYDRATION = 'hydration';
-export const CHANNEL_MEDICATION = 'medication';
-export const CHANNEL_GENERIC = 'general';
+/**
+ * Canais Android. A importância de um canal não pode ser alterada depois de criado, por isso o
+ * identificador tem versão: mudar a configuração exige um novo id (e apagar o antigo).
+ */
+export const CHANNEL_HYDRATION = 'hydration_v2';
+export const CHANNEL_MEDICATION = 'medication_v2';
+export const CHANNEL_GENERIC = 'general_v2';
+export const LEGACY_CHANNELS = ['hydration', 'medication', 'general'];
 
 export const ACTION_LOG_WATER = 'log_water';
 export const ACTION_SNOOZE = 'snooze';
@@ -29,7 +34,7 @@ export interface PlanInput {
   hydrationSlots: HydrationSlot[];
   medications: Medication[];
   occurrences: MedicationOccurrence[];
-  settings: Pick<HydrationSettings, 'showDetailsOnLockScreen'>;
+  settings: Pick<HydrationSettings, 'showDetailsOnLockScreen'> & Partial<Pick<HydrationSettings, 'medicationRepeatMinutes' | 'medicationRepeatCount'>>;
   preferredName: string;
   budget?: number;
   healthReviewDue?: Date | null;
@@ -70,6 +75,27 @@ export function buildNotificationPlan(input: PlanInput): PlannedNotification[] {
       channelId: CHANNEL_MEDICATION,
       data: { kind: 'medication', occurrenceId: occ.id, medicationId: med.id },
     });
+    // Repetições enquanto a dose não for confirmada: são canceladas na reconciliação assim que o
+    // estado da ocorrência muda (tomada, adiada, não tomada). Não alteram a prescrição.
+    const repeatMin = input.settings.medicationRepeatMinutes ?? 0;
+    const repeatCount = input.settings.medicationRepeatCount ?? 0;
+    if (occ.status === 'scheduled' && repeatMin > 0) {
+      for (let i = 1; i <= repeatCount; i++) {
+        const at = new Date(fireAt.getTime() + i * repeatMin * 60_000);
+        const rTitle = detailed ? `Ainda não confirmado: ${med.name}` : 'Medicamento ainda não confirmado';
+        const rBody = detailed ? `${med.doseAmount} ${med.doseUnit}`.trim() : 'Toque para ver os detalhes e confirmar.';
+        medication.push({
+          identifier: `med@${occ.id}@${at.toISOString()}@r${i}@${hash(rTitle + rBody)}`,
+          kind: 'medication',
+          fireAt: iso(at),
+          title: rTitle,
+          body: rBody,
+          categoryId: CATEGORY_MEDICATION,
+          channelId: CHANNEL_MEDICATION,
+          data: { kind: 'medication', occurrenceId: occ.id, medicationId: med.id, repeat: String(i) },
+        });
+      }
+    }
   }
   medication.sort((a, b) => a.fireAt.localeCompare(b.fireAt));
 
@@ -126,16 +152,32 @@ export interface Reconciliation {
   unchanged: number;
 }
 
+/** Agendamento já existente no sistema. `channelId` é o canal Android gravado no gatilho (ausente no iOS). */
+export interface ExistingScheduled {
+  identifier: string;
+  channelId?: string | null;
+}
+
 /**
  * Compara o que já está agendado no sistema (identificadores do app) com o plano desejado.
  * Só cancela/agenda a diferença: evita duplicidade após sincronização ou edição de horários.
+ * Um agendamento cujo canal difere do planejado (por exemplo, canal antigo apagado após uma
+ * migração) é refeito: o Android entregaria a notificação num canal genérico, sem a importância,
+ * o som e a vibração configurados.
  */
-export function reconcile(existingIdentifiers: string[], plan: PlannedNotification[]): Reconciliation {
+export function reconcile(existingScheduled: ExistingScheduled[], plan: PlannedNotification[]): Reconciliation {
   const wanted = new Map(plan.map((p) => [p.identifier, p]));
   // Só reconcilia o que o plano gerencia; avisos únicos ("lembrar depois" da água, testes) não são cancelados aqui.
-  const existing = new Set(existingIdentifiers.filter(isPlanManagedIdentifier));
-  const toCancel = [...existing].filter((id) => !wanted.has(id));
-  const toSchedule = plan.filter((p) => !existing.has(p.identifier));
+  const existing = new Map(existingScheduled.filter((e) => isPlanManagedIdentifier(e.identifier)).map((e) => [e.identifier, e] as const));
+  const stale = (e: ExistingScheduled): boolean => {
+    const p = wanted.get(e.identifier);
+    return !p || (typeof e.channelId === 'string' && e.channelId !== p.channelId);
+  };
+  const toCancel = [...existing.values()].filter(stale).map((e) => e.identifier);
+  const toSchedule = plan.filter((p) => {
+    const e = existing.get(p.identifier);
+    return !e || stale(e);
+  });
   return { toCancel, toSchedule, unchanged: plan.length - toSchedule.length };
 }
 

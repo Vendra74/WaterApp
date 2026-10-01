@@ -56,6 +56,9 @@ Builds de distribuição interna/produção: `eas build --profile preview|produc
 
 Os diretórios `android/` e `ios/` são gerados (Continuous Native Generation); não os edite à mão.
 
+Passo a passo detalhado do development build (EAS ou local) em `docs/BUILD.md`; roteiro de teste em
+aparelho em `docs/TESTE-DISPOSITIVO.md`.
+
 ## Variáveis de ambiente
 
 Veja `.env.example`. Só variáveis `EXPO_PUBLIC_*` (públicas) entram no app. A chave anônima do

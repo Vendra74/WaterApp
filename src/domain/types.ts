@@ -89,6 +89,15 @@ export interface HydrationSettings {
   showDetailsOnLockScreen: boolean;
   /** Após N lembretes seguidos sem confirmação, avisar cuidador autorizado. 0 = desligado. */
   caregiverAlertAfterUnconfirmed: number;
+  /**
+   * A janela (início/fim) acompanha acordar/dormir do perfil. Vira false quando a pessoa ajusta
+   * a janela manualmente em "Lembretes de água" para valores diferentes da rotina.
+   */
+  windowFollowsRoutine: boolean;
+  /** Repetir o lembrete de medicamento a cada N minutos enquanto não confirmado. 0 = não repetir. */
+  medicationRepeatMinutes: number;
+  /** Quantas repetições no máximo por dose. */
+  medicationRepeatCount: number;
 }
 
 export type BeverageKind = 'water' | 'tea' | 'juice' | 'milk' | 'coffee' | 'soup' | 'other';

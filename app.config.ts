@@ -38,7 +38,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     permissions: [
       'android.permission.POST_NOTIFICATIONS',
+      // Lembretes de medicamento precisam de horário exato. SCHEDULE_EXACT_ALARM cobre Android 12;
+      // em Android 13+ USE_EXACT_ALARM é concedida na instalação para apps de alarme/lembrete
+      // (a Play Store pode pedir justificativa na revisão: ver docs/VALIDACAO.md).
       'android.permission.SCHEDULE_EXACT_ALARM',
+      'android.permission.USE_EXACT_ALARM',
       'android.permission.RECEIVE_BOOT_COMPLETED',
       'android.permission.VIBRATE',
     ],
@@ -50,10 +54,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-sqlite',
     'expo-secure-store',
     'expo-background-task',
-    ['expo-image-picker', { cameraPermission: 'Fotografar a embalagem ou a receita de um medicamento.' }],
+    [
+      'expo-image-picker',
+      {
+        cameraPermission: 'Fotografar a embalagem ou a receita de um medicamento.',
+        photosPermission: 'Anexar uma imagem da embalagem ou da receita de um medicamento.',
+        // Sem gravação de vídeo/áudio: evita a permissão RECORD_AUDIO no Android.
+        microphonePermission: false,
+      },
+    ],
+    'expo-system-ui',
     'expo-localization',
   ],
   extra: {
-    eas: { projectId: process.env.EAS_PROJECT_ID ?? '' },
+    // Identificador público do projeto no EAS (@vendra74/cuidar). Não é segredo.
+    eas: { projectId: process.env.EAS_PROJECT_ID ?? '0df6abf4-c3a7-451a-8a04-ff234ea85853' },
   },
+  owner: 'vendra74',
 });

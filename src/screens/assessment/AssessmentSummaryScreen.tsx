@@ -8,7 +8,7 @@ import { Card } from '@/ui/components/Card';
 import { Banner } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
 import { evaluateIndividualPlan } from '@/domain/safety/plan';
-import { defaultHydrationSettings } from '@/domain/hydration/schedule';
+import { settingsAfterAssessment } from '@/domain/hydration/schedule';
 import { requestPermission } from '@/services/notifications/notificationService';
 import { useTheme } from '@/ui/theme';
 import { STEPS } from './steps';
@@ -37,7 +37,11 @@ export function AssessmentSummaryScreen() {
     { key: 'containers', label: 'Recipientes', value: draft.containers.map((c) => `${c.label} ${c.volumeMl} ml`).join(', ') },
     { key: 'fruits', label: 'Frutas', value: draft.fruitPreferences.join(', ') || 'Nenhuma' },
     { key: 'allergies', label: 'Alergias / restrições', value: [...draft.allergies, ...draft.dietaryRestrictions].join(', ') || 'Nenhuma' },
-    { key: 'restriction', label: 'Orientação profissional de líquidos', value: tri(draft.fluidRestriction) + (draft.professionalGoalMl ? ` — ${draft.professionalGoalMl} ml/dia` : '') },
+    { key: 'restriction', label: 'Orientação profissional de líquidos', value: tri(draft.fluidRestriction) },
+    // A quantidade só vale (e só é editável) quando houve orientação; antes ela não aparecia no resumo.
+    ...(draft.fluidRestriction === 'yes'
+      ? [{ key: 'goal', label: 'Quantidade orientada', value: draft.professionalGoalMl ? `${draft.professionalGoalMl} ml/dia` : 'Não informada' }]
+      : []),
     { key: 'swallow', label: 'Dificuldade para engolir', value: tri(draft.swallowingDifficulty) },
     { key: 'help_needs', label: 'Precisa de ajuda', value: `Beber: ${tri(draft.needsHelpToDrink)} · Banheiro: ${tri(draft.needsHelpToBathroom)}` },
     { key: 'extras', label: 'Medicamentos / cuidador', value: `${draft.wantsMedications ? 'Sim' : 'Não'} / ${draft.wantsCaregiver ? 'Sim' : 'Não'}` },
@@ -50,8 +54,7 @@ export function AssessmentSummaryScreen() {
     try {
       const saved: Profile = { ...draft, assessmentCompleted: true, assessmentStep: 0, lastHealthReviewPromptAt: new Date().toISOString() };
       await updateProfile(saved);
-      const base = settings ?? defaultHydrationSettings(saved);
-      await updateSettings({ ...base, enabled: true, windowStart: saved.wakeTime, windowEnd: saved.sleepTime });
+      await updateSettings(settingsAfterAssessment(settings, saved));
       await requestPermission();
       nav.reset({ index: 0, routes: [{ name: 'Main' }] });
     } finally {

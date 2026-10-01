@@ -9,7 +9,7 @@ import { Banner, ChoiceGroup, TimeField, Toggle } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
 import type { HydrationSettings, Weekday } from '@/domain/types';
 import { WEEKDAY_LABELS_PT } from '@/domain/time/time';
-import { generateHydrationSlots } from '@/domain/hydration/schedule';
+import { generateHydrationSlots, settingsAfterManualEdit } from '@/domain/hydration/schedule';
 
 export function ReminderSettingsScreen() {
   const nav = useNavigation();
@@ -24,7 +24,7 @@ export function ReminderSettingsScreen() {
       title="Lembretes de água"
       footer={
         <View style={{ gap: 8 }}>
-          <BigButton label="Salvar" icon="✓" onPress={() => void updateSettings(s).then(() => nav.goBack())} />
+          <BigButton label="Salvar" icon="✓" onPress={() => void updateSettings(profile ? settingsAfterManualEdit(s, profile) : s).then(() => nav.goBack())} />
           <BigButton kind="ghost" compact label="Cancelar" onPress={() => nav.goBack()} />
         </View>
       }
@@ -77,6 +77,19 @@ export function ReminderSettingsScreen() {
         <Toggle label="Som" value={s.sound} onChange={(v) => set({ sound: v })} />
         <Toggle label="Vibração" hint="Android: também controlado pelo canal nas configurações do sistema." value={s.vibrate} onChange={(v) => set({ vibrate: v })} />
         <ChoiceGroup label='Tempo de "Lembrar depois"' options={[{ value: '10', label: '10 minutos' }, { value: '15', label: '15 minutos' }, { value: '30', label: '30 minutos' }]} value={String(s.snoozeMinutes)} onChange={(v) => set({ snoozeMinutes: Number(v) })} />
+      </Card>
+      <Card>
+        <AppText variant="heading">Medicamento não confirmado</AppText>
+        <ChoiceGroup
+          label="Repetir o lembrete enquanto não confirmar"
+          hint="Repete o aviso da mesma dose. Não altera horários nem orienta dose extra."
+          options={[{ value: '0', label: 'Não repetir' }, { value: '5', label: 'A cada 5 minutos' }, { value: '10', label: 'A cada 10 minutos' }, { value: '15', label: 'A cada 15 minutos' }]}
+          value={String(s.medicationRepeatMinutes)}
+          onChange={(v) => set({ medicationRepeatMinutes: Number(v) })}
+        />
+        {s.medicationRepeatMinutes > 0 ? (
+          <ChoiceGroup label="Quantas vezes" options={[{ value: '1', label: '1 vez' }, { value: '2', label: '2 vezes' }, { value: '3', label: '3 vezes' }]} value={String(s.medicationRepeatCount)} onChange={(v) => set({ medicationRepeatCount: Number(v) })} />
+        ) : null}
       </Card>
       <Card>
         <AppText variant="heading">Privacidade</AppText>

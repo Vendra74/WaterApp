@@ -53,26 +53,29 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
 | Push para o cuidador (aviso em tempo real) | Edge Function + Expo Push/FCM/APNs e credenciais | **Não implementado** |
 | Builds nativos / lojas | Android Studio/Xcode ou conta EAS | Perfis em `eas.json`; `expo prebuild` não pôde ser executado aqui |
 
-## Não pôde ser testado neste ambiente (precisa de dispositivo físico)
+## Ainda não testado (após as sessões em aparelho de 30/09)
 
-- Entrega real de notificações e comportamento dos botões de ação em Android e iOS.
-- Comportamento com permissão negada em tempo de execução, reinício do aparelho (as notificações
-  agendadas por data persistem no sistema; a tarefa periódica e a reabertura do app repõem o
-  horizonte) e mudança de fuso horário (o reagendamento recalcula a partir do horário local).
-- Execução da tarefa em segundo plano (`expo-background-task`), que fica a critério do sistema.
-- Leitura de tela (TalkBack/VoiceOver) — os componentes têm papéis, rótulos e estados, mas a
-  navegação real não foi verificada.
-- Câmera/galeria para foto do medicamento.
-- Compartilhamento do arquivo de exportação.
+- iOS: nada foi testado em iPhone (build exige conta Apple Developer ou Xcode local).
+- Android: reinício do aparelho; mudança de fuso horário (exige root para automatizar); TalkBack;
+  “Apagar todos os meus dados”; primeira abertura em instalação limpa; permissão negada em tempo
+  de execução; execução efetiva da tarefa periódica em segundo plano (a critério do sistema).
+- Compartilhamento com cuidador (build sem Supabase configurado).
+- Câmera/galeria para foto do medicamento e compartilhamento do arquivo de exportação só foram
+  exercitados até a abertura do seletor/diálogo do sistema.
 
 ## Limitações conscientes
 
 - iOS mantém no máximo 64 notificações pendentes por app. O planejador prioriza medicamentos e
   completa com hidratação; o restante é agendado quando o app abre ou na tarefa periódica. A tela de
   teste mostra quando houve truncamento.
+- Android 12+: sem permissão de alarme exato, o expo-notifications usa alarmes inexatos
+  (`setAndAllowWhileIdle`), que o sistema agrupa e atrasa em minutos (verificado em aparelho: o teste
+  de 10 s não aparecia). O app declara `SCHEDULE_EXACT_ALARM` (Android 12) e `USE_EXACT_ALARM`
+  (Android 13+, concedida na instalação) e oferece o botão “Permitir alarmes exatos” na tela de teste.
+  Política da Play Store: `USE_EXACT_ALARM` é aceita para apps cuja função central são alarmes ou
+  lembretes com horário; na publicação, justificar como lembrete de medicamentos.
 - Android pode atrasar notificações em economia de bateria/Doze; alguns fabricantes exigem liberar o
-  app nas configurações de bateria. `SCHEDULE_EXACT_ALARM` está declarado; o uso efetivo de alarmes
-  exatos depende do sistema e da versão do expo-notifications.
+  app nas configurações de bateria.
 - Avisos falados só com o app aberto.
 - “Lembrar depois” da água agenda um aviso único; não altera a grade.
 - Aviso ao cuidador exige que o app do titular processe o lembrete (primeiro plano ou tarefa em
@@ -81,6 +84,41 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
   cifragem via SecureStore é pendência.
 - Conformidade legal (LGPD) completa exige revisão jurídica específica; estão implementados os
   controles técnicos de consentimento, exportação, exclusão e autorização no servidor.
+
+## Resultados em aparelho (2026-09-30, Android, development build via EAS)
+
+- Build EAS concluído e instalado; avaliação inicial e tela Hoje funcionam.
+- Corrigido em campo: categoria de notificação sem ações era rejeitada pelo Android e abortava o
+  agendamento; som `'default'` no canal era tratado como arquivo personalizado.
+- Corrigido em campo: alarmes inexatos atrasavam o teste de 10 s (ver limitação acima).
+- Verificado em campo (Motorola Edge 50 Pro): lembrete de água entregue com ícone, texto e os três
+  botões de ação. Com o modo Não perturbe ligado o lembrete ficou apenas na barra de status; canais
+  passaram a importância máxima e visíveis na tela bloqueada, e há opção de os medicamentos
+  ignorarem o Não perturbe (exige autorização do usuário nas configurações do sistema).
+- Verificado em campo (30/09, adb + dumpsys): a tela bloqueada da Motorola (estilo Peek) mostra um
+  carrossel de ícones com 4 vagas por página, conversas na frente; a gota do Cuidar pode cair na 2ª
+  página. Tocando nela o lembrete aparece inteiro sem desbloquear. Nenhuma configuração do sistema
+  bloqueava o app; `lockscreenVisibility` do canal é ignorado pelo Android. O app passou a dispensar
+  lembretes anteriores do mesmo tipo quando chega um novo (com o processo vivo), para evitar o
+  agrupamento que escondia os botões. Detalhes em `docs/TESTE-DISPOSITIVO.md`.
+- Corrigido em campo (30/09): após a migração de canais, os lembretes já agendados continuavam no
+  canal antigo apagado e eram entregues no canal genérico do Expo (importância menor, sem ignorar
+  Não perturbe). O reconciliador agora refaz agendamentos cujo canal difere do planejado.
+- Sessão pela interface (30/09, adb + uiautomator): seções 1–6 e 9–12 do checklist exercitadas.
+  Corrigidos em campo: botões de configurações do sistema mudos (import dinâmico de
+  expo-application), discador (`canOpenURL('tel:')` falso no Android 11+), roteamento dos botões da
+  notificação de teste, layout em letras “Máximo”, período de lembretes sobrescrito ao atualizar a
+  avaliação, linha de quantidade no resumo, ordem das doses nos detalhes e doses geradas antes do
+  cadastro do medicamento. Detalhes em `docs/TESTE-DISPOSITIVO.md`.
+- Entregas pontuais confirmadas em aparelho: água às 18:00, 18:05 e 18:30; medicamento às 18:45 e
+  19:15; dose adiada entregue às 20:28 com o nome (opção ligada); repetições “ainda não confirmado”
+  aos +10 e +20 min.
+- Revisão de código posterior (01/10): doses do dia do cadastro voltam a existir (podem ter sido
+  tomadas antes de cadastrar e precisam ser corrigíveis); só dias anteriores ficam de fora.
+  Ocorrências que a prescrição não prevê mais permanecem como histórico e recebem “sem confirmação”.
+  A decisão “janela de lembretes segue acordar/dormir” passou para o domínio
+  (`windowFollowsRoutine`), com testes; a dispensa de avisos obsoletos também roda na tarefa de
+  notificação em segundo plano (melhor esforço).
 
 ## Roteiro sugerido de teste em dispositivo
 
