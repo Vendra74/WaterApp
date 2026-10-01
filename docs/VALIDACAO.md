@@ -73,7 +73,7 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
   de 10 s não aparecia). O app declara `SCHEDULE_EXACT_ALARM` (Android 12) e `USE_EXACT_ALARM`
   (Android 13+, concedida na instalação) e oferece o botão “Permitir alarmes exatos” na tela de teste.
   Política da Play Store: `USE_EXACT_ALARM` é aceita para apps cuja função central são alarmes ou
-  lembretes com horário; na publicação, justificar como lembrete de medicamentos.
+  lembretes com horário; a justificativa pronta para a revisão está em `docs/PLAY-STORE.md`.
 - Android pode atrasar notificações em economia de bateria/Doze; alguns fabricantes exigem liberar o
   app nas configurações de bateria.
 - Avisos falados só com o app aberto.
