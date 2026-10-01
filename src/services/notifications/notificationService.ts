@@ -97,6 +97,7 @@ export async function ensureChannels(_showDetailsOnLockScreen: boolean, sound: b
   }
   await Notifications.setNotificationChannelAsync(CHANNEL_GENERIC, {
     ...base,
+    bypassDnd: false,
     importance: Notifications.AndroidImportance.DEFAULT,
     name: 'Avisos gerais',
     description: 'Revisões periódicas e testes.',

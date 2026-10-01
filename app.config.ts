@@ -45,6 +45,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'android.permission.USE_EXACT_ALARM',
       'android.permission.RECEIVE_BOOT_COMPLETED',
       'android.permission.VIBRATE',
+      // Sem esta permissão o app não aparece na lista "Acesso aos modos / Não perturbe" do sistema,
+      // e o canal de medicamentos não consegue ignorar o Não perturbe.
+      'android.permission.ACCESS_NOTIFICATION_POLICY',
     ],
     predictiveBackGestureEnabled: false,
   },

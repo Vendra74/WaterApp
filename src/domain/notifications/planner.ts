@@ -7,13 +7,15 @@ export const CATEGORY_MEDICATION = 'cuidar.medication';
 export const CATEGORY_GENERIC = 'cuidar.generic';
 
 /**
- * Canais Android. A importância de um canal não pode ser alterada depois de criado, por isso o
- * identificador tem versão: mudar a configuração exige um novo id (e apagar o antigo).
+ * Canais Android. A importância e o "ignorar Não perturbe" de um canal não podem ser alterados
+ * depois de criado, por isso o identificador tem versão: mudar a configuração exige um novo id
+ * (e apagar o antigo). v3 de água e avisos gerais: a v2 ficou gravada em aparelhos com
+ * "ignorar Não perturbe" ligado, e só os medicamentos devem passar pelo Não perturbe.
  */
-export const CHANNEL_HYDRATION = 'hydration_v2';
+export const CHANNEL_HYDRATION = 'hydration_v3';
 export const CHANNEL_MEDICATION = 'medication_v2';
-export const CHANNEL_GENERIC = 'general_v2';
-export const LEGACY_CHANNELS = ['hydration', 'medication', 'general'];
+export const CHANNEL_GENERIC = 'general_v3';
+export const LEGACY_CHANNELS = ['hydration', 'medication', 'general', 'hydration_v2', 'general_v2'];
 
 export const ACTION_LOG_WATER = 'log_water';
 export const ACTION_SNOOZE = 'snooze';
@@ -57,31 +59,36 @@ export function buildNotificationPlan(input: PlanInput): PlannedNotification[] {
     let fireAt: Date | null = null;
     if (occ.status === 'scheduled') fireAt = new Date(occ.plannedAt);
     else if (occ.status === 'snoozed' && occ.snoozedUntil) fireAt = new Date(occ.snoozedUntil);
-    if (!fireAt || fireAt.getTime() <= nowMs) continue;
+    if (!fireAt) continue;
 
     const detailed = input.settings.showDetailsOnLockScreen;
-    const title = detailed ? `Medicamento: ${med.name}` : 'Hora do seu medicamento';
-    const body = detailed
-      ? `${med.doseAmount} ${med.doseUnit}${med.instructions ? ` · ${med.instructions}` : ''}`.trim()
-      : 'Toque para ver os detalhes e confirmar.';
-    const content = `${title}|${body}`;
-    medication.push({
-      identifier: `med@${occ.id}@${fireAt.toISOString()}@${hash(content)}`,
-      kind: 'medication',
-      fireAt: iso(fireAt),
-      title,
-      body,
-      categoryId: CATEGORY_MEDICATION,
-      channelId: CHANNEL_MEDICATION,
-      data: { kind: 'medication', occurrenceId: occ.id, medicationId: med.id },
-    });
+    if (fireAt.getTime() > nowMs) {
+      const title = detailed ? `Medicamento: ${med.name}` : 'Hora do seu medicamento';
+      const body = detailed
+        ? `${med.doseAmount} ${med.doseUnit}${med.instructions ? ` · ${med.instructions}` : ''}`.trim()
+        : 'Toque para ver os detalhes e confirmar.';
+      const content = `${title}|${body}`;
+      medication.push({
+        identifier: `med@${occ.id}@${fireAt.toISOString()}@${hash(content)}`,
+        kind: 'medication',
+        fireAt: iso(fireAt),
+        title,
+        body,
+        categoryId: CATEGORY_MEDICATION,
+        channelId: CHANNEL_MEDICATION,
+        data: { kind: 'medication', occurrenceId: occ.id, medicationId: med.id },
+      });
+    }
     // Repetições enquanto a dose não for confirmada: são canceladas na reconciliação assim que o
     // estado da ocorrência muda (tomada, adiada, não tomada). Não alteram a prescrição.
+    // As repetições ainda futuras são mantidas mesmo quando o horário da dose já passou: abrir o
+    // app depois da hora, sem confirmar, não pode cancelar o "ainda não confirmado".
     const repeatMin = input.settings.medicationRepeatMinutes ?? 0;
     const repeatCount = input.settings.medicationRepeatCount ?? 0;
     if (occ.status === 'scheduled' && repeatMin > 0) {
       for (let i = 1; i <= repeatCount; i++) {
         const at = new Date(fireAt.getTime() + i * repeatMin * 60_000);
+        if (at.getTime() <= nowMs) continue;
         const rTitle = detailed ? `Ainda não confirmado: ${med.name}` : 'Medicamento ainda não confirmado';
         const rBody = detailed ? `${med.doseAmount} ${med.doseUnit}`.trim() : 'Toque para ver os detalhes e confirmar.';
         medication.push({

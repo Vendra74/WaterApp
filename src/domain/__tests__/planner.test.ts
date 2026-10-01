@@ -58,6 +58,21 @@ describe('planejador de notificações', () => {
     expect(afterSnooze).toHaveLength(1); // adiada: só o novo aviso, sem repetições
   });
 
+  it('mantém as repetições futuras de uma dose cujo horário já passou sem confirmação', () => {
+    const m = makeMedication({ times: ['08:00'] });
+    const [occ] = materializeOccurrences(m, [], NOW, 1, NOW);
+    const withRepeat = { ...settings, medicationRepeatMinutes: 10, medicationRepeatCount: 2 };
+    // App aberto às 08:05, dose das 08:00 ainda "agendada": o aviso original já passou,
+    // mas os "ainda não confirmado" de 08:10 e 08:20 continuam agendados.
+    const at805 = new Date(2026, 8, 29, 8, 5);
+    const plan = buildNotificationPlan({ now: at805, hydrationSlots: [], medications: [m], occurrences: [occ!], settings: withRepeat, preferredName: '' });
+    expect(plan.map((p) => new Date(p.fireAt).getMinutes())).toEqual([10, 20]);
+    expect(plan.every((p) => /não confirmado/i.test(p.title))).toBe(true);
+    // Às 08:25 nada resta a agendar para essa dose.
+    const late = buildNotificationPlan({ now: new Date(2026, 8, 29, 8, 25), hydrationSlots: [], medications: [m], occurrences: [occ!], settings: withRepeat, preferredName: '' });
+    expect(late).toHaveLength(0);
+  });
+
   it('reconciliação só agenda/cancela a diferença e não toca identificadores de terceiros', () => {
     const slots = generateHydrationSlots({ settings, naps: [], now: NOW, days: 1 });
     const plan = buildNotificationPlan({ now: NOW, hydrationSlots: slots, medications: [], occurrences: [], settings, preferredName: '' });
