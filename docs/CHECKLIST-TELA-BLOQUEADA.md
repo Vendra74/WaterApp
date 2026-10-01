@@ -40,11 +40,14 @@ verdade, alarme exato com o app fechado e reinício do aparelho).
 Build testado: APK de desenvolvimento de 30/09 com JavaScript do PR #2 (commit f65a6a5); a configuração
 nativa não mudou depois dele. Som e vibração confirmados pelo histórico de áudio e do vibrador do aparelho.
 
-- **A** OK, exceto A3 (falha parcial): o Cuidar não aparece em “Acesso aos modos” porque o manifesto
-  não declara `ACCESS_NOTIFICATION_POLICY`; o texto da tela manda “ativar o Cuidar na lista”, o que
-  não é possível.
+- **A** OK, exceto A3 (falha parcial): o Cuidar não aparecia em “Acesso aos modos” porque o manifesto
+  não declarava `ACCESS_NOTIFICATION_POLICY`. **Corrigido no PR #7**: com o APK local do main
+  (f3ddaaa, instalado às 15:52) o Cuidar aparece na lista como “Não permitido”; ativar é decisão do
+  usuário e não é necessário para o medicamento passar pelo Não perturbe (o canal já faz isso).
 - **B** OK: entrega em ~0,1 s na tela bloqueada, som e vibração, gota no carrossel, botões corretos.
-- **C** C1 **falha**: com Não perturbe em prioridade a água não foi silenciada (tocou e vibrou). Causa:
+- **C** C1 **falha** no build do PR #2; **corrigida no PR #7 e confirmada às 15:35** (código do main pelo
+  Metro): água entregue em 0,15 s, interceptada pelo sistema, sem som nem vibração; medicamento tocou
+  e vibrou (0,1 s). Causa original:
   no aparelho os canais `hydration_v2`, `medication_v2` e `general_v2` estão com “ignorar Não
   perturbe” ligado e o sistema trata o app inteiro como prioritário. O código atual cria o canal de
   água com `bypassDnd: false`, mas o Android mantém o valor com que o canal foi criado da primeira
@@ -56,9 +59,11 @@ nativa não mudou depois dele. Som e vibração confirmados pelo histórico de �
 - Lembrete real de água das 11:30 também chegou no segundo exato.
 
 ### Achados fora do checklist
-1. **Bug:** abrir o app depois do horário de uma dose não confirmada cancela as repetições “ainda não
-   confirmado” pendentes. Em `src/domain/notifications/planner.ts` a ocorrência com horário já passado
-   é pulada inteira, junto com as repetições. Em D3 a repetição só chegou porque o app ficou fechado.
+1. **Bug (corrigido no PR #7):** abrir o app depois do horário de uma dose não confirmada cancelava as
+   repetições “ainda não confirmado” pendentes (`planner.ts` pulava a ocorrência passada inteira).
+   Confirmado após a correção: dose de teste às 15:41, app aberto às 15:42 sem confirmar e
+   “Reagendar agora” forçado; os avisos de 15:51 e 16:01 continuaram agendados e o das 15:51 chegou
+   às 15:51:00 com som e vibração.
 2. Apagar um medicamento não remove da bandeja a notificação dele que já está na tela.
 3. Deslizar o app para fora do gerenciador não encerrou o processo neste aparelho; os alarmes
    continuaram normais.
