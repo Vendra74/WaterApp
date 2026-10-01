@@ -27,6 +27,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         'O acesso às fotos é usado apenas para anexar uma imagem da embalagem ou da receita de um medicamento.',
       UIBackgroundModes: ['fetch', 'processing'],
     },
+    entitlements: {
+      // Sem este entitlement o iOS trata `interruptionLevel: 'timeSensitive'` como notificação comum,
+      // e o lembrete de medicamento fica calado no Modo Foco / Não Perturbe.
+      'com.apple.developer.usernotifications.time-sensitive': true,
+    },
   },
   android: {
     package: BUNDLE_ID,

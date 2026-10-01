@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, AppState, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, AppState, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer, createNavigationContainerRef, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -108,8 +108,10 @@ async function processResponse(response: Notifications.NotificationResponse) {
   switch (routed.kind) {
     case 'hydration':
       if (routed.action === 'snooze') {
-        await scheduleHydrationSnooze(store.settings?.snoozeMinutes ?? 15, store.settings?.sound ?? true);
+        const minutes = store.settings?.snoozeMinutes ?? 15;
+        await scheduleHydrationSnooze(minutes, store.settings?.sound ?? true);
         navigationRef.navigate('Main');
+        Alert.alert('Lembrete adiado', `Vamos lembrar você de novo em ${minutes} min.`);
       } else navigateForHydrationAction(routed.action === 'open' ? 'log_water' : routed.action); // toque simples abre o registro
       break;
     case 'medication':
@@ -129,6 +131,9 @@ async function processResponse(response: Notifications.NotificationResponse) {
     case 'test':
       // Notificação da tela "Testar notificações": mesmas telas do lembrete real, sem registrar nem adiar.
       navigateForHydrationAction(routed.action);
+      if (routed.action === 'snooze') {
+        Alert.alert('Lembrete de teste', `Nada foi adiado. Em um lembrete de verdade, o aviso voltaria em ${store.settings?.snoozeMinutes ?? 15} min.`);
+      }
       break;
     default:
       navigationRef.navigate('Main');
