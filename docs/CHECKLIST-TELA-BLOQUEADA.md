@@ -22,7 +22,7 @@ verdade, alarme exato com o app fechado e reinício do aparelho).
       Esperado: **silenciado** (sem som; pode aparecer só como ícone).
 - [ ] Testar lembrete de **medicamento** (10 s) → bloquear a tela.
       Esperado: **toca e vibra mesmo com Não perturbe**.
-- [ ] Desligar o Não perturbe ao terminar.
+- [x] Desligar o Não perturbe ao terminar.
 
 ## D. Alarme exato com o app fechado
 - [x] Cadastrar medicamento para daqui a 3 min. Fechar o app pelo gerenciador (deslizar para fora).
@@ -40,11 +40,17 @@ verdade, alarme exato com o app fechado e reinício do aparelho).
   `ACCESS_NOTIFICATION_POLICY`. Mesmo assim os canais v2 estão com “ignorar Não perturbe” ligado no
   aparelho.
 - **B** OK: entrega em ~0,1 s na tela bloqueada, som e vibração, gota no carrossel, botões corretos.
-- **C** em andamento. Achado já certo: o canal de **água** também está com “ignorar Não perturbe”
+- **C** não concluída (a primeira tentativa ficou inválida: Não perturbe ligado em “silêncio total”
+  antes de “prioridade”, o que deixou o toque em silencioso; restaurado). Achado já certo: o canal de **água** também está com “ignorar Não perturbe”
   ligado no aparelho (o código atual cria `hydration_v2` com `bypassDnd: false`, mas o Android mantém
   o valor com que o canal foi criado pela primeira vez). Esperado: água silenciada, só medicamento passa.
 - **D** OK: com o app fechado pelo gerenciador e a tela bloqueada, dose das 11:25 entregue às 11:25:00
   e repetição “ainda não confirmado” às 11:35:00, ambas com som e vibração.
-- **E** autorizada pelo Andre; pendente de execução.
+- **E** autorizada pelo Andre, mas não executada: o aparelho ficou bloqueado no PIN por 2 h e a sessão
+  parou. Retomar com o celular desbloqueado (seção C e E).
 - Lembrete real de água das 11:30 também chegou no segundo exato.
+- Build testado: APK de desenvolvimento de 30/09 com JavaScript do PR #2 (commit f65a6a5); a
+  configuração nativa não mudou depois dele.
+- Pendências deixadas no aparelho: medicamento “Teste checklist” (11:25, todos os dias) ainda
+  cadastrado, com a dose de hoje sem confirmação; notificações de teste acumuladas na tela bloqueada.
 
