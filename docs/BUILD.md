@@ -80,6 +80,10 @@ xcrun devicectl device install app --device <UDID do iPhone> ../.dd/Build/Produc
    lembrete de medicamento **não** fura o Modo Foco (isso só se testa com o Apple Developer Program pago).
    `xcrun devicectl list devices` mostra o UDID; a configuração Release embute o JavaScript e roda sem o Mac.
 
+Com o Apple Developer Program pago (ativo desde 02/10/2026) não é preciso o arquivo de entitlements
+vazio: rode o mesmo `xcodebuild` sem `CODE_SIGN_ENTITLEMENTS` e o app sai com push e Time Sensitive.
+Depois de pagar, a ativação levou algumas horas; até lá a Apple continua respondendo como Personal Team.
+
 ## Depois do build
 
 Siga `docs/TESTE-DISPOSITIVO.md` e anote os resultados. Qualquer falha, cole no chat a mensagem

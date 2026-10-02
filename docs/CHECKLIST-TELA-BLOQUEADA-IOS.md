@@ -38,7 +38,8 @@ Antes: Ajustes → Foco → Não Perturbe → Apps: o Cuidar **não** deve estar
       Esperado: **silenciado** (sem som, sem acender a tela; fica só na Central de Notificações).
 - [ ] Testar lembrete de **medicamento** (10 s) → bloquear a tela.
       Esperado: **toca, vibra e acende a tela mesmo com o Foco**, com a etiqueta “Urgente”.
-      **FALHA:** ficou quieto, igual à água (ver Resultados).
+      **FALHA:** ficou quieto, igual à água (ver Resultados). **Corrigido e comprovado no reteste de
+      02/10** (ver “Reteste com a conta paga”).
 - [x] Desligar o Foco ao terminar. (só foi desligado depois da dose das 17:45; ver bloco D)
 
 ## D. Horário certo com o app fechado
@@ -89,10 +90,23 @@ dependem dele. Som e vibração foram relatados por quem estava com o aparelho, 
    reinstalar pelo Mac. Os dados do app são mantidos na reinstalação.
 
 ### Correções (mesmo PR, commit separado)
-- Entitlement de Time Sensitive declarado em `app.config.ts`. **Não verificado no aparelho** (achado 3).
+- Entitlement de Time Sensitive declarado em `app.config.ts`. Comprovado no aparelho em 02/10 (abaixo).
 - Lembrete de teste de água passa a usar o nível comum.
 - “Lembrar depois” mostra uma confirmação (“Lembrete adiado… em N min”, ou que o teste não adia nada).
   Conferido no iPhone com a versão corrigida (commit 5f040ac, mesma assinatura gratuita): o aviso aparece no lembrete de teste.
 
-Estado deixado no aparelho: Não Perturbe desligado, Modo de Desenvolvedor ligado, versão corrigida instalada
+### Reteste com a conta paga (02/10/2026)
+Andre assinou o Apple Developer Program em 01/10 (ativo em 02/10). O mesmo Team ID passou a aceitar as
+capacidades Time Sensitive e Push, e o build Release foi assinado com os entitlements completos gerados
+pelo `expo prebuild` (sem o arquivo de entitlements vazio) e instalado por cima, mantendo os dados.
+
+- Primeira tentativa: com o Não Perturbe ligado, água e medicamento ficaram quietos. O build estava
+  certo (entitlement na assinatura e no perfil de provisionamento); faltava ligar “Notificações
+  Urgentes” nos Ajustes do iPhone. Há duas chaves: a do app (Ajustes → Notificações → Cuidar) e a do
+  Foco (Ajustes → Foco → Não Perturbe → Apps). Não ficou registrado qual das duas estava desligada.
+- Depois de conferir as chaves: **C2 OK**, o lembrete de medicamento tocou com o Não Perturbe ligado.
+- Para o usuário não depender de adivinhar isso, a tela “Testar notificações” ganhou no iOS um cartão
+  “Modo Foco e Não Perturbe” explicando as duas chaves, com atalho para os ajustes do app.
+
+Estado deixado no aparelho (01/10): Não Perturbe desligado, Modo de Desenvolvedor ligado, versão corrigida instalada
 por cima (sem o entitlement de Time Sensitive), medicamento “Teste” apagado por Andre, dados do perfil intactos.

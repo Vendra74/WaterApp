@@ -88,6 +88,16 @@ export function NotificationTestScreen() {
           <BigButton compact label="Permitir tocar no Não perturbe (medicamentos)" onPress={() => void openDndAccessSettings().then((err) => { if (err) { console.warn('dnd access settings', err); setMsg('Não foi possível abrir a tela do sistema. Procure “Acesso a Não perturbe” nas configurações.'); } })} />
         </Card>
       ) : null}
+      {Platform.OS === 'ios' ? (
+        <Card>
+          <AppText variant="heading">Modo Foco e Não Perturbe</AppText>
+          <AppText variant="small">
+            Com um Foco ligado, o iPhone silencia os lembretes. Para os lembretes de medicamento tocarem mesmo assim, duas chaves “Notificações Urgentes” precisam estar ligadas:
+            a do {'“'}Cuidar{'”'} (botão abaixo, em Notificações) e a do próprio Foco (Ajustes → Foco → Não Perturbe → Apps). Os lembretes de água continuam silenciados pelo Foco.
+          </AppText>
+          <BigButton compact label="Abrir ajustes do Cuidar" onPress={() => void Linking.openSettings()} />
+        </Card>
+      ) : null}
       <BigButton kind="secondary" label="Mostrar notificação agora (sem alarme)" icon="⚡" onPress={() => void testNow()} />
       <BigButton label="Testar lembrete de água (10 s)" icon="💧" onPress={() => void test('hydration')} />
       <BigButton kind="secondary" label="Testar lembrete de medicamento (10 s)" icon="💊" onPress={() => void test('medication')} />
