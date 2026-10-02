@@ -54,7 +54,8 @@ export function TimeField({ label, value, onChange, hint }: { label: string; val
         <AppText variant="heading">{value}</AppText>
       </Pressable>
       {open ? (
-        <DateTimePicker value={date} mode="time" is24Hour display={Platform.OS === 'ios' ? 'spinner' : 'default'} onChange={onPick} locale="pt-BR" />
+        // themeVariant/textColor (iOS): sem eles a roleta segue o Modo Escuro do sistema e os números somem no fundo claro.
+        <DateTimePicker value={date} mode="time" is24Hour display={Platform.OS === 'ios' ? 'spinner' : 'default'} onChange={onPick} locale="pt-BR" themeVariant="light" textColor={t.colors.text} />
       ) : null}
       {open && Platform.OS === 'ios' ? (
         <Pressable accessibilityRole="button" onPress={() => setOpen(false)} style={{ minHeight: 48, justifyContent: 'center', alignItems: 'center' }}>
