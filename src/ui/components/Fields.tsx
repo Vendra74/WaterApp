@@ -54,7 +54,18 @@ export function TimeField({ label, value, onChange, hint }: { label: string; val
         <AppText variant="heading">{value}</AppText>
       </Pressable>
       {open ? (
-        <DateTimePicker value={date} mode="time" is24Hour display={Platform.OS === 'ios' ? 'spinner' : 'default'} onChange={onPick} locale="pt-BR" />
+        // O app só tem paletas claras, mas com userInterfaceStyle "automatic" a roleta do iOS seguia o modo
+        // escuro do sistema: números brancos sobre fundo branco. Fixa a variante clara e a cor do texto.
+        <DateTimePicker
+          value={date}
+          mode="time"
+          is24Hour
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={onPick}
+          locale="pt-BR"
+          themeVariant="light"
+          textColor={t.colors.text}
+        />
       ) : null}
       {open && Platform.OS === 'ios' ? (
         <Pressable accessibilityRole="button" onPress={() => setOpen(false)} style={{ minHeight: 48, justifyContent: 'center', alignItems: 'center' }}>

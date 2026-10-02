@@ -16,7 +16,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: 'portrait',
   icon: './assets/icon.png',
   scheme: APP_SLUG,
-  userInterfaceStyle: 'automatic',
+  // O app só tem paletas claras (src/ui/theme.ts). Em 'automatic', o Modo Escuro do sistema pintava
+  // componentes nativos (roleta de horário, alertas, teclado) com texto claro sobre o nosso fundo claro.
+  userInterfaceStyle: 'light',
   ios: {
     bundleIdentifier: BUNDLE_ID,
     // Número do build enviado ao App Store Connect/TestFlight. Cada envio precisa de um número maior
