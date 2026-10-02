@@ -1,5 +1,5 @@
-import { confirmTaken, materializeOccurrences, occurrenceId, plannedTimesFor, snooze, markUnconfirmedIfLate, correctStatus } from '../medication/occurrences';
-import { formatTimeBR } from '../time/time';
+import { confirmTaken, materializeOccurrences, occurrenceId, pendingOccurrencesToday, plannedTimesFor, snooze, markUnconfirmedIfLate, correctStatus } from '../medication/occurrences';
+import { addDays, formatTimeBR, toISODate } from '../time/time';
 import { makeMedication, NOW } from './fixtures';
 
 describe('ocorrências de medicamentos', () => {
@@ -90,5 +90,37 @@ describe('ocorrências de medicamentos', () => {
 
   it('medicamento inativo não gera ocorrências', () => {
     expect(plannedTimesFor(makeMedication({ active: false }), NOW, 3)).toEqual([]);
+  });
+});
+
+describe('medicamentos de hoje na tela inicial', () => {
+  it('lista só as doses pendentes do dia local, em ordem, e nenhuma dos dias seguintes', () => {
+    const med = makeMedication({ times: ['08:00', '20:00'] });
+    const occs = materializeOccurrences(med, [], addDays(NOW, -1), 4, NOW);
+    expect(occs.length).toBeGreaterThan(4); // ontem, hoje e dias seguintes
+    const today = pendingOccurrencesToday(occs, NOW);
+    expect(today.map((o) => formatTimeBR(new Date(o.plannedAt)))).toEqual(['08:00', '20:00']);
+    expect(today.every((o) => toISODate(new Date(o.plannedAt)) === toISODate(NOW))).toBe(true);
+  });
+
+  it('exclui doses de hoje já tomadas ou não tomadas, mas mantém as sem confirmação', () => {
+    const med = makeMedication({ times: ['06:00', '08:00', '20:00'] });
+    const occs = materializeOccurrences(med, [], NOW, 1, NOW);
+    const taken = confirmTaken(occs[0]!, NOW).occ;
+    const late = markUnconfirmedIfLate(occs[1]!, new Date(2026, 8, 29, 11, 0), 120);
+    const today = pendingOccurrencesToday([late, taken, occs[2]!], NOW);
+    expect(today.map((o) => [formatTimeBR(new Date(o.plannedAt)), o.status])).toEqual([
+      ['08:00', 'unconfirmed'],
+      ['20:00', 'scheduled'],
+    ]);
+  });
+
+  it('fica vazia quando não há mais doses hoje, mesmo com doses amanhã', () => {
+    const med = makeMedication({ times: ['08:00'] });
+    const occs = materializeOccurrences(med, [], NOW, 2, NOW);
+    const [today, ...rest] = occs;
+    const done = confirmTaken(today!, NOW).occ;
+    expect(rest).toHaveLength(1);
+    expect(pendingOccurrencesToday([done, ...rest], NOW)).toEqual([]);
   });
 });
