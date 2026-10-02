@@ -357,7 +357,8 @@ export async function scheduleTestNotification(seconds: number, kind: 'hydration
       data: { kind: 'test' },
       categoryIdentifier: kind === 'hydration' ? CATEGORY_HYDRATION : CATEGORY_MEDICATION,
       sound: contentSound(true),
-      interruptionLevel: 'timeSensitive',
+      // Igual ao lembrete real: só o medicamento fura o Modo Foco do iOS.
+      interruptionLevel: kind === 'medication' ? 'timeSensitive' : 'active',
       ...(Platform.OS === 'android' ? { priority: Notifications.AndroidNotificationPriority.MAX, vibrate: [0, 400, 250, 400] } : {}),
     },
     trigger: {
