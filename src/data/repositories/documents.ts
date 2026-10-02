@@ -24,3 +24,5 @@ export const DOC_PROFILE = 'profile';
 export const DOC_HYDRATION_SETTINGS = 'hydration_settings';
 export const DOC_CARE = 'care';
 export const DOC_NOTIFICATION_STATE = 'notification_state';
+export const DOC_CAREGIVER_ALERT_STATE = 'caregiver_alert_state';
+export const DOC_OCCURRENCES_QUEUED = 'occurrences_queued';

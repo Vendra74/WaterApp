@@ -4,7 +4,7 @@ import { evaluateIndividualPlan, type IndividualPlan } from '@/domain/safety/pla
 import { addDays, startOfLocalDay } from '@/domain/time/time';
 import { env } from '@/config/env';
 import { getDb } from '@/data/db';
-import { deleteContact, listContacts, upsertContact, consecutiveUnconfirmedHydration } from '@/data/repositories/misc';
+import { deleteContact, listContacts, upsertContact } from '@/data/repositories/misc';
 import { loadHydrationSettings, loadProfile, saveHydrationSettings, saveProfile } from '@/services/usecases/profile';
 import { addHydrationLog, editHydrationLog, loadLogsForDay, restoreHydrationLog, undoHydrationLog, type AddLogInput, type AddLogResult } from '@/services/usecases/hydration';
 import {
@@ -20,7 +20,7 @@ import {
 } from '@/services/usecases/medications';
 import { loadNotificationState, rescheduleAll, type NotificationState, getPermissionState, type PermissionState } from '@/services/notifications/notificationService';
 import { getSyncStatus, pushOutbox, type SyncStatus } from '@/services/sync/syncService';
-import { sendUnconfirmedAlert } from '@/services/sync/careService';
+import { checkCaregiverAlerts } from '@/services/usecases/caregiverAlerts';
 
 interface AppState {
   ready: boolean;
@@ -162,6 +162,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     await snoozeOccurrence(id, minutes);
     await get().refresh();
     await get().reschedule();
+    void get().refreshSync();
   },
 
   notTaken: async (id, note) => {
@@ -203,14 +204,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  /** Avisa cuidador após N lembretes seguidos sem confirmação (somente se configurado e autorizado). */
+  /** Avisa cuidador sobre lembretes e doses sem confirmação (somente se configurado e autorizado) e envia a fila. */
   checkCaregiverAlert: async () => {
-    const { settings } = get();
-    if (!settings || settings.caregiverAlertAfterUnconfirmed <= 0) return;
-    const since = new Date(Date.now() - 24 * 3_600_000).toISOString();
-    const n = await consecutiveUnconfirmedHydration(await getDb(), since);
-    if (n >= settings.caregiverAlertAfterUnconfirmed && n % settings.caregiverAlertAfterUnconfirmed === 0) {
-      await sendUnconfirmedAlert('hydration_unconfirmed', n);
-    }
+    await checkCaregiverAlerts().catch(() => undefined);
+    void get().refreshSync();
   },
 }));

@@ -130,6 +130,12 @@ export function CaregiverScreen() {
           value={String(settings?.caregiverAlertAfterUnconfirmed ?? 0)}
           onChange={(v) => settings && void updateSettings({ ...settings, caregiverAlertAfterUnconfirmed: Number(v) })}
         />
+        <Toggle
+          label="Avisar quando uma dose de medicamento ficar sem confirmação"
+          hint="O aviso sai cerca de 2 horas depois do horário da dose, quando o aplicativo é aberto ou consegue rodar em segundo plano. Diz apenas “sem confirmação”. Não afirma que você não tomou."
+          value={settings?.caregiverAlertMedication ?? true}
+          onChange={(v) => settings && void updateSettings({ ...settings, caregiverAlertMedication: v })}
+        />
       </Card>
 
       <Card>

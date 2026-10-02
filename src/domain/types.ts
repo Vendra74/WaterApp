@@ -89,6 +89,8 @@ export interface HydrationSettings {
   showDetailsOnLockScreen: boolean;
   /** Após N lembretes seguidos sem confirmação, avisar cuidador autorizado. 0 = desligado. */
   caregiverAlertAfterUnconfirmed: number;
+  /** Avisar cuidador autorizado quando uma dose de medicamento ficar "sem confirmação". */
+  caregiverAlertMedication: boolean;
   /**
    * A janela (início/fim) acompanha acordar/dormir do perfil. Vira false quando a pessoa ajusta
    * a janela manualmente em "Lembretes de água" para valores diferentes da rotina.

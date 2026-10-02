@@ -83,6 +83,9 @@ async function pushItem(sb: NonNullable<ReturnType<typeof getSupabase>>, uid: st
     }
     case 'medication': {
       if (item.op === 'delete') {
+        // As ocorrências do medicamento excluído também saem do servidor (como no aparelho).
+        const occ = await sb.from('medication_occurrences').delete().eq('medication_id', item.entity_id).eq('owner_id', uid);
+        if (occ.error) throw new Error(occ.error.message);
         const { error } = await sb.from('medications').delete().eq('id', item.entity_id).eq('owner_id', uid);
         if (error) throw new Error(error.message);
         return;
@@ -93,6 +96,11 @@ async function pushItem(sb: NonNullable<ReturnType<typeof getSupabase>>, uid: st
       return;
     }
     case 'medication_occurrence': {
+      if (item.op === 'delete') {
+        const { error } = await sb.from('medication_occurrences').delete().eq('id', item.entity_id).eq('owner_id', uid);
+        if (error) throw new Error(error.message);
+        return;
+      }
       const o = payload as MedicationOccurrence;
       const { error } = await sb.from('medication_occurrences').upsert({
         id: o.id, owner_id: uid, medication_id: o.medicationId, planned_at: o.plannedAt, status: o.status, taken_at: o.takenAt, snoozed_until: o.snoozedUntil, history: o.history, updated_at: o.updatedAt, recorded_by: uid,

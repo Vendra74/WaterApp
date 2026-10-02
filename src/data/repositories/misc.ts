@@ -1,6 +1,7 @@
 import type { DB } from '../db';
 import type { EmergencyContact } from '@/domain/types';
 import { newId } from '@/domain/ids';
+import { consecutiveUnconfirmed, type ReminderResponseRow } from '@/domain/care/alerts';
 
 export async function listContacts(db: DB): Promise<EmergencyContact[]> {
   return db.getAllAsync<EmergencyContact>('SELECT id, name, phone, relationship FROM emergency_contacts ORDER BY name');
@@ -25,17 +26,12 @@ export async function recordReminderResponse(db: DB, kind: 'hydration' | 'medica
  * Conta lembretes de hidratação consecutivos (mais recentes) sem confirmação.
  * "Confirmação" = registro de água após o lembrete. Serve apenas para o aviso "sem confirmação" ao cuidador.
  */
-export async function consecutiveUnconfirmedHydration(db: DB, sinceISO: string): Promise<number> {
-  const rows = await db.getAllAsync<{ action: string }>(
-    "SELECT action FROM reminder_responses WHERE kind = 'hydration' AND at >= ? ORDER BY at DESC",
+export async function consecutiveUnconfirmedHydration(db: DB, sinceISO: string): Promise<{ count: number; latestFiredAt: string | null }> {
+  const rows = await db.getAllAsync<ReminderResponseRow>(
+    "SELECT ref, at, action FROM reminder_responses WHERE kind = 'hydration' AND at >= ? ORDER BY at DESC",
     sinceISO,
   );
-  let count = 0;
-  for (const r of rows) {
-    if (r.action === 'logged') break;
-    if (r.action === 'fired') count += 1;
-  }
-  return count;
+  return consecutiveUnconfirmed(rows);
 }
 
 export interface OutboxItem { id: number; entity: string; entity_id: string; op: string; payload: string; attempts: number; last_error: string | null }
