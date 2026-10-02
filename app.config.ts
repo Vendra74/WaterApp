@@ -19,8 +19,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   userInterfaceStyle: 'automatic',
   ios: {
     bundleIdentifier: BUNDLE_ID,
+    // Número do build enviado ao App Store Connect/TestFlight. Cada envio precisa de um número maior
+    // que o anterior (a `version` pode continuar igual). Ver docs/TESTFLIGHT.md.
+    buildNumber: '1',
     supportsTablet: true,
     infoPlist: {
+      // O app só usa a criptografia padrão do sistema (HTTPS). Sem esta chave, o App Store Connect
+      // pergunta sobre exportação de criptografia a cada build enviado.
+      ITSAppUsesNonExemptEncryption: false,
       NSCameraUsageDescription:
         'A câmera é usada apenas para fotografar a embalagem ou a receita de um medicamento, se você quiser.',
       NSPhotoLibraryUsageDescription:
