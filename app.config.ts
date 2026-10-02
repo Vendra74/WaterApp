@@ -42,7 +42,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: BUNDLE_ID,
     adaptiveIcon: {
-      backgroundColor: '#E6F4FE',
+      backgroundColor: '#0B5FA5',
       foregroundImage: './assets/android-icon-foreground.png',
       backgroundImage: './assets/android-icon-background.png',
       monochromeImage: './assets/android-icon-monochrome.png',
@@ -64,6 +64,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   web: { favicon: './assets/favicon.png' },
   plugins: [
+    [
+      'expo-splash-screen',
+      {
+        image: './assets/splash-icon.png',
+        imageWidth: 220,
+        resizeMode: 'contain',
+        backgroundColor: '#0B5FA5',
+        dark: { backgroundColor: '#084780' },
+      },
+    ],
     ['expo-notifications', { icon: './assets/notification-icon.png', color: '#0B5FA5', defaultChannel: 'hydration' }],
     'expo-sqlite',
     'expo-secure-store',
