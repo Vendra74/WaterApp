@@ -92,8 +92,8 @@ export function NotificationTestScreen() {
         <Card>
           <AppText variant="heading">Modo Foco e Não Perturbe</AppText>
           <AppText variant="small">
-            Com um Foco ligado, o iPhone silencia os lembretes. Para os lembretes de medicamento tocarem mesmo assim, duas chaves “Notificações Urgentes” precisam estar ligadas:
-            a do {'“'}Cuidar{'”'} (botão abaixo, em Notificações) e a do próprio Foco (Ajustes → Foco → Não Perturbe → Apps). Os lembretes de água continuam silenciados pelo Foco.
+            Com um Foco ligado, o iPhone silencia os lembretes. Para os lembretes de medicamento tocarem mesmo assim, ligue “Notificações Relevantes” no próprio Foco:
+            Ajustes → Foco → Não Perturbe → Apps. A chave de mesmo nome nos ajustes do {'\u201C'}Cuidar{'\u201D'} (botão abaixo, em Notificações) também precisa estar ligada. Os lembretes de água continuam silenciados pelo Foco.
           </AppText>
           <BigButton compact label="Abrir ajustes do Cuidar" onPress={() => void Linking.openSettings()} />
         </Card>

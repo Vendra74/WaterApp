@@ -6,8 +6,9 @@ Marque `[x]` quando o esperado acontecer, `[ ]` se falhar, `[-]` se não foi tes
 É a versão para iPhone de `docs/CHECKLIST-TELA-BLOQUEADA.md` (Motorola). O que muda no iOS:
 
 - Não existem “alarmes exatos” nem “Acesso aos modos”: o iOS entrega notificações locais no horário
-  e quem decide o que fura o **Modo Foco / Não Perturbe** é o nível “Urgente” (Time Sensitive) da
-  notificação. O Cuidar marca como urgente só os lembretes de medicamento.
+  e quem decide o que fura o **Modo Foco / Não Perturbe** é o nível Time Sensitive da
+  notificação, que o iOS em português chama de “Notificações Relevantes”. O Cuidar marca assim só os
+  lembretes de medicamento.
 - O iOS guarda no máximo 64 notificações pendentes por app.
 - A chave lateral de silencioso tira o som de qualquer notificação (fica só a vibração). Deixe o
   iPhone **com som** durante o teste, exceto no item F.
@@ -19,7 +20,7 @@ Marque `[x]` quando o esperado acontecer, `[ ]` se falhar, `[-]` se não foi tes
 - [x] App instalado e aberto pelo menos uma vez (Mais → Testar notificações mostra permissão “concedida”).
 - [-] Ajustes → Notificações → Cuidar: “Permitir Notificações” ligado, com Tela Bloqueada, Central de
       Notificações, Faixas e Sons marcados. (não conferido na tela de Ajustes; os lembretes do bloco B chegaram normalmente)
-- [-] Na mesma tela aparece a chave “Notificações Urgentes” e ela está ligada. (não se aplica a este
+- [-] Na mesma tela aparece a chave “Notificações Relevantes” e ela está ligada. (não se aplica a este
       build: sem o entitlement a chave não existe; ver Resultados)
 - [-] Ajustes → Notificações → Resumo Programado: desligado, ou o Cuidar fora do resumo. (não conferido)
 
@@ -33,11 +34,11 @@ Marque `[x]` quando o esperado acontecer, `[ ]` se falhar, `[-]` se não foi tes
 
 ## C. Modo Foco “Não Perturbe” LIGADO
 Antes: Ajustes → Foco → Não Perturbe → Apps: o Cuidar **não** deve estar na lista de permitidos, e
-“Notificações Urgentes” deve estar ligado.
+“Notificações Relevantes” deve estar ligado (estava **desligado** no iPhone do teste; ver reteste de 02/10).
 - [x] Ligar o Não Perturbe (Central de Controle → Foco). Testar lembrete de **água** (10 s) → bloquear a tela.
       Esperado: **silenciado** (sem som, sem acender a tela; fica só na Central de Notificações).
 - [ ] Testar lembrete de **medicamento** (10 s) → bloquear a tela.
-      Esperado: **toca, vibra e acende a tela mesmo com o Foco**, com a etiqueta “Urgente”.
+      Esperado: **toca, vibra e acende a tela mesmo com o Foco**.
       **FALHA:** ficou quieto, igual à água (ver Resultados). **Corrigido e comprovado no reteste de
       02/10** (ver “Reteste com a conta paga”).
 - [x] Desligar o Foco ao terminar. (só foi desligado depois da dose das 17:45; ver bloco D)
@@ -81,7 +82,7 @@ dependem dele. Som e vibração foram relatados por quem estava com o aparelho, 
 ### Achados
 1. **Usabilidade:** “Lembrar depois” abre o app sem dizer o que foi feito. No lembrete de teste nada
    é adiado (de propósito), e no de água o novo aviso é agendado sem confirmação na tela.
-2. O lembrete de **teste** de água pedia o nível “urgente”, diferente do lembrete real de água. Sem o
+2. O lembrete de **teste** de água pedia o nível Time Sensitive, diferente do lembrete real de água. Sem o
    entitlement não fazia diferença; com ele, o teste de água furaria o Foco.
 3. **Limite da conta gratuita:** o Personal Team recusa a capacidade Time Sensitive Notifications
    (“Personal development teams … do not support the Time Sensitive Notifications capability”).
@@ -101,12 +102,13 @@ capacidades Time Sensitive e Push, e o build Release foi assinado com os entitle
 pelo `expo prebuild` (sem o arquivo de entitlements vazio) e instalado por cima, mantendo os dados.
 
 - Primeira tentativa: com o Não Perturbe ligado, água e medicamento ficaram quietos. O build estava
-  certo (entitlement na assinatura e no perfil de provisionamento); faltava ligar “Notificações
-  Urgentes” nos Ajustes do iPhone. Há duas chaves: a do app (Ajustes → Notificações → Cuidar) e a do
-  Foco (Ajustes → Foco → Não Perturbe → Apps). Não ficou registrado qual das duas estava desligada.
-- Depois de conferir as chaves: **C2 OK**, o lembrete de medicamento tocou com o Não Perturbe ligado.
+  certo (entitlement na assinatura e no perfil de provisionamento); a chave “Notificações Relevantes”
+  do Foco estava desligada (Ajustes → Foco → Não Perturbe → Apps). Segundo Andre, só essa estava desligada; a chave de
+  mesmo nome do app (Ajustes → Notificações → Cuidar) não precisou de ajuste. No iOS em português o nome é “Notificações
+  Relevantes”, não “Urgentes”.
+- Depois de ligar a chave do Foco: **C2 OK**, o lembrete de medicamento tocou com o Não Perturbe ligado.
 - Para o usuário não depender de adivinhar isso, a tela “Testar notificações” ganhou no iOS um cartão
-  “Modo Foco e Não Perturbe” explicando as duas chaves, com atalho para os ajustes do app.
+  “Modo Foco e Não Perturbe” explicando a chave do Foco e a do app, com atalho para os ajustes do app.
 
 Estado deixado no aparelho (01/10): Não Perturbe desligado, Modo de Desenvolvedor ligado, versão corrigida instalada
 por cima (sem o entitlement de Time Sensitive), medicamento “Teste” apagado por Andre, dados do perfil intactos.
