@@ -80,8 +80,10 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
 - “Lembrar depois” da água agenda um aviso único; não altera a grade.
 - Aviso ao cuidador exige que o app do titular processe o lembrete (primeiro plano ou tarefa em
   segundo plano); sem isso, não há contagem — por isso a mensagem sempre diz “sem confirmação”.
-- Sessão do Supabase é guardada em AsyncStorage (padrão da documentação); endurecimento com
-  cifragem via SecureStore é pendência.
+- Sessão do Supabase é guardada no armazenamento cifrado do sistema (`expo-secure-store`:
+  Keystore no Android, Keychain no iOS), dividida em partes de até 2 KB; sessões gravadas antes
+  em AsyncStorage são migradas uma vez na primeira leitura. A gravação real no aparelho não foi
+  testada neste ambiente.
 - Conformidade legal (LGPD) completa exige revisão jurídica específica; estão implementados os
   controles técnicos de consentimento, exportação, exclusão e autorização no servidor.
 
