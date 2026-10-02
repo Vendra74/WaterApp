@@ -1,5 +1,7 @@
 # Gerar o development build
 
+Para instalar em outros iPhones sem cabo (TestFlight), veja [TESTFLIGHT.md](TESTFLIGHT.md).
+
 O app usa módulos nativos (notificações com botões, SQLite, tarefas em segundo plano), então o
 **Expo Go não serve** para o teste real. É preciso um *development build*. Escolha um caminho.
 
