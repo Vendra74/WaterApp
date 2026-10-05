@@ -42,7 +42,7 @@ export function HistoryScreen() {
   const weekDays = Array.from({ length: 7 }, (_, i) => toISODate(addDays(new Date(), -6 + i)));
 
   return (
-    <Screen title="Histórico">
+    <Screen safeTop title="Histórico">
       <ChoiceGroup options={[{ value: 'day', label: 'Hoje' }, { value: 'week', label: 'Últimos 7 dias' }]} value={mode} onChange={(v) => setMode(v as 'day' | 'week')} />
       {mode === 'day' ? (
         <>

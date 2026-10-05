@@ -15,7 +15,7 @@ export function WelcomeScreen() {
   const profile = useAppStore((s) => s.profile);
   const canResume = !!profile && profile.assessmentStep > 0 && !profile.assessmentCompleted;
   return (
-    <Screen>
+    <Screen safeTop>
       <View style={{ alignItems: 'center', gap: t.space(1), marginTop: t.space(4) }}>
         <AppText variant="big" accessibilityRole="header">{APP_NAME}</AppText>
         <AppText style={{ textAlign: 'center' }} muted>{APP_TAGLINE}</AppText>

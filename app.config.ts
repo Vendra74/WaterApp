@@ -23,7 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: BUNDLE_ID,
     // Número do build enviado ao App Store Connect/TestFlight. Cada envio precisa de um número maior
     // que o anterior (a `version` pode continuar igual). Ver docs/TESTFLIGHT.md.
-    buildNumber: '1',
+    buildNumber: '2',
     supportsTablet: true,
     infoPlist: {
       // O app só usa a criptografia padrão do sistema (HTTPS). Sem esta chave, o App Store Connect
