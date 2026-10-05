@@ -1,0 +1,28 @@
+# Configuração do projeto Supabase do Cuidar aplicada com `supabase config push`.
+# Só a parte de autenticação é mantida aqui: login por código de 6 dígitos enviado ao e-mail.
+project_id = "vqpvazseakezfsivxtgq"
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = []
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+otp_length = 6
+otp_expiry = 3600
+max_frequency = "1m0s"
+
+# Modelos de e-mail com o código ({{ .Token }}). O plano gratuito do Supabase só aceita alterar os
+# modelos com SMTP próprio configurado; descomente depois de configurar o SMTP.
+# [auth.email.template.magic_link]
+# subject = "Seu código do Cuidar"
+# content_path = "./supabase/templates/codigo.html"
+#
+# [auth.email.template.confirmation]
+# subject = "Seu código do Cuidar"
+# content_path = "./supabase/templates/codigo.html"

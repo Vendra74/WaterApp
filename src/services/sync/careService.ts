@@ -1,5 +1,6 @@
 import { getSupabase } from './supabaseClient';
 import type { CarePermission } from '@/domain/types';
+import { unconfirmedAlertMessage, type UnconfirmedAlertKind } from '@/domain/care/alerts';
 
 export interface RemoteCareLink {
   id: string;
@@ -99,17 +100,13 @@ export async function acknowledgeAlert(id: string, userId: string): Promise<void
  * Registra um aviso "sem confirmação" para cuidadores ativos. A mensagem nunca afirma que a pessoa
  * não bebeu/não tomou. Retorna false se não houve envio confirmado (offline, sem vínculo, erro).
  */
-export async function sendUnconfirmedAlert(kind: 'hydration_unconfirmed' | 'medication_unconfirmed', count: number): Promise<boolean> {
+export async function sendUnconfirmedAlert(kind: UnconfirmedAlertKind, count: number): Promise<boolean> {
   const sb = getSupabase();
   if (!sb) return false;
   const { data: session } = await sb.auth.getSession();
   const uid = session.session?.user.id;
   if (!uid) return false;
-  const message =
-    kind === 'hydration_unconfirmed'
-      ? `${count} lembretes de água seguidos sem confirmação no aplicativo. Isso não significa que a pessoa não bebeu: vale entrar em contato.`
-      : `${count} lembretes de medicamento sem confirmação no aplicativo. Isso não significa que a dose não foi tomada: vale entrar em contato.`;
-  const { error } = await sb.from('care_alerts').insert({ owner_id: uid, kind, message });
+  const { error } = await sb.from('care_alerts').insert({ owner_id: uid, kind, message: unconfirmedAlertMessage(kind, count) });
   return !error;
 }
 

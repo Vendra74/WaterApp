@@ -89,6 +89,7 @@ Sessão de 30/09/2026 (via adb, aparelho travado com PIN; itens sem marca não f
 - [ ] “Apagar todos os meus dados” → volta à tela de boas-vindas e os lembretes somem da lista. (não executado: apagaria os dados do testador)
 
 ## 13. Cuidador (somente com Supabase configurado)
+Roteiro completo com duas contas em `docs/TESTE-CUIDADOR.md`.
 - [ ] Conta A gera convite; conta B aceita; B vê água/medicamentos de A. (build sem Supabase: “Compartilhamento remoto não configurado neste build”)
 - [ ] A revoga; B não vê mais (e recebe erro ao atualizar).
 

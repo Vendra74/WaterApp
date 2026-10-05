@@ -87,6 +87,18 @@ export function materializeOccurrences(
   return out;
 }
 
+/**
+ * Ocorrências novas ou alteradas em relação às já gravadas. Só essas precisam ser regravadas e
+ * enviadas ao servidor (o cuidador vê as doses previstas e as que ficaram "sem confirmação").
+ */
+export function changedOccurrences(existing: MedicationOccurrence[], next: MedicationOccurrence[]): MedicationOccurrence[] {
+  const byId = new Map(existing.map((o) => [o.id, o]));
+  return next.filter((o) => {
+    const prev = byId.get(o.id);
+    return !prev || prev.status !== o.status || prev.updatedAt !== o.updatedAt;
+  });
+}
+
 export function markUnconfirmedIfLate(
   occ: MedicationOccurrence,
   now: Date,

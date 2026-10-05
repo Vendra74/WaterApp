@@ -113,5 +113,8 @@ export async function pruneFutureScheduled(db: DB, medicationId: string, keepIds
   );
   const keep = new Set(keepIds);
   const toDelete = rows.map((r) => r.id).filter((id) => !keep.has(id));
-  for (const id of toDelete) await db.runAsync('DELETE FROM medication_occurrences WHERE id = ?', id);
+  for (const id of toDelete) {
+    await db.runAsync('DELETE FROM medication_occurrences WHERE id = ?', id);
+    await enqueue(db, 'medication_occurrence', id, 'delete', { id });
+  }
 }

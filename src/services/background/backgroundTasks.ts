@@ -7,6 +7,23 @@ export const RESCHEDULE_TASK = 'cuidar.reschedule';
 export const NOTIFICATION_TASK = 'cuidar.notification-received';
 
 /**
+ * Com o app fechado ninguém marca as doses atrasadas nem avisa o cuidador; as tarefas em segundo
+ * plano fazem isso quando o sistema as executa (melhor esforço: não há garantia de horário).
+ */
+async function caregiverCheck(): Promise<void> {
+  try {
+    const { refreshOccurrences } = await import('@/services/usecases/medications');
+    const { checkCaregiverAlerts } = await import('@/services/usecases/caregiverAlerts');
+    const { pushOutbox } = await import('@/services/sync/syncService');
+    await refreshOccurrences();
+    await checkCaregiverAlerts();
+    await pushOutbox();
+  } catch {
+    // Sem rede ou sem conta: a próxima abertura do app tenta de novo.
+  }
+}
+
+/**
  * Tarefa periódica: reagenda notificações no sistema (repõe o horizonte, aplica mudanças de fuso).
  * O sistema decide quando executar (mínimo ~15 min no Android; iOS a critério do sistema).
  * Não é garantia de execução: ao abrir o app também reagendamos.
@@ -15,6 +32,7 @@ TaskManager.defineTask(RESCHEDULE_TASK, async () => {
   try {
     const { rescheduleAll } = await import('@/services/notifications/notificationService');
     await rescheduleAll();
+    await caregiverCheck();
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch {
     return BackgroundTask.BackgroundTaskResult.Failed;
@@ -23,7 +41,7 @@ TaskManager.defineTask(RESCHEDULE_TASK, async () => {
 
 /**
  * Tarefa executada quando uma notificação chega com o app em segundo plano (Android/iOS conforme suporte).
- * Usada apenas para registrar que um lembrete de água foi exibido (contagem "sem confirmação").
+ * Registra que um lembrete de água foi exibido (contagem "sem confirmação") e verifica avisos ao cuidador.
  */
 TaskManager.defineTask<Notifications.NotificationTaskPayload>(NOTIFICATION_TASK, async ({ data }) => {
   try {
@@ -36,6 +54,7 @@ TaskManager.defineTask<Notifications.NotificationTaskPayload>(NOTIFICATION_TASK,
       // Dispensa avisos obsoletos também com o app em segundo plano (melhor esforço).
       await svc.dismissSuperseded(data as unknown as Notifications.Notification).catch(() => undefined);
     }
+    await caregiverCheck();
     return Notifications.BackgroundNotificationTaskResult.NewData;
   } catch {
     return Notifications.BackgroundNotificationTaskResult.Failed;
