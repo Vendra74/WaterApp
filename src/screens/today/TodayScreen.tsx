@@ -13,13 +13,14 @@ import { suggestFor } from '@/domain/safety/suggestions';
 import { generateHydrationSlots } from '@/domain/hydration/schedule';
 import { formatTimeBR, WEEKDAY_LONG_PT, weekdayOf } from '@/domain/time/time';
 import { OCCURRENCE_STATUS_PT, pendingOccurrencesToday } from '@/domain/medication/occurrences';
+import { describeSuggestion } from '@/domain/adaptive/reminderSuggestions';
 import { speak } from '@/services/speech/speech';
 import { useTheme } from '@/ui/theme';
 
 export function TodayScreen() {
   const nav = useNavigation();
   const t = useTheme();
-  const { profile, settings, plan, todayLogs, medications, occurrences, permission, notificationState, sync, lastUndo, undoLog } = useAppStore();
+  const { profile, settings, plan, todayLogs, medications, occurrences, permission, notificationState, sync, lastUndo, undoLog, suggestions: reminderSuggestions, applySuggestion, dismissSuggestion } = useAppStore();
   const [now, setNow] = useState(new Date());
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 30_000);
@@ -38,6 +39,8 @@ export function TodayScreen() {
   const upcoming = useMemo(() => pendingOccurrencesToday(occurrences, now), [occurrences, now]);
   const suggestions = profile && plan ? suggestFor(profile, plan, now) : [];
   const name = profile?.preferredName || profile?.name || '';
+  const suggestion = reminderSuggestions[0] ?? null;
+  const suggestionText = suggestion ? describeSuggestion(suggestion) : null;
 
   const readAloud = () => {
     const parts = [
@@ -81,6 +84,17 @@ export function TodayScreen() {
       <BigButton label="Registrar água" icon="💧" onPress={() => nav.navigate('HydrationLog')} />
       {lastUndo ? (
         <BigButton kind="ghost" compact label={`Desfazer último registro (${lastUndo.volumeMl} ml)`} onPress={() => void undoLog(lastUndo)} />
+      ) : null}
+
+      {/* Uma sugestão por vez, aprendida dos registros dos últimos dias. Nada muda sem tocar em "Mudar". */}
+      {suggestion ? (
+        <Card tone="alt" accessibilityRole="summary">
+          <AppText variant="heading">{suggestionText!.title}</AppText>
+          <AppText>{suggestionText!.body}</AppText>
+          <AppText muted variant="small">Calculado só neste aparelho, com os seus registros. Você pode desligar isso em Lembretes de água.</AppText>
+          <BigButton compact icon="✓" label={suggestionText!.accept} onPress={() => void applySuggestion(suggestion)} />
+          <BigButton compact kind="ghost" label={suggestionText!.reject} onPress={() => void dismissSuggestion(suggestion)} />
+        </Card>
       ) : null}
 
       <Card>

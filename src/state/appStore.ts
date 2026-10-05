@@ -21,6 +21,8 @@ import {
 import { loadNotificationState, rescheduleAll, type NotificationState, getPermissionState, type PermissionState } from '@/services/notifications/notificationService';
 import { getSyncStatus, pushOutbox, type SyncStatus } from '@/services/sync/syncService';
 import { checkCaregiverAlerts } from '@/services/usecases/caregiverAlerts';
+import { dismissReminderSuggestion, loadReminderSuggestions } from '@/services/usecases/suggestions';
+import { applyHydrationSuggestion, applyMedicationSuggestion, type ReminderSuggestion } from '@/domain/adaptive/reminderSuggestions';
 
 interface AppState {
   ready: boolean;
@@ -36,6 +38,8 @@ interface AppState {
   permission: PermissionState;
   sync: SyncStatus | null;
   lastUndo: HydrationLog | null;
+  /** Sugestões de ajuste de horário aprendidas dos registros (só no aparelho). */
+  suggestions: ReminderSuggestion[];
 
   bootstrap: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -56,6 +60,9 @@ interface AppState {
   reschedule: () => Promise<void>;
   refreshSync: () => Promise<void>;
   checkCaregiverAlert: () => Promise<void>;
+  refreshSuggestions: () => Promise<void>;
+  applySuggestion: (s: ReminderSuggestion) => Promise<void>;
+  dismissSuggestion: (s: ReminderSuggestion) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -72,6 +79,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   permission: 'undetermined',
   sync: null,
   lastUndo: null,
+  suggestions: [],
 
   bootstrap: async () => {
     await getDb();
@@ -94,7 +102,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     ]);
     await refreshOccurrences(now);
     const occurrences = await loadOccurrencesBetween(addDays(startOfLocalDay(now), -1), addDays(startOfLocalDay(now), 15));
-    set({ profile, settings, plan: evaluateIndividualPlan(profile), todayLogs, medications, occurrences, contacts, notificationState, permission });
+    const suggestions = await loadReminderSuggestions(profile, settings, medications, now).catch(() => []);
+    set({ profile, settings, plan: evaluateIndividualPlan(profile), todayLogs, medications, occurrences, contacts, notificationState, permission, suggestions });
   },
 
   updateProfile: async (p) => {
@@ -108,6 +117,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     await saveHydrationSettings(s);
     set({ settings: s });
     await get().reschedule();
+    await get().refreshSuggestions();
+  },
+
+  refreshSuggestions: async () => {
+    const { profile, settings, medications } = get();
+    if (!profile || !settings) return;
+    set({ suggestions: await loadReminderSuggestions(profile, settings, medications).catch(() => []) });
   },
 
   logWater: async (input) => {
@@ -202,6 +218,24 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch {
       set({ sync: await getSyncStatus().catch(() => null) });
     }
+  },
+
+  /** A pessoa aceitou a sugestão: aplica ao horário correspondente e reagenda. */
+  applySuggestion: async (s) => {
+    const { settings, medications } = get();
+    if (s.kind === 'medication_time') {
+      const med = medications.find((m) => m.id === s.medicationId);
+      if (med) await get().upsertMedication(applyMedicationSuggestion(med, s));
+    } else if (settings) {
+      await get().updateSettings(applyHydrationSuggestion(settings, s));
+    }
+    set({ suggestions: get().suggestions.filter((x) => x.key !== s.key) });
+  },
+
+  /** A pessoa recusou: some da tela e não volta por um tempo. */
+  dismissSuggestion: async (s) => {
+    await dismissReminderSuggestion(s.key);
+    set({ suggestions: get().suggestions.filter((x) => x.key !== s.key) });
   },
 
   /** Avisa cuidador sobre lembretes e doses sem confirmação (somente se configurado e autorizado) e envia a fila. */

@@ -79,6 +79,15 @@ export function ReminderSettingsScreen() {
         <ChoiceGroup label='Tempo de "Lembrar depois"' options={[{ value: '10', label: '10 minutos' }, { value: '15', label: '15 minutos' }, { value: '30', label: '30 minutos' }]} value={String(s.snoozeMinutes)} onChange={(v) => set({ snoozeMinutes: Number(v) })} />
       </Card>
       <Card>
+        <AppText variant="heading">Sugestões de horário</AppText>
+        <Toggle
+          label="Sugerir ajustes com base nos meus registros"
+          hint="Se você costuma registrar água ou confirmar um remédio sempre um pouco depois do aviso, o app propõe mudar o horário. Calculado só neste aparelho; nada muda sem você aceitar."
+          value={s.suggestReminderAdjustments}
+          onChange={(v) => set({ suggestReminderAdjustments: v })}
+        />
+      </Card>
+      <Card>
         <AppText variant="heading">Medicamento não confirmado</AppText>
         <ChoiceGroup
           label="Repetir o lembrete enquanto não confirmar"
