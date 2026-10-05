@@ -171,3 +171,16 @@ export function occurrencesForDay(occs: MedicationOccurrence[], day: Date): Medi
   const key = toISODate(day);
   return occs.filter((o) => toISODate(new Date(o.plannedAt)) === key);
 }
+
+const PENDING_STATUSES: readonly OccurrenceStatus[] = ['scheduled', 'snoozed', 'unconfirmed'];
+
+/**
+ * Doses pendentes (agendadas, adiadas ou sem confirmação) do dia local de `now`, em ordem de horário.
+ * Doses de dias seguintes não entram: a tela "Hoje" mostra apenas o que ainda precisa de atenção hoje,
+ * inclusive as já passadas sem confirmação, que ainda podem ser registradas.
+ */
+export function pendingOccurrencesToday(occs: MedicationOccurrence[], now: Date): MedicationOccurrence[] {
+  return occurrencesForDay(occs, now)
+    .filter((o) => PENDING_STATUSES.includes(o.status))
+    .sort((a, b) => new Date(a.plannedAt).getTime() - new Date(b.plannedAt).getTime());
+}

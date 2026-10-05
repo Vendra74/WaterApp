@@ -16,22 +16,35 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: 'portrait',
   icon: './assets/icon.png',
   scheme: APP_SLUG,
-  userInterfaceStyle: 'automatic',
+  // O app só tem paletas claras (src/ui/theme.ts). Em 'automatic', o Modo Escuro do sistema pintava
+  // componentes nativos (roleta de horário, alertas, teclado) com texto claro sobre o nosso fundo claro.
+  userInterfaceStyle: 'light',
   ios: {
     bundleIdentifier: BUNDLE_ID,
+    // Número do build enviado ao App Store Connect/TestFlight. Cada envio precisa de um número maior
+    // que o anterior (a `version` pode continuar igual). Ver docs/TESTFLIGHT.md.
+    buildNumber: '2',
     supportsTablet: true,
     infoPlist: {
+      // O app só usa a criptografia padrão do sistema (HTTPS). Sem esta chave, o App Store Connect
+      // pergunta sobre exportação de criptografia a cada build enviado.
+      ITSAppUsesNonExemptEncryption: false,
       NSCameraUsageDescription:
         'A câmera é usada apenas para fotografar a embalagem ou a receita de um medicamento, se você quiser.',
       NSPhotoLibraryUsageDescription:
         'O acesso às fotos é usado apenas para anexar uma imagem da embalagem ou da receita de um medicamento.',
       UIBackgroundModes: ['fetch', 'processing'],
     },
+    entitlements: {
+      // Sem este entitlement o iOS trata `interruptionLevel: 'timeSensitive'` como notificação comum,
+      // e o lembrete de medicamento fica calado no Modo Foco / Não Perturbe.
+      'com.apple.developer.usernotifications.time-sensitive': true,
+    },
   },
   android: {
     package: BUNDLE_ID,
     adaptiveIcon: {
-      backgroundColor: '#E6F4FE',
+      backgroundColor: '#0B5FA5',
       foregroundImage: './assets/android-icon-foreground.png',
       backgroundImage: './assets/android-icon-background.png',
       monochromeImage: './assets/android-icon-monochrome.png',
@@ -53,6 +66,16 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   web: { favicon: './assets/favicon.png' },
   plugins: [
+    [
+      'expo-splash-screen',
+      {
+        image: './assets/splash-icon.png',
+        imageWidth: 220,
+        resizeMode: 'contain',
+        backgroundColor: '#0B5FA5',
+        dark: { backgroundColor: '#084780' },
+      },
+    ],
     ['expo-notifications', { icon: './assets/notification-icon.png', color: '#0B5FA5', defaultChannel: 'hydration' }],
     'expo-sqlite',
     'expo-secure-store',

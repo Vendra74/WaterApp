@@ -10,7 +10,7 @@ export function MoreScreen() {
   const nav = useNavigation();
   const { sync, demoMode } = useAppStore();
   return (
-    <Screen title="Mais">
+    <Screen safeTop title="Mais">
       <BigButton kind="secondary" icon="👤" label="Perfil e plano" onPress={() => nav.navigate('Profile')} />
       <BigButton kind="secondary" icon="⏰" label="Lembretes de água" onPress={() => nav.navigate('ReminderSettings')} />
       <BigButton kind="secondary" icon="☎" label="Contatos de ajuda" onPress={() => nav.navigate('Contacts')} />

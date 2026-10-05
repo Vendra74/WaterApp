@@ -11,7 +11,7 @@ export function MedicationsScreen() {
   const nav = useNavigation();
   const medications = useAppStore((s) => s.medications);
   return (
-    <Screen title="Medicamentos" footer={<BigButton label="Cadastrar medicamento" icon="+" onPress={() => nav.navigate('MedicationForm')} />}>
+    <Screen safeTop title="Medicamentos" footer={<BigButton label="Cadastrar medicamento" icon="+" onPress={() => nav.navigate('MedicationForm')} />}>
       <AppText muted>Cadastre exatamente como está na prescrição. O aplicativo não sugere doses nem horários.</AppText>
       {medications.length === 0 ? <AppText>Nenhum medicamento cadastrado.</AppText> : null}
       {medications.map((m) => (

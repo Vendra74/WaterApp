@@ -12,7 +12,7 @@ import { goalProgressPercent } from '@/domain/safety/plan';
 import { suggestFor } from '@/domain/safety/suggestions';
 import { generateHydrationSlots } from '@/domain/hydration/schedule';
 import { formatTimeBR, WEEKDAY_LONG_PT, weekdayOf } from '@/domain/time/time';
-import { OCCURRENCE_STATUS_PT } from '@/domain/medication/occurrences';
+import { OCCURRENCE_STATUS_PT, pendingOccurrencesToday } from '@/domain/medication/occurrences';
 import { speak } from '@/services/speech/speech';
 import { useTheme } from '@/ui/theme';
 
@@ -34,9 +34,8 @@ export function TodayScreen() {
     return slots[0]?.at ?? null;
   }, [settings, profile, now]);
   const medsById = new Map(medications.map((m) => [m.id, m]));
-  const upcoming = occurrences
-    .filter((o) => (o.status === 'scheduled' || o.status === 'snoozed' || o.status === 'unconfirmed') && new Date(o.plannedAt).getTime() > now.getTime() - 12 * 3_600_000)
-    .slice(0, 4);
+  // Apenas as doses de hoje: as de amanhã em diante confundiam a lista.
+  const upcoming = useMemo(() => pendingOccurrencesToday(occurrences, now), [occurrences, now]);
   const suggestions = profile && plan ? suggestFor(profile, plan, now) : [];
   const name = profile?.preferredName || profile?.name || '';
 
@@ -51,7 +50,7 @@ export function TodayScreen() {
   };
 
   return (
-    <Screen>
+    <Screen safeTop>
       {/* Com letras muito grandes o botão não cabe ao lado da hora: empilha em vez de cortar. */}
       <View style={t.fontScale >= 1.5 ? { gap: t.space(1) } : { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <View>
@@ -85,8 +84,8 @@ export function TodayScreen() {
       ) : null}
 
       <Card>
-        <AppText variant="heading">Próximos medicamentos</AppText>
-        {upcoming.length === 0 ? <AppText muted>{medications.length === 0 ? 'Nenhum medicamento cadastrado.' : 'Nada pendente nas próximas horas.'}</AppText> : null}
+        <AppText variant="heading">Medicamentos de hoje</AppText>
+        {upcoming.length === 0 ? <AppText muted>{medications.length === 0 ? 'Nenhum medicamento cadastrado.' : 'Nenhum medicamento restante hoje.'}</AppText> : null}
         {upcoming.map((o) => {
           const m = medsById.get(o.medicationId);
           const when = o.status === 'snoozed' && o.snoozedUntil ? new Date(o.snoozedUntil) : new Date(o.plannedAt);

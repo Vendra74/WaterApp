@@ -9,13 +9,19 @@ interface Props {
   children: React.ReactNode;
   footer?: React.ReactNode;
   scroll?: boolean;
+  /**
+   * Telas sem cabeçalho de navegação (abas e boas-vindas): afasta o conteúdo da barra de status do aparelho.
+   * Só no Android: no iOS a ScrollView já aplica esse recuo sozinha (contentInsetAdjustmentBehavior) e somar
+   * o inset deixaria um espaço dobrado no topo.
+   */
+  safeTop?: boolean;
 }
 
-export function Screen({ title, children, footer, scroll = true }: Props) {
+export function Screen({ title, children, footer, scroll = true, safeTop = false }: Props) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const content = (
-    <View style={{ padding: t.space(2), gap: t.space(2), paddingBottom: t.space(4) }}>
+    <View style={{ padding: t.space(2), gap: t.space(2), paddingTop: t.space(2) + (safeTop && Platform.OS === 'android' ? insets.top : 0), paddingBottom: t.space(4) }}>
       {title ? <AppText variant="title">{title}</AppText> : null}
       {children}
     </View>
