@@ -65,6 +65,10 @@ describe('ocorrências de medicamentos', () => {
     const fixed = correctStatus(late, 'taken', new Date(2026, 8, 29, 11), 'tomei às 8h e esqueci de marcar');
     expect(fixed.status).toBe('taken');
     expect(fixed.history.map((h) => h.to)).toEqual(['scheduled', 'unconfirmed', 'taken']);
+    // Sem horário informado, usa o momento da correção; com horário, registra a hora real da tomada.
+    expect(fixed.takenAt).toBe(new Date(2026, 8, 29, 11).toISOString());
+    const at8 = correctStatus(late, 'taken', new Date(2026, 8, 29, 11), 'tomei às 8h', new Date(2026, 8, 29, 8, 10).toISOString());
+    expect(at8.takenAt).toBe(new Date(2026, 8, 29, 8, 10).toISOString());
   });
 
   it('sem data de início, não gera doses de dias anteriores ao cadastro; as do próprio dia continuam', () => {

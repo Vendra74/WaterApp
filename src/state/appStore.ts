@@ -54,7 +54,7 @@ interface AppState {
   confirmTaken: (occurrenceId: string) => Promise<{ alreadyConfirmed: boolean } | null>;
   snooze: (occurrenceId: string, minutes: number) => Promise<void>;
   notTaken: (occurrenceId: string, note?: string) => Promise<void>;
-  correct: (occurrenceId: string, to: OccurrenceStatus, note: string) => Promise<void>;
+  correct: (occurrenceId: string, to: OccurrenceStatus, note: string, takenAt?: string) => Promise<void>;
   saveContact: (c: EmergencyContact) => Promise<void>;
   removeContact: (id: string) => Promise<void>;
   reschedule: () => Promise<void>;
@@ -131,6 +131,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (result.ok) {
       set({ todayLogs: await loadLogsForDay(new Date()), lastUndo: result.log });
       void get().refreshSync();
+      void get().refreshSuggestions();
     }
     return result;
   },
@@ -139,6 +140,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     await undoHydrationLog(log);
     set({ todayLogs: await loadLogsForDay(new Date()), lastUndo: null });
     void get().refreshSync();
+    void get().refreshSuggestions();
   },
 
   restoreLog: async (log) => {
@@ -150,6 +152,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     await editHydrationLog(log, changes);
     set({ todayLogs: await loadLogsForDay(new Date()) });
     void get().refreshSync();
+    void get().refreshSuggestions();
   },
 
   upsertMedication: async (m) => {
@@ -188,8 +191,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     void get().refreshSync();
   },
 
-  correct: async (id, to, note) => {
-    await correctOccurrence(id, to, note);
+  correct: async (id, to, note, takenAt) => {
+    await correctOccurrence(id, to, note, takenAt);
     await get().refresh();
     void get().reschedule();
     void get().refreshSync();

@@ -1,4 +1,4 @@
-import type { Medication, MedicationOccurrence, OccurrenceStatus } from '../types';
+import type { ISODateTime, Medication, MedicationOccurrence, OccurrenceStatus } from '../types';
 import { addDays, atLocalTime, iso, parseISODate, startOfLocalDay, toISODate, weekdayOf } from '../time/time';
 
 export function occurrenceId(medicationId: string, plannedAt: Date): string {
@@ -151,11 +151,14 @@ export function markNotTaken(occ: MedicationOccurrence, now: Date, note = ''): M
   return transition(occ, 'not_taken', now, 'informada como não tomada', { note, snoozedUntil: null });
 }
 
-/** Correção manual mantendo histórico. */
-export function correctStatus(occ: MedicationOccurrence, to: OccurrenceStatus, now: Date, note: string): MedicationOccurrence {
+/**
+ * Correção manual mantendo histórico. Ao marcar como tomada, `takenAt` informa a hora real em que
+ * a pessoa tomou (ex.: "tomei às 8h e esqueci de marcar"); sem ela, mantém a já registrada ou usa agora.
+ */
+export function correctStatus(occ: MedicationOccurrence, to: OccurrenceStatus, now: Date, note: string, takenAt?: ISODateTime): MedicationOccurrence {
   return transition(occ, to, now, `correção manual: ${note}`, {
     note,
-    takenAt: to === 'taken' ? occ.takenAt ?? iso(now) : null,
+    takenAt: to === 'taken' ? takenAt ?? occ.takenAt ?? iso(now) : null,
   });
 }
 

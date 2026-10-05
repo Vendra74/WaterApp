@@ -6,10 +6,10 @@ import { Screen } from '@/ui/components/Screen';
 import { AppText } from '@/ui/components/AppText';
 import { BigButton } from '@/ui/components/BigButton';
 import { Card } from '@/ui/components/Card';
-import { Banner, TextField } from '@/ui/components/Fields';
+import { Banner, TextField, TimeField } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
 import { OCCURRENCE_STATUS_PT } from '@/domain/medication/occurrences';
-import { formatDateBR, formatTimeBR } from '@/domain/time/time';
+import { atLocalTime, formatDateBR, formatTimeBR } from '@/domain/time/time';
 import { speak } from '@/services/speech/speech';
 
 export function OccurrenceActionScreen() {
@@ -21,6 +21,7 @@ export function OccurrenceActionScreen() {
   const [msg, setMsg] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const [correcting, setCorrecting] = useState(false);
+  const [takenTime, setTakenTime] = useState<string | null>(null);
 
   if (!occ || !med) return <Screen title="Medicamento"><AppText>Registro não encontrado.</AppText><BigButton label="Voltar" onPress={() => nav.goBack()} /></Screen>;
 
@@ -63,7 +64,8 @@ export function OccurrenceActionScreen() {
           <AppText variant="heading">Corrigir registro</AppText>
           <AppText muted variant="small">A alteração fica no histórico desta dose.</AppText>
           <TextField label="Motivo" value={note} onChangeText={setNote} placeholder="Ex.: tomei mas esqueci de marcar" />
-          <BigButton compact label="Marcar como tomada" onPress={() => void correct(occ.id, 'taken', note || 'correção').then(() => nav.goBack())} />
+          <TimeField label="Horário em que tomou" hint="Para marcar como tomada. Fica no histórico desta dose." value={takenTime ?? formatTimeBR(occ.takenAt ? new Date(occ.takenAt) : planned)} onChange={setTakenTime} />
+          <BigButton compact label="Marcar como tomada" onPress={() => void correct(occ.id, 'taken', note || 'correção', atLocalTime(planned, takenTime ?? formatTimeBR(occ.takenAt ? new Date(occ.takenAt) : planned)).toISOString()).then(() => nav.goBack())} />
           <BigButton compact kind="secondary" label="Marcar como não tomada" onPress={() => void correct(occ.id, 'not_taken', note || 'correção').then(() => nav.goBack())} />
           <BigButton compact kind="secondary" label="Voltar para agendada" onPress={() => void correct(occ.id, 'scheduled', note || 'correção').then(() => nav.goBack())} />
         </Card>
