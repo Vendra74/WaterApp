@@ -3,24 +3,40 @@
 Roteiro e resultados do teste de compartilhamento: vínculo, aviso “sem confirmação” e sessão.
 Aparelho do titular: Motorola Edge 50 Pro (Android 16), development build do `main`.
 
-## Estado em 01/10/2026
+## Estado em 05/10/2026
 
-**O teste em aparelho ainda não foi executado.** O build instalado não tem servidor configurado
-(não há `.env` no projeto), então “Compartilhar com cuidador” mostra apenas “Integração pendente”.
-Falta criar o projeto Supabase do Cuidar e as duas contas. Até lá, o que há aqui é a revisão do
-código do fluxo e as correções que ela pediu.
+O servidor existe e foi validado de ponta a ponta com duas contas temporárias (tabela de
+resultados no fim). **O teste nos aparelhos, com as contas reais, ainda não foi executado.**
 
-## Preparação do servidor
+- Projeto Supabase “cuidar” (São Paulo, ref `vqpvazseakezfsivxtgq`), criado em 05/10/2026 na
+  organização do Andre. A senha do banco está no Chaves do Mac dele, item
+  `supabase-cuidar-db-password`.
+- Migrações `0001_init.sql` e `0002_convite_pgcrypto.sql` aplicadas com `supabase db push`.
+- Código de login com 6 dígitos (`supabase/config.toml`, aplicado com `supabase config push`;
+  o padrão do Supabase era 8, e o app pede 6).
+- `.env` na pasta do projeto no Mac (não versionado) com a URL e a chave pública.
 
-1. Projeto Supabase próprio do Cuidar, com `supabase/migrations/0001_init.sql` aplicada.
-2. Authentication → Email: código por e-mail (OTP) ativo e o modelo “Magic Link” contendo
-   `{{ .Token }}` (o app pede um código de 6 dígitos, não um link).
-3. `.env` na raiz (não versionado) com `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
-   No development build basta reiniciar o Metro com `npx expo start --dev-client --clear`: as
-   variáveis `EXPO_PUBLIC_*` entram no pacote JavaScript, não é preciso novo build nativo.
-4. E-mail: pela documentação do Supabase, o servidor de e-mail padrão só entrega para endereços de
-   membros da organização e tem limite baixo de envios por hora. Para a conta do cuidador com
-   qualquer endereço (e para produção) é preciso configurar SMTP próprio.
+**Pendência: e-mail do código.** O e-mail padrão do Supabase traz só um link, não o código, e o
+plano gratuito recusa alterar o modelo sem SMTP próprio (“Email template modification is not
+available for free tier projects using the default email provider”). Além disso, pela documentação
+do Supabase, o servidor de e-mail padrão só entrega para membros da organização e tem limite baixo
+de envios por hora. Enquanto não houver SMTP próprio (ou plano pago), ninguém consegue entrar
+sozinho pelo app: o código precisa ser gerado pelo painel/API de administração. O modelo pronto
+está em `supabase/templates/codigo.html`, comentado em `supabase/config.toml`.
+
+## Preparação do servidor (como foi feito)
+
+```bash
+supabase projects create cuidar --org-id <org> --region sa-east-1 --db-password <senha>
+supabase link --project-ref <ref>
+supabase db push
+supabase config push            # confira o diff antes de aceitar
+SB_URL=... SB_ANON=... SB_SERVICE=... node scripts/teste-servidor-cuidador.cjs
+```
+
+No development build basta gravar o `.env` e reiniciar o Metro com
+`npx expo start --dev-client --clear`: as variáveis `EXPO_PUBLIC_*` entram no pacote JavaScript.
+O build Release do iPhone precisa ser recompilado com o `.env` presente.
 
 ## Roteiro
 
@@ -64,6 +80,9 @@ Conta A = titular (Motorola). Conta B = cuidador (segundo aparelho ou segunda in
 
 Corrigido neste PR:
 
+- **Convite falhava no Supabase.** `create_care_invite` e `accept_care_invite` fixavam
+  `search_path = public`, mas a `pgcrypto` fica no esquema `extensions`: gerar convite daria
+  “function digest does not exist”. Corrigido em `0002_convite_pgcrypto.sql`.
 - **Dose sem confirmação nunca avisava o cuidador.** Só existia aviso para lembretes de água; o
   tipo `medication_unconfirmed` estava previsto no servidor, mas nada o enviava. Agora cada dose
   que fica “sem confirmação” nas últimas 24 h gera um aviso, uma única vez, com opção de desligar
@@ -100,4 +119,10 @@ Limitações conhecidas, não resolvidas aqui:
 
 | Data | Aparelhos | Bloco | Resultado |
 |---|---|---|---|
-| — | — | — | ainda não executado |
+| 05/10/2026 | Servidor “cuidar”, script `scripts/teste-servidor-cuidador.cjs`, duas contas temporárias | Login por código de 6 dígitos; código errado recusado; conta criada no primeiro acesso | OK |
+| 05/10/2026 | idem | Convite: geração, código errado, próprio convite, aceite, segundo aceite recusado | OK |
+| 05/10/2026 | idem | Cuidador sem vínculo não vê nada; com vínculo vê nome, água, dose “sem confirmação” e nome do remédio | OK |
+| 05/10/2026 | idem | Aviso de dose sem confirmação: titular registra, cuidador vê e marca como visto | OK |
+| 05/10/2026 | idem | “Apenas ver” não registra água nem aumenta a própria permissão | OK |
+| 05/10/2026 | idem | Revogação corta o acesso a dados, avisos e lista; “apagar meus dados” limpa o servidor | OK |
+| — | Motorola + segundo aparelho, contas reais | Roteiro acima (telas do app) | ainda não executado |

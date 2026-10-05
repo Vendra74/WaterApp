@@ -15,9 +15,11 @@ Ou cole `migrations/0001_init.sql` no SQL Editor do painel.
 
 ## Autenticação
 
-O app usa login por código enviado ao e-mail (OTP). No painel: Authentication → Providers → Email,
-ative "Email OTP" e desative confirmação por link se quiser apenas código. Ajuste o template
-"Magic Link" para incluir `{{ .Token }}`.
+O app usa login por código de 6 dígitos enviado ao e-mail (OTP). O tamanho do código está em
+`config.toml` (`supabase config push`; confira o diff antes de aceitar). Os modelos “Magic Link”
+e “Confirm signup” precisam conter `{{ .Token }}` (modelo em `templates/codigo.html`), mas o plano
+gratuito só permite alterá-los com SMTP próprio configurado. Sem isso o e-mail traz apenas um
+link e o login pelo app não funciona. Detalhes e estado atual em `docs/TESTE-CUIDADOR.md`.
 
 ## Segurança
 
