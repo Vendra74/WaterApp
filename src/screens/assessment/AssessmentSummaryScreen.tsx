@@ -13,6 +13,7 @@ import { requestPermission } from '@/services/notifications/notificationService'
 import { useTheme } from '@/ui/theme';
 import { STEPS } from './steps';
 import type { Profile } from '@/domain/types';
+import { env } from '@/config/env';
 
 const tri = (v: string) => (v === 'yes' ? 'Sim' : v === 'no' ? 'Não' : 'Não sei');
 
@@ -44,7 +45,9 @@ export function AssessmentSummaryScreen() {
       : []),
     { key: 'swallow', label: 'Dificuldade para engolir', value: tri(draft.swallowingDifficulty) },
     { key: 'help_needs', label: 'Precisa de ajuda', value: `Beber: ${tri(draft.needsHelpToDrink)} · Banheiro: ${tri(draft.needsHelpToBathroom)}` },
-    { key: 'extras', label: 'Medicamentos / cuidador', value: `${draft.wantsMedications ? 'Sim' : 'Não'} / ${draft.wantsCaregiver ? 'Sim' : 'Não'}` },
+    env.caregiverEnabled
+      ? { key: 'extras', label: 'Medicamentos / cuidador', value: `${draft.wantsMedications ? 'Sim' : 'Não'} / ${draft.wantsCaregiver ? 'Sim' : 'Não'}` }
+      : { key: 'extras', label: 'Medicamentos', value: draft.wantsMedications ? 'Sim' : 'Não' },
   ];
 
   const editingStep = STEPS.find((s) => s.key === editingKey);
