@@ -50,7 +50,7 @@ export function TodayScreen() {
   };
 
   return (
-    <Screen>
+    <Screen safeTop>
       {/* Com letras muito grandes o botão não cabe ao lado da hora: empilha em vez de cortar. */}
       <View style={t.fontScale >= 1.5 ? { gap: t.space(1) } : { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <View>

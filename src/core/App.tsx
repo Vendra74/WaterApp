@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer, createNavigationContainerRef, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Notifications from 'expo-notifications';
 
 import type { RootStackParamList, TabParamList } from './navigation';
@@ -58,6 +58,8 @@ function TabLabel({ label, color, fontSize }: { label: string; color: string; fo
 function MainTabs() {
   const prefs = useAppStore((s) => s.profile?.accessibility ?? DEFAULT_PREFS);
   const theme = buildTheme(prefs);
+  // Altura fixa ignora a área segura: no Android com botões de navegação a barra do sistema cobria as abas.
+  const insets = useSafeAreaInsets();
   return (
     <Tabs.Navigator
       screenOptions={{
@@ -66,7 +68,7 @@ function MainTabs() {
         tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarLabel: ({ color, children }) => <TabLabel label={String(children)} color={color} fontSize={theme.font(13)} />,
         tabBarItemStyle: { paddingHorizontal: 2 },
-        tabBarStyle: { height: 76, paddingBottom: 10, paddingTop: 6, backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border },
+        tabBarStyle: { height: 76 + insets.bottom, paddingBottom: 10 + insets.bottom, paddingTop: 6, backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border },
       }}
     >
       <Tabs.Screen name="Hoje" component={TodayScreen} options={{ tabBarIcon: (p) => <TabIcon label="🏠" {...p} /> }} />
