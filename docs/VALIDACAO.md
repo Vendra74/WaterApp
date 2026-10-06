@@ -44,6 +44,10 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
 
 ## Depende de configuração externa
 
+O compartilhamento com cuidador está **desligado nesta versão** (`EXPO_PUBLIC_CAREGIVER_ENABLED`,
+padrão `false`): as linhas de conta, convite, sincronização e aviso abaixo valem para quando for
+religado. Estado e pendências em `docs/TESTE-CUIDADOR.md`.
+
 | Recurso | Depende de | Estado |
 |---|---|---|
 | Conta e login por código de e-mail | Supabase configurado + Email OTP ativado | Implementado; não testado contra servidor real |
