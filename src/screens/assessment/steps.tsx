@@ -6,6 +6,7 @@ import { AppText } from '@/ui/components/AppText';
 import { BigButton } from '@/ui/components/BigButton';
 import { useTheme } from '@/ui/theme';
 import { newId } from '@/domain/ids';
+import { env } from '@/config/env';
 
 export interface StepProps {
   draft: Profile;
@@ -245,12 +246,14 @@ export const STEPS: Step[] = [
   },
   {
     key: 'extras',
-    title: 'Você quer cadastrar medicamentos e convidar um cuidador?',
-    help: 'As duas coisas são opcionais e podem ser feitas depois.',
+    title: env.caregiverEnabled ? 'Você quer cadastrar medicamentos e convidar um cuidador?' : 'Você quer cadastrar medicamentos?',
+    help: env.caregiverEnabled ? 'As duas coisas são opcionais e podem ser feitas depois.' : 'É opcional e pode ser feito depois.',
     render: ({ draft, update }) => (
       <View style={{ gap: 16 }}>
         <Toggle label="Quero cadastrar meus medicamentos" value={draft.wantsMedications} onChange={(v) => update({ wantsMedications: v })} />
-        <Toggle label="Quero convidar um familiar ou cuidador" hint="Precisa de internet e de uma conta." value={draft.wantsCaregiver} onChange={(v) => update({ wantsCaregiver: v })} />
+        {env.caregiverEnabled ? (
+          <Toggle label="Quero convidar um familiar ou cuidador" hint="Precisa de internet e de uma conta." value={draft.wantsCaregiver} onChange={(v) => update({ wantsCaregiver: v })} />
+        ) : null}
       </View>
     ),
   },

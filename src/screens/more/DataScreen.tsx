@@ -11,6 +11,7 @@ import { deleteAllLocalData, exportAllData } from '@/services/export/dataExport'
 import { deleteRemoteData } from '@/services/sync/careService';
 import { loadDemoData } from '@/services/demo/demoData';
 import { hasAiConsent, isPrescriptionReadingAvailable, setAiConsent } from '@/services/ai/prescriptionReader';
+import { env } from '@/config/env';
 
 export function DataScreen() {
   const nav = useNavigation();
@@ -52,8 +53,8 @@ export function DataScreen() {
     <Screen title="Meus dados">
       <Card>
         <AppText variant="heading">Onde ficam meus dados?</AppText>
-        <AppText>Tudo fica neste aparelho. Só é enviado ao servidor o necessário para o cuidador que você autorizou. Dados de saúde não são incluídos em registros de erro nem em ferramentas de publicidade.</AppText>
-        {sync?.configured ? <AppText muted variant="small">Conta: {sync.signedIn ? 'conectada' : 'não conectada'} · pendências de envio: {sync.pending}</AppText> : <AppText muted variant="small">Compartilhamento remoto não configurado neste build.</AppText>}
+        <AppText>Tudo fica neste aparelho. {env.caregiverEnabled ? 'Só é enviado ao servidor o necessário para o cuidador que você autorizou. ' : 'Nesta versão nada é enviado a servidores. '}Dados de saúde não são incluídos em registros de erro nem em ferramentas de publicidade.</AppText>
+        {sync?.configured ? <AppText muted variant="small">Conta: {sync.signedIn ? 'conectada' : 'não conectada'} · pendências de envio: {sync.pending}</AppText> : env.caregiverEnabled ? <AppText muted variant="small">Compartilhamento remoto não configurado neste build.</AppText> : null}
       </Card>
       {canRead ? (
         <Card>

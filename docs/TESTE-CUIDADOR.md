@@ -5,6 +5,13 @@ Aparelho do titular: Motorola Edge 50 Pro (Android 16), development build do `ma
 
 ## Estado em 05/10/2026
 
+**Função desligada nesta versão (decisão do Andre em 05/10/2026).** O login depende de um serviço
+de e-mail próprio para enviar o código, e isso fica para a próxima versão. O app sai com
+`EXPO_PUBLIC_CAREGIVER_ENABLED=false` (padrão): sem entrada “Compartilhar com cuidador”, sem a
+pergunta sobre cuidador na avaliação e sem nenhuma comunicação com o servidor. Para religar:
+configurar o SMTP, descomentar os modelos em `supabase/config.toml`, definir
+`EXPO_PUBLIC_CAREGIVER_ENABLED=true` no `.env` e executar o roteiro abaixo nos aparelhos.
+
 O servidor existe e foi validado de ponta a ponta com duas contas temporárias (tabela de
 resultados no fim). **O teste nos aparelhos, com as contas reais, ainda não foi executado.**
 
