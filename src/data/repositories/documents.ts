@@ -28,3 +28,5 @@ export const DOC_CAREGIVER_ALERT_STATE = 'caregiver_alert_state';
 export const DOC_OCCURRENCES_QUEUED = 'occurrences_queued';
 /** Sugestões de horário recusadas: chave → instante da recusa. */
 export const DOC_DISMISSED_SUGGESTIONS = 'dismissed_suggestions';
+/** Consentimento para enviar fotos de receita ao serviço de leitura: { acceptedAt } ou ausente. */
+export const DOC_AI_CONSENT = 'ai_consent';

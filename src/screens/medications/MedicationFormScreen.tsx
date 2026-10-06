@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Alert, Image, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Image, View } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import type { RootStackParamList } from '@/core/navigation';
@@ -7,10 +7,14 @@ import { Screen } from '@/ui/components/Screen';
 import { AppText } from '@/ui/components/AppText';
 import { BigButton } from '@/ui/components/BigButton';
 import { Banner, ChoiceGroup, TextField, TimeField, Toggle } from '@/ui/components/Fields';
+import { Card } from '@/ui/components/Card';
+import { useTheme } from '@/ui/theme';
 import { useAppStore } from '@/state/appStore';
 import type { Medication, Weekday } from '@/domain/types';
 import { newId } from '@/domain/ids';
 import { isValidHHmm, WEEKDAY_LABELS_PT } from '@/domain/time/time';
+import { applyPrescriptionDraft, describePrescriptionDraft } from '@/domain/medication/prescriptionDraft';
+import { CONSENT_TEXT_AI, hasAiConsent, isPrescriptionReadingAvailable, readPrescriptionPhoto, setAiConsent } from '@/services/ai/prescriptionReader';
 
 function blank(): Medication {
   const now = new Date().toISOString();
@@ -28,7 +32,53 @@ export function MedicationFormScreen() {
   const [m, setM] = useState<Medication>(existing ?? blank());
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(false);
+  const [readResult, setReadResult] = useState<{ filled: string[]; missing: string[]; notes: string } | null>(null);
+  const [consent, setConsent] = useState<boolean | null>(null);
+  const t = useTheme();
+  const canRead = isPrescriptionReadingAvailable();
+  useEffect(() => {
+    if (canRead) void hasAiConsent().then(setConsent);
+  }, [canRead]);
   const set = (patch: Partial<Medication>) => setM((x) => ({ ...x, ...patch }));
+
+  /** Pede a autorização uma vez; fica guardada até a pessoa retirar em Meus dados. */
+  const ensureConsent = () =>
+    new Promise<boolean>((resolve) => {
+      if (consent) return resolve(true);
+      Alert.alert('Enviar a foto para leitura?', CONSENT_TEXT_AI, [
+        { text: 'Agora não', style: 'cancel', onPress: () => resolve(false) },
+        { text: 'Autorizo', onPress: () => void setAiConsent(true).then(() => { setConsent(true); resolve(true); }) },
+      ]);
+    });
+
+  /** Lê a receita ou a caixa pela foto e preenche o formulário como rascunho. */
+  const fillFromPhoto = async (camera: boolean) => {
+    if (!(await ensureConsent())) return;
+    const perm = camera ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Sem permissão', 'Não foi possível acessar a câmera ou as fotos.');
+      return;
+    }
+    const opts = { mediaTypes: ['images' as const], quality: 0.5, base64: true };
+    const r = camera ? await ImagePicker.launchCameraAsync(opts) : await ImagePicker.launchImageLibraryAsync(opts);
+    const asset = !r.canceled ? r.assets[0] : undefined;
+    if (!asset?.base64) return;
+    setReading(true);
+    setReadResult(null);
+    setError(null);
+    try {
+      const result = await readPrescriptionPhoto(asset.base64, asset.mimeType ?? 'image/jpeg');
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setM((x) => applyPrescriptionDraft({ ...x, photoUri: asset.uri }, result.draft));
+      setReadResult({ ...describePrescriptionDraft(result.draft), notes: result.draft.notes });
+    } finally {
+      setReading(false);
+    }
+  };
 
   const pickPhoto = async (camera: boolean) => {
     const perm = camera ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -70,7 +120,34 @@ export function MedicationFormScreen() {
         </View>
       }
     >
-      <Banner tone="info">Copie da receita. A foto é apenas um apoio visual: nada é lido automaticamente da imagem.</Banner>
+      {canRead ? (
+        <Card tone="alt">
+          <AppText variant="heading">Preencher pela foto</AppText>
+          <AppText>Tire uma foto da receita ou da caixa. O cadastro é preenchido como rascunho e você confere cada campo antes de salvar.</AppText>
+          {reading ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }} accessibilityLiveRegion="polite">
+              <ActivityIndicator color={t.colors.primary} />
+              <AppText bold>Lendo a foto…</AppText>
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <BigButton kind="secondary" compact style={{ flex: 1 }} icon="📷" label="Tirar foto" onPress={() => void fillFromPhoto(true)} />
+              <BigButton kind="secondary" compact style={{ flex: 1 }} label="Escolher foto" onPress={() => void fillFromPhoto(false)} />
+            </View>
+          )}
+          <AppText muted variant="small">A foto é enviada para leitura e não fica guardada. Autorização em Mais → Meus dados.</AppText>
+        </Card>
+      ) : (
+        <Banner tone="info">Copie da receita. A foto é apenas um apoio visual: nada é lido automaticamente da imagem.</Banner>
+      )}
+      {readResult ? (
+        <Banner tone="success" title="Preenchido pela foto. Confira cada campo antes de salvar.">
+          {readResult.filled.length ? `Lido: ${readResult.filled.join(', ')}. ` : ''}
+          {readResult.missing.length ? `Não encontrado na foto: ${readResult.missing.join(', ')}. ` : ''}
+          {readResult.notes}
+        </Banner>
+      ) : null}
+      {error ? <Banner tone="warning">{error}</Banner> : null}
       <TextField label="Nome" value={m.name} onChangeText={(v) => set({ name: v })} autoCapitalize="words" />
       <TextField label="Apresentação ou concentração" hint="Ex.: comprimido 50 mg, xarope 5 mg/ml" value={m.presentation} onChangeText={(v) => set({ presentation: v })} />
       <View style={{ flexDirection: 'row', gap: 8 }}>

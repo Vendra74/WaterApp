@@ -5,6 +5,8 @@ project_id = "vqpvazseakezfsivxtgq"
 [auth]
 site_url = "http://localhost:3000"
 additional_redirect_urls = []
+# Sessão anônima: usada só para autorizar a leitura de receita por foto (Edge Function ler-receita).
+enable_anonymous_sign_ins = true
 
 [auth.mfa.totp]
 enroll_enabled = true
@@ -26,3 +28,7 @@ max_frequency = "1m0s"
 # [auth.email.template.confirmation]
 # subject = "Seu código do Cuidar"
 # content_path = "./supabase/templates/codigo.html"
+
+# Leitura de receita por foto: exige usuário autenticado (sessão anônima do app serve).
+[functions.ler-receita]
+verify_jwt = true
