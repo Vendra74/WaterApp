@@ -73,7 +73,7 @@ PRIVACIDADE
 O Cuidar é uma ferramenta de apoio à rotina. Não faz diagnóstico, não prescreve, não calcula doses nem metas e não substitui a orientação de profissionais de saúde. Não é um serviço de emergência.
 ```
 
-### Novidades desta versão (0.1.0)
+### Novidades desta versão (1.0)
 
 ```
 Primeira versão do Cuidar: lembretes de água e de medicamentos, confirmação de dose pela notificação, leitura em voz alta e botão de ajuda.
@@ -133,7 +133,7 @@ Connect não pergunta sobre exportação de criptografia.
 ## Envio
 
 1. Em **Distribuição → iOS App → 1.0 Preparar para envio**, preencha os campos acima, envie as capturas
-   e escolha o build 3 ou mais recente (os builds 1 e 2 ainda declaram iPad).
+   e escolha o build 4 ou mais recente (os builds 1 a 3 são da versão 0.1.0, que a ficha do App Store Connect não aceita: a versão da ficha nasce como 1.0 e não pode ser editada).
 2. Preencha **Privacidade do app** e **Classificação etária**.
 3. Em **Lançamento da versão**, escolha “Lançar manualmente” se quiser controlar o dia.
 4. Clique em **Adicionar para revisão** e depois **Enviar para revisão**. A revisão costuma levar de 1 a
