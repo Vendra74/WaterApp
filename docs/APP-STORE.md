@@ -23,7 +23,7 @@ estão nesta pasta: `docs/privacidade.html` e `docs/index.html`. Para publicá-l
 | Nome | Cuidar: água e remédios (já definido ao criar o app; 30 caracteres no máximo) |
 | Subtítulo (30) | Lembretes de água e medicamentos |
 | Categoria principal | Saúde e fitness |
-| Categoria secundária | Medicina |
+| Categoria secundária | Utilitários (evite “Medicina”: a diretriz 5.1.3 impõe exigências extras a essa categoria, e o app se declara apoio à rotina) |
 | Idioma principal | Português (Brasil) |
 | Preço | Grátis |
 | Disponibilidade | Brasil (acrescente outros países se quiser) |
@@ -82,9 +82,12 @@ Primeira versão do Cuidar: lembretes de água e de medicamentos, confirmação 
 ## Capturas de tela
 
 A Apple exige pelo menos as do iPhone de 6,9" (1320 × 2868 px, por exemplo iPhone 17 Pro Max) e
-aceita que elas sejam reaproveitadas para os tamanhos menores. iPad é opcional se o app for marcado
-apenas para iPhone; como `supportsTablet` está ligado em `app.config.ts`, envie também as de iPad
-13" (2064 × 2752 px) ou desligue `supportsTablet` antes do próximo build.
+aceita que elas sejam reaproveitadas para os tamanhos menores.
+
+**iPad:** `supportsTablet` está ligado em `app.config.ts`, o que obriga capturas de iPad 13"
+(2064 × 2752 px) e faz a revisão testar num layout que nunca foi validado. Recomendação para esta
+primeira versão: `supportsTablet: false`, com `ios.buildNumber` maior, gerando um build novo antes do
+envio.
 
 Sugestão de sequência (3 a 6 imagens, tiradas no próprio iPhone com o build do TestFlight):
 
@@ -115,6 +118,13 @@ qualquer leitura como recomendação.
 ```
 O Cuidar é um app de lembretes de hidratação e de medicamentos. Não exige login; todos os recursos funcionam localmente no aparelho e os lembretes usam notificações locais. O app não faz diagnóstico, não prescreve nem calcula doses ou metas; os horários e quantidades são sempre informados pela própria pessoa. Para testar: conclua a avaliação inicial, cadastre um medicamento com horário próximo e permita as notificações. O entitlement de Time Sensitive Notifications é usado só para o lembrete de medicamento, para que ele toque mesmo no Modo Foco; o lembrete de água não usa esse nível.
 ```
+
+## Distribuição não listada (opcional)
+
+Se preferir que o app fique na App Store só por link, sem aparecer na busca, peça a distribuição não
+listada **antes** de enviar para revisão, em https://developer.apple.com/support/unlisted-app-distribution/
+(formulário curto explicando o público restrito). Depois de aprovada, a opção aparece em
+*Pricing and Availability*. A revisão é a mesma da publicação normal.
 
 ## Criptografia
 
