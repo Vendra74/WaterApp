@@ -97,6 +97,7 @@ export function defaultHydrationSettings(profile: Pick<Profile, 'wakeTime' | 'sl
     windowFollowsRoutine: true,
     medicationRepeatMinutes: 10,
     medicationRepeatCount: 2,
+    suggestReminderAdjustments: true,
   };
 }
 

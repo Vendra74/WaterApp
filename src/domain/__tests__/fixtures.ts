@@ -61,6 +61,7 @@ export function makeSettings(overrides: Partial<HydrationSettings> = {}): Hydrat
     windowFollowsRoutine: true,
     medicationRepeatMinutes: 0,
     medicationRepeatCount: 0,
+    suggestReminderAdjustments: true,
     ...overrides,
   };
 }

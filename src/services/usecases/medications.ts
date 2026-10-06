@@ -97,11 +97,11 @@ export async function markOccurrenceNotTaken(id: string, note = ''): Promise<Med
   return next;
 }
 
-export async function correctOccurrence(id: string, to: OccurrenceStatus, note: string): Promise<MedicationOccurrence | null> {
+export async function correctOccurrence(id: string, to: OccurrenceStatus, note: string, takenAt?: string): Promise<MedicationOccurrence | null> {
   const db = await getDb();
   const occ = await getOccurrence(db, id);
   if (!occ) return null;
-  const next = correctStatus(occ, to, new Date(), note);
+  const next = correctStatus(occ, to, new Date(), note, takenAt);
   await upsertOccurrences(db, [next], true);
   return next;
 }

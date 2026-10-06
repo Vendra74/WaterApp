@@ -100,6 +100,11 @@ export interface HydrationSettings {
   medicationRepeatMinutes: number;
   /** Quantas repetições no máximo por dose. */
   medicationRepeatCount: number;
+  /**
+   * Sugerir ajustes de horário a partir dos registros reais (calculado só no aparelho).
+   * Nada muda sem a pessoa aceitar a sugestão.
+   */
+  suggestReminderAdjustments: boolean;
 }
 
 export type BeverageKind = 'water' | 'tea' | 'juice' | 'milk' | 'coffee' | 'soup' | 'other';
