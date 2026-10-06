@@ -80,5 +80,5 @@ O app não declara microfone, localização, contatos nem acesso a arquivos.
   doses nem metas e não é serviço de emergência (texto em `src/config/branding.ts`). Use essa
   descrição ao preencher a categoria e a declaração de conteúdo de saúde.
 - **Público-alvo**: adultos. O app não é dirigido a crianças.
-- **Política de privacidade**: a Play exige uma URL pública. Pendência: publicar o texto antes do
-  envio.
+- **Política de privacidade**: a Play exige uma URL pública. O texto está em `docs/privacidade.html`,
+  publicado pelo GitHub Pages (ver [APP-STORE.md](APP-STORE.md)); use a mesma URL aqui.
