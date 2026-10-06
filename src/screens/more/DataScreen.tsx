@@ -53,7 +53,7 @@ export function DataScreen() {
     <Screen title="Meus dados">
       <Card>
         <AppText variant="heading">Onde ficam meus dados?</AppText>
-        <AppText>Tudo fica neste aparelho. {env.caregiverEnabled ? 'Só é enviado ao servidor o necessário para o cuidador que você autorizou. ' : 'Nesta versão nada é enviado a servidores. '}Dados de saúde não são incluídos em registros de erro nem em ferramentas de publicidade.</AppText>
+        <AppText>Tudo fica neste aparelho. {env.caregiverEnabled ? 'Só é enviado ao servidor o necessário para o cuidador que você autorizou. ' : canRead ? 'Nesta versão só sai do aparelho a foto de receita que você autorizar ler, e ela não fica guardada. ' : 'Nesta versão nada é enviado a servidores. '}Dados de saúde não são incluídos em registros de erro nem em ferramentas de publicidade.</AppText>
         {sync?.configured ? <AppText muted variant="small">Conta: {sync.signedIn ? 'conectada' : 'não conectada'} · pendências de envio: {sync.pending}</AppText> : env.caregiverEnabled ? <AppText muted variant="small">Compartilhamento remoto não configurado neste build.</AppText> : null}
       </Card>
       {canRead ? (
