@@ -84,10 +84,9 @@ Primeira versão do Cuidar: lembretes de água e de medicamentos, confirmação 
 A Apple exige pelo menos as do iPhone de 6,9" (1320 × 2868 px, por exemplo iPhone 17 Pro Max) e
 aceita que elas sejam reaproveitadas para os tamanhos menores.
 
-**iPad:** `supportsTablet` está ligado em `app.config.ts`, o que obriga capturas de iPad 13"
-(2064 × 2752 px) e faz a revisão testar num layout que nunca foi validado. Recomendação para esta
-primeira versão: `supportsTablet: false`, com `ios.buildNumber` maior, gerando um build novo antes do
-envio.
+**iPad:** `supportsTablet` está desligado em `app.config.ts` desde o build 3 (06/10/2026): o layout nunca
+foi validado em tablet e a Apple exigiria capturas de iPad 13". Para voltar a oferecer iPad, religue a
+opção, valide o layout e envie as capturas de iPad.
 
 Sugestão de sequência (3 a 6 imagens, tiradas no próprio iPhone com o build do TestFlight):
 
@@ -134,7 +133,7 @@ Connect não pergunta sobre exportação de criptografia.
 ## Envio
 
 1. Em **Distribuição → iOS App → 1.0 Preparar para envio**, preencha os campos acima, envie as capturas
-   e escolha o build (o mais recente aprovado no TestFlight).
+   e escolha o build 3 ou mais recente (os builds 1 e 2 ainda declaram iPad).
 2. Preencha **Privacidade do app** e **Classificação etária**.
 3. Em **Lançamento da versão**, escolha “Lançar manualmente” se quiser controlar o dia.
 4. Clique em **Adicionar para revisão** e depois **Enviar para revisão**. A revisão costuma levar de 1 a
