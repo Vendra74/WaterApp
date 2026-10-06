@@ -12,6 +12,13 @@ export const env = {
   demoMode: (process.env.EXPO_PUBLIC_DEMO_MODE ?? 'false').toLowerCase() === 'true',
 };
 
-/** Com o cuidador desligado o app não fala com o servidor: nada de conta, envio ou aviso. */
-export const isSupabaseConfigured = (): boolean =>
-  env.caregiverEnabled && env.supabaseUrl.startsWith('https://') && env.supabaseAnonKey.length > 20;
+/** URL e chave pública do projeto presentes no bundle (necessário para qualquer chamada ao servidor). */
+export const hasSupabaseCredentials = (): boolean =>
+  env.supabaseUrl.startsWith('https://') && env.supabaseAnonKey.length > 20;
+
+/**
+ * Compartilhamento com cuidador pronto para uso: credenciais presentes e recurso ligado. Com o
+ * cuidador desligado não há conta, envio de doses nem avisos. A leitura de receita por foto não
+ * depende disto: ela usa só as credenciais (ver `getSupabaseForReading`).
+ */
+export const isSupabaseConfigured = (): boolean => env.caregiverEnabled && hasSupabaseCredentials();
