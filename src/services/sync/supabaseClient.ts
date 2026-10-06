@@ -1,7 +1,7 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { env, isSupabaseConfigured } from '@/config/env';
+import { env, hasSupabaseCredentials, isSupabaseConfigured } from '@/config/env';
 
 let client: SupabaseClient | null = null;
 
@@ -12,6 +12,15 @@ let client: SupabaseClient | null = null;
  */
 export function getSupabase(): SupabaseClient | null {
   if (!isSupabaseConfigured()) return null;
+  return getSupabaseForReading();
+}
+
+/**
+ * Cliente só com as credenciais, sem exigir o cuidador ligado. Usado pela leitura de receita por
+ * foto, que tem autorização própria da pessoa. Nenhum serviço de sincronização deve usar este.
+ */
+export function getSupabaseForReading(): SupabaseClient | null {
+  if (!hasSupabaseCredentials()) return null;
   if (!client) {
     client = createClient(env.supabaseUrl, env.supabaseAnonKey, {
       auth: {

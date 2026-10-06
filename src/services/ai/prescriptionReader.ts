@@ -1,7 +1,7 @@
 import { getDb } from '@/data/db';
 import { DOC_AI_CONSENT, getDocument, setDocument } from '@/data/repositories/documents';
-import { isSupabaseConfigured } from '@/config/env';
-import { getSupabase } from '@/services/sync/supabaseClient';
+import { hasSupabaseCredentials } from '@/config/env';
+import { getSupabaseForReading } from '@/services/sync/supabaseClient';
 import { normalizePrescriptionDraft, type PrescriptionDraft } from '@/domain/medication/prescriptionDraft';
 
 /**
@@ -11,8 +11,9 @@ import { normalizePrescriptionDraft, type PrescriptionDraft } from '@/domain/med
 export const CONSENT_TEXT_AI =
   'Para preencher o cadastro, a foto da receita ou da caixa é enviada ao servidor do Cuidar e ao serviço de inteligência artificial que faz a leitura. A imagem é usada só para isso e não fica guardada. O resultado é um rascunho: você confere cada campo antes de salvar. Você pode retirar esta autorização em Mais → Meus dados.';
 
+/** Disponível sempre que o bundle tem as credenciais do projeto, mesmo com o cuidador desligado. */
 export function isPrescriptionReadingAvailable(): boolean {
-  return isSupabaseConfigured();
+  return hasSupabaseCredentials();
 }
 
 export async function hasAiConsent(): Promise<boolean> {
@@ -28,7 +29,7 @@ export async function setAiConsent(accepted: boolean): Promise<void> {
 export type ReadPrescriptionResult = { ok: true; draft: PrescriptionDraft } | { ok: false; error: string };
 
 export async function readPrescriptionPhoto(imageBase64: string, mediaType = 'image/jpeg'): Promise<ReadPrescriptionResult> {
-  const sb = getSupabase();
+  const sb = getSupabaseForReading();
   if (!sb) return { ok: false, error: 'Leitura por foto não configurada neste build.' };
   if (!(await hasAiConsent())) return { ok: false, error: 'Autorização necessária.' };
 
