@@ -104,6 +104,11 @@ qualquer leitura como recomendação.
 - **Você ou seus parceiros terceirizados coletam dados deste app?** Não.
   - Justificativa: todos os dados ficam no aparelho; não há conta, servidor, análise de uso nem anúncios.
   - O rótulo exibido na loja será “Dados não coletados”.
+- **Atenção (07/10/2026):** o build 3 foi gerado antes da leitura de receita por foto. Um build que
+  inclua esse recurso (credenciais do Supabase no `.env`) passa a enviar a foto autorizada ao servidor
+  e ao provedor de IA: responda “Sim” e declare “Fotos” (funcionalidade do app, vinculadas ao usuário
+  não, opcional), e troque na descrição “Nada é enviado ao desenvolvedor” pelo texto usado em
+  [PLAY-STORE.md](PLAY-STORE.md). A política de privacidade publicada já descreve esse recurso.
 - Se uma versão futura ativar o compartilhamento com cuidador (Supabase), refaça o questionário:
   passaria a coletar “Informações de saúde” e “Informações de contato”, vinculadas ao usuário, para
   a funcionalidade do app.

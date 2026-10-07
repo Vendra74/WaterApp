@@ -45,6 +45,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: BUNDLE_ID,
+    // Número do build enviado ao Play Console. Cada AAB enviado precisa de um número maior que o
+    // anterior (a `version` pode continuar igual). Ver docs/PLAY-STORE.md.
+    versionCode: 1,
     adaptiveIcon: {
       backgroundColor: '#0B5FA5',
       foregroundImage: './assets/android-icon-foreground.png',
