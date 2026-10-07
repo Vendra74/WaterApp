@@ -26,7 +26,7 @@ estão nesta pasta: `docs/privacidade.html` e `docs/index.html`. Para publicá-l
 | Categoria secundária | Utilitários (evite “Medicina”: a diretriz 5.1.3 impõe exigências extras a essa categoria, e o app se declara apoio à rotina) |
 | Idioma principal | Português (Brasil) |
 | Preço | Grátis |
-| Disponibilidade | Brasil e Estados Unidos (o app segue o idioma do aparelho: inglês nos aparelhos em inglês, português nos demais) |
+| Disponibilidade | Brasil e Estados Unidos (o app segue o idioma do aparelho, e a pessoa pode fixar português ou inglês em Mais → Idioma) |
 | Classificação etária | Responda “Nenhum” a tudo, exceto **Informações médicas/tratamento: Infrequente/Leve**. Resultado esperado: 4+ (ou 12+, conforme o questionário atual da Apple). |
 | Direitos autorais | 2026 André Luiz Machado Vendramini |
 | URL de suporte | `https://vendra74.github.io/WaterApp/` |
@@ -138,13 +138,13 @@ Cuidar is a tool to support your routine. It does not diagnose, prescribe, calcu
 ### What's New in This Version
 
 ```
-Cuidar now speaks English: the app follows your device language. Water and medication reminders, dose confirmation from the notification, read aloud, help button and optional medication entry from a photo of the prescription.
+Cuidar now speaks English: the app follows your device language, and you can pick a language in More → Language. Water and medication reminders, dose confirmation from the notification, read aloud, help button and optional medication entry from a photo of the prescription.
 ```
 
 ### Capturas em inglês
 
-A localização em inglês precisa das próprias capturas (mesmos tamanhos). Mude o idioma do iPhone para
-inglês (Ajustes → Geral → Idioma e Região), abra o app e tire a mesma sequência da seção abaixo.
+A localização em inglês precisa das próprias capturas (mesmos tamanhos). No app, escolha English em
+Mais → Idioma e tire a mesma sequência da seção abaixo.
 
 ### Notas para a revisão em inglês (App Review Information → Notes)
 

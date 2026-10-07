@@ -32,6 +32,8 @@ async function caregiverCheck(): Promise<void> {
 TaskManager.defineTask(RESCHEDULE_TASK, async () => {
   try {
     const { rescheduleAll } = await import('@/services/notifications/notificationService');
+    const { applyStoredLanguage } = await import('@/services/usecases/language');
+    await applyStoredLanguage(); // textos das notificações no idioma escolhido, mesmo sem abrir o app
     await rescheduleAll();
     await caregiverCheck();
     return BackgroundTask.BackgroundTaskResult.Success;

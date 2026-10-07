@@ -2,10 +2,24 @@
  * Idioma da interface. Puro (sem React Native) para que o domínio e os testes possam usá-lo.
  *
  * Regra do produto: português do Brasil é o padrão; o inglês entra quando o aparelho está em inglês.
- * Qualquer outro idioma do aparelho cai no português. O idioma é definido uma vez na abertura do app
- * (ver `device.ts`) e não muda enquanto o app está aberto.
+ * Qualquer outro idioma do aparelho cai no português. A pessoa pode fixar o idioma em
+ * Mais → Idioma (preferência gravada no aparelho; ver `services/usecases/language.ts`).
  */
 export type Locale = 'pt-BR' | 'en';
+
+/** Escolha da pessoa: seguir o aparelho ou um idioma fixo. */
+export type LanguagePreference = 'auto' | Locale;
+
+export const LANGUAGE_PREFERENCES: readonly LanguagePreference[] = ['auto', 'pt-BR', 'en'];
+
+export function isLanguagePreference(value: unknown): value is LanguagePreference {
+  return typeof value === 'string' && (LANGUAGE_PREFERENCES as readonly string[]).includes(value);
+}
+
+/** Preferência gravada + idioma do aparelho → idioma do app. */
+export function resolvePreference(preference: LanguagePreference, deviceLanguageCode: string | null | undefined): Locale {
+  return preference === 'auto' ? resolveLocale(deviceLanguageCode) : preference;
+}
 
 export const DEFAULT_LOCALE: Locale = 'pt-BR';
 

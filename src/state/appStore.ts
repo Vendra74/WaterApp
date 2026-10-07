@@ -23,6 +23,9 @@ import { getSyncStatus, pushOutbox, type SyncStatus } from '@/services/sync/sync
 import { checkCaregiverAlerts } from '@/services/usecases/caregiverAlerts';
 import { dismissReminderSuggestion, loadReminderSuggestions } from '@/services/usecases/suggestions';
 import { applyHydrationSuggestion, applyMedicationSuggestion, type ReminderSuggestion } from '@/domain/adaptive/reminderSuggestions';
+import { getLocale, type LanguagePreference, type Locale } from '@/i18n';
+import { applyLanguagePreference } from '@/i18n/device';
+import { applyStoredLanguage, saveLanguagePreference } from '@/services/usecases/language';
 
 interface AppState {
   ready: boolean;
@@ -40,6 +43,9 @@ interface AppState {
   lastUndo: HydrationLog | null;
   /** Sugestões de ajuste de horário aprendidas dos registros (só no aparelho). */
   suggestions: ReminderSuggestion[];
+  /** Escolha em Mais → Idioma; `locale` é o idioma em uso (muda a tela ao ser alterado). */
+  languagePreference: LanguagePreference;
+  locale: Locale;
 
   bootstrap: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -63,6 +69,7 @@ interface AppState {
   refreshSuggestions: () => Promise<void>;
   applySuggestion: (s: ReminderSuggestion) => Promise<void>;
   dismissSuggestion: (s: ReminderSuggestion) => Promise<void>;
+  setLanguage: (preference: LanguagePreference) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -80,9 +87,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   sync: null,
   lastUndo: null,
   suggestions: [],
+  languagePreference: 'auto',
+  locale: getLocale(),
 
   bootstrap: async () => {
     await getDb();
+    const { preference, locale } = await applyStoredLanguage();
+    set({ languagePreference: preference, locale });
     await get().refresh();
     set({ ready: true });
     void get().reschedule();
@@ -118,6 +129,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ settings: s });
     await get().reschedule();
     await get().refreshSuggestions();
+  },
+
+  setLanguage: async (preference) => {
+    const locale = applyLanguagePreference(preference);
+    set({ languagePreference: preference, locale });
+    await saveLanguagePreference(preference);
+    await get().reschedule(); // títulos e botões das notificações já agendadas
   },
 
   refreshSuggestions: async () => {

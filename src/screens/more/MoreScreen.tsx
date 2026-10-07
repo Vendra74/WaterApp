@@ -24,6 +24,7 @@ export function MoreScreen() {
       <BigButton kind="secondary" icon="🔔" label={m.testNotifications} onPress={() => nav.navigate('NotificationTest')} />
       <BigButton kind="secondary" icon="📖" label={m.content} onPress={() => nav.navigate('Content')} />
       <BigButton kind="secondary" icon="🗂" label={m.data} onPress={() => nav.navigate('Data')} />
+      <BigButton kind="secondary" icon="🌐" label={m.language} onPress={() => nav.navigate('Language')} />
       <AppText muted variant="small">{s.common.appVersion(APP_NAME, '0.1.0')}{demoMode ? m.demoTag : ''}</AppText>
       <AppText muted variant="small">{m.disclaimer}</AppText>
     </Screen>

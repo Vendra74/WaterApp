@@ -2,7 +2,7 @@ import { getLocale } from './locale';
 import { pt, type Strings } from './pt';
 import { en } from './en';
 
-export { getLocale, setLocale, resolveLocale, isEnglish, localeTag, type Locale } from './locale';
+export { getLocale, setLocale, resolveLocale, resolvePreference, isLanguagePreference, isEnglish, localeTag, LANGUAGE_PREFERENCES, type Locale, type LanguagePreference } from './locale';
 export type { Strings } from './pt';
 
 /**

@@ -25,6 +25,7 @@ export type RootStackParamList = {
   Data: undefined;
   Content: undefined;
   Contacts: undefined;
+  Language: undefined;
 };
 
 declare global {

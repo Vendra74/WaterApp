@@ -1,6 +1,6 @@
 import { pt } from '../pt';
 import { en } from '../en';
-import { getLocale, resolveLocale, setLocale, strings } from '../index';
+import { getLocale, resolveLocale, resolvePreference, setLocale, strings } from '../index';
 import { formatClock, formatDate, formatHHmm, formatISODate, weekdayShort } from '../format';
 import { buildNotificationPlan } from '@/domain/notifications/planner';
 import { describeSuggestion } from '@/domain/adaptive/reminderSuggestions';
@@ -33,7 +33,7 @@ describe('dicionários', () => {
   });
 
   it('nenhum texto em inglês ficou igual ao português por descuido (exceto os que são iguais mesmo)', () => {
-    const same = new Set(['common.ml', 'medicationForm.dose', 'assessment.fontNormal', 'prescription.fieldDose', 'nav.dose', 'common.item', 'common.medication', 'occurrenceStatus.taken', 'hydration.beverageSoup', 'help.emergencyNumber', 'medications.instructions', 'occurrence.instructions', 'profile.instructions', 'medicationForm.dateHint', 'medicationForm.routeOther']);
+    const same = new Set(['common.ml', 'medicationForm.dose', 'assessment.fontNormal', 'prescription.fieldDose', 'nav.dose', 'common.item', 'common.medication', 'occurrenceStatus.taken', 'hydration.beverageSoup', 'help.emergencyNumber', 'medications.instructions', 'occurrence.instructions', 'profile.instructions', 'medicationForm.dateHint', 'medicationForm.routeOther', 'language.ptBR', 'language.en']);
     const a = leaves(pt);
     const pick = (o: unknown, path: string) => path.split('.').reduce<unknown>((acc, k) => (acc as Record<string, unknown>)[k], o);
     for (const [path, type] of a) {
@@ -112,5 +112,15 @@ describe('textos gerados pelo domínio em inglês', () => {
     expect(text.accept).toBe('Change to 8:30 AM');
     expect(text.reject).toBe('Keep 8:00 AM');
     expect(describeSchedule(medication({ times: ['08:00', '20:00'], weekdays: [] }))).toBe('at 8:00 AM, 8:00 PM, every day');
+  });
+});
+
+describe('preferência de idioma', () => {
+  it('auto segue o aparelho; escolha fixa ignora o aparelho', () => {
+    expect(resolvePreference('auto', 'en-US')).toBe('en');
+    expect(resolvePreference('auto', 'pt-BR')).toBe('pt-BR');
+    expect(resolvePreference('auto', undefined)).toBe('pt-BR');
+    expect(resolvePreference('en', 'pt-BR')).toBe('en');
+    expect(resolvePreference('pt-BR', 'en')).toBe('pt-BR');
   });
 });
