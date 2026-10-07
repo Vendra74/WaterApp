@@ -11,8 +11,10 @@ import { totalForDay } from '@/domain/hydration/logs';
 import { goalProgressPercent } from '@/domain/safety/plan';
 import { suggestFor } from '@/domain/safety/suggestions';
 import { generateHydrationSlots } from '@/domain/hydration/schedule';
-import { formatTimeBR, WEEKDAY_LONG_PT, weekdayOf } from '@/domain/time/time';
-import { OCCURRENCE_STATUS_PT, pendingOccurrencesToday } from '@/domain/medication/occurrences';
+import { weekdayOf } from '@/domain/time/time';
+import { occurrenceStatusLabel, pendingOccurrencesToday } from '@/domain/medication/occurrences';
+import { strings } from '@/i18n';
+import { formatClock, weekdayLong } from '@/i18n/format';
 import { describeSuggestion } from '@/domain/adaptive/reminderSuggestions';
 import { speak } from '@/services/speech/speech';
 import { useTheme } from '@/ui/theme';
@@ -20,6 +22,8 @@ import { useTheme } from '@/ui/theme';
 export function TodayScreen() {
   const nav = useNavigation();
   const t = useTheme();
+  const s = strings();
+  const td = s.today;
   const { profile, settings, plan, todayLogs, medications, occurrences, permission, notificationState, sync, lastUndo, undoLog, suggestions: reminderSuggestions, applySuggestion, dismissSuggestion } = useAppStore();
   const [now, setNow] = useState(new Date());
   useEffect(() => {
@@ -44,10 +48,10 @@ export function TodayScreen() {
 
   const readAloud = () => {
     const parts = [
-      `Agora são ${formatTimeBR(now)}.`,
-      nextHydration ? `Próximo lembrete de água às ${formatTimeBR(nextHydration)}.` : 'Nenhum lembrete de água programado.',
-      `Hoje você registrou ${total} mililitros.`,
-      upcoming.length ? `Próximo medicamento: ${medsById.get(upcoming[0]!.medicationId)?.name ?? ''} às ${formatTimeBR(new Date(upcoming[0]!.plannedAt))}.` : '',
+      `${td.nowIs(formatClock(now))}.`,
+      nextHydration ? td.nextWaterAt(formatClock(nextHydration)) : td.noWaterScheduled,
+      td.loggedToday(total),
+      upcoming.length ? td.nextMedication(medsById.get(upcoming[0]!.medicationId)?.name ?? '', formatClock(new Date(upcoming[0]!.plannedAt))) : '',
     ];
     speak(parts.join(' '));
   };
@@ -57,33 +61,33 @@ export function TodayScreen() {
       {/* Com letras muito grandes o botão não cabe ao lado da hora: empilha em vez de cortar. */}
       <View style={t.fontScale >= 1.5 ? { gap: t.space(1) } : { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <View>
-          <AppText muted>{WEEKDAY_LONG_PT[weekdayOf(now)]}</AppText>
-          <AppText variant="big" accessibilityLabel={`Agora são ${formatTimeBR(now)}`}>{formatTimeBR(now)}</AppText>
+          <AppText muted>{weekdayLong(weekdayOf(now))}</AppText>
+          <AppText variant="big" accessibilityLabel={td.nowIs(formatClock(now))}>{formatClock(now)}</AppText>
         </View>
-        <BigButton kind="secondary" compact icon="🔊" label="Ler em voz alta" onPress={readAloud} />
+        <BigButton kind="secondary" compact icon="🔊" label={s.common.readAloud} onPress={readAloud} />
       </View>
-      {name ? <AppText variant="heading">Olá, {name}.</AppText> : null}
+      {name ? <AppText variant="heading">{td.hello(name)}</AppText> : null}
 
       {permission === 'denied' ? (
-        <Banner tone="warning" title="Notificações desligadas">Os lembretes não vão aparecer. Ative em Mais → Testar notificações.</Banner>
+        <Banner tone="warning" title={td.notificationsOffTitle}>{td.notificationsOffBody}</Banner>
       ) : null}
-      {notificationState?.lastError && permission !== 'denied' ? <Banner tone="warning" title="Agendamento">{notificationState.lastError}</Banner> : null}
+      {notificationState?.lastError && permission !== 'denied' ? <Banner tone="warning" title={td.schedulingTitle}>{notificationState.lastError}</Banner> : null}
 
       <Card tone="alt">
-        <AppText variant="label" muted>Próximo lembrete de água</AppText>
-        <AppText variant="big">{nextHydration ? formatTimeBR(nextHydration) : '—'}</AppText>
-        {!settings?.enabled ? <AppText muted>Lembretes de água desligados. Ligue em Lembretes.</AppText> : null}
-        <AppText variant="label" muted>Água registrada hoje</AppText>
-        <AppText variant="heading">{total} ml{pct !== null && plan?.goalMl ? ` · ${pct}% de ${plan.goalMl} ml` : ''}</AppText>
-        {pct !== null && pct > 100 ? <AppText style={{ color: t.colors.warning }}>Acima da quantidade orientada. Se tiver dúvida, fale com sua equipe de saúde.</AppText> : null}
+        <AppText variant="label" muted>{td.nextWater}</AppText>
+        <AppText variant="big">{nextHydration ? formatClock(nextHydration) : '—'}</AppText>
+        {!settings?.enabled ? <AppText muted>{td.waterOff}</AppText> : null}
+        <AppText variant="label" muted>{td.waterToday}</AppText>
+        <AppText variant="heading">{pct !== null && plan?.goalMl ? td.totalWithGoal(total, pct, plan.goalMl) : `${total} ml`}</AppText>
+        {pct !== null && pct > 100 ? <AppText style={{ color: t.colors.warning }}>{td.aboveGoal}</AppText> : null}
         {suggestions.length > 1 ? (
-          <AppText muted variant="small">Sugestão de agora: {suggestions.map((s) => s.label).join(', ')}. (Frutas não contam como líquido.)</AppText>
+          <AppText muted variant="small">{td.suggestionNow(suggestions.map((x) => x.label).join(', '))}</AppText>
         ) : null}
       </Card>
 
-      <BigButton label="Registrar água" icon="💧" onPress={() => nav.navigate('HydrationLog')} />
+      <BigButton label={td.logWater} icon="💧" onPress={() => nav.navigate('HydrationLog')} />
       {lastUndo ? (
-        <BigButton kind="ghost" compact label={`Desfazer último registro (${lastUndo.volumeMl} ml)`} onPress={() => void undoLog(lastUndo)} />
+        <BigButton kind="ghost" compact label={td.undoLast(lastUndo.volumeMl)} onPress={() => void undoLog(lastUndo)} />
       ) : null}
 
       {/* Uma sugestão por vez, aprendida dos registros dos últimos dias. Nada muda sem tocar em "Mudar". */}
@@ -91,15 +95,15 @@ export function TodayScreen() {
         <Card tone="alt" accessibilityRole="summary">
           <AppText variant="heading">{suggestionText!.title}</AppText>
           <AppText>{suggestionText!.body}</AppText>
-          <AppText muted variant="small">Calculado só neste aparelho, com os seus registros. Você pode desligar isso em Lembretes de água.</AppText>
+          <AppText muted variant="small">{td.suggestionNote}</AppText>
           <BigButton compact icon="✓" label={suggestionText!.accept} onPress={() => void applySuggestion(suggestion)} />
           <BigButton compact kind="ghost" label={suggestionText!.reject} onPress={() => void dismissSuggestion(suggestion)} />
         </Card>
       ) : null}
 
       <Card>
-        <AppText variant="heading">Medicamentos de hoje</AppText>
-        {upcoming.length === 0 ? <AppText muted>{medications.length === 0 ? 'Nenhum medicamento cadastrado.' : 'Nenhum medicamento restante hoje.'}</AppText> : null}
+        <AppText variant="heading">{td.medicationsToday}</AppText>
+        {upcoming.length === 0 ? <AppText muted>{medications.length === 0 ? td.noMedications : td.noMedicationsLeft}</AppText> : null}
         {upcoming.map((o) => {
           const m = medsById.get(o.medicationId);
           const when = o.status === 'snoozed' && o.snoozedUntil ? new Date(o.snoozedUntil) : new Date(o.plannedAt);
@@ -108,18 +112,18 @@ export function TodayScreen() {
               key={o.id}
               kind="secondary"
               compact
-              label={`${formatTimeBR(when)} · ${m?.name ?? 'Medicamento'} · ${OCCURRENCE_STATUS_PT[o.status]}`}
-              hint="Abre as opções: tomei, lembrar depois, não tomei"
+              label={`${formatClock(when)} · ${m?.name ?? s.common.medication} · ${occurrenceStatusLabel(o.status)}`}
+              hint={td.occurrenceHint}
               onPress={() => nav.navigate('OccurrenceAction', { occurrenceId: o.id })}
             />
           );
         })}
       </Card>
 
-      <BigButton kind="danger" label="Preciso de ajuda" icon="☎" onPress={() => nav.navigate('Help')} />
+      <BigButton kind="danger" label={td.needHelp} icon="☎" onPress={() => nav.navigate('Help')} />
 
       {sync && sync.configured && sync.pending > 0 ? (
-        <AppText muted variant="small">{sync.pending} registro(s) aguardando sincronização{sync.online ? '' : ' (sem internet)'}.</AppText>
+        <AppText muted variant="small">{td.pendingSync(sync.pending, !sync.online)}</AppText>
       ) : null}
     </Screen>
   );

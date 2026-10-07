@@ -11,7 +11,7 @@ import { isSupabaseConfigured } from '@/config/env';
 import { currentUser, requestEmailCode, signOut, verifyEmailCode, type AuthUser } from '@/services/sync/authService';
 import { acceptInvite, CONSENT_TEXT, changePermission, createInvite, listCaredPeople, listMyLinks, revokeLink, type CaredPerson, type RemoteCareLink } from '@/services/sync/careService';
 import type { CarePermission } from '@/domain/types';
-import { formatDateBR } from '@/domain/time/time';
+import { formatDate as formatDateBR } from '@/i18n/format';
 
 export function CaregiverScreen() {
   const nav = useNavigation();

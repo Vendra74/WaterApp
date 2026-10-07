@@ -1,4 +1,5 @@
 import type { Profile } from '../types';
+import { strings } from '@/i18n';
 
 /**
  * Regras explícitas de segurança para personalização.
@@ -86,8 +87,7 @@ export function evaluateIndividualPlan(profile: Pick<
       allowIndividualSuggestions: true,
       showGoalProgress: true,
       flags,
-      guidance:
-        'Seus lembretes seguem a quantidade e as orientações informadas pela sua equipe de saúde. Se as orientações mudarem, atualize aqui.',
+      guidance: strings().plan.professionalGoal,
     };
   }
 
@@ -98,22 +98,16 @@ export function evaluateIndividualPlan(profile: Pick<
     allowIndividualSuggestions: true,
     showGoalProgress: false,
     flags,
-    guidance:
-      'Você receberá lembretes gerais para beber água ao longo do dia, sem meta de volume. O aplicativo não calcula quantidades: se quiser uma meta, confirme com sua equipe de saúde.',
+    guidance: strings().plan.generalReminders,
   };
 }
 
 function guidanceFor(flags: SafetyFlag[]): string {
-  if (flags.includes('assessment_incomplete')) {
-    return 'Complete a avaliação inicial para ativar sugestões personalizadas. Os lembretes gerais continuam disponíveis.';
-  }
-  if (flags.includes('swallowing_difficulty') || flags.includes('swallowing_unknown')) {
-    return 'Você informou dificuldade para engolir (ou não tem certeza). Por segurança, o aplicativo não sugere volumes nem alimentos. Confirme um plano com sua equipe de saúde e registre aqui o que foi orientado.';
-  }
-  if (flags.includes('fluid_restriction_without_quantity') || flags.includes('fluid_restriction_unknown')) {
-    return 'Você indicou uma restrição de líquidos (ou não tem certeza) sem a quantidade orientada. O aplicativo não vai sugerir volumes: confirme com sua equipe de saúde e cadastre a quantidade quando souber.';
-  }
-  return 'Confirme suas orientações com a equipe de saúde.';
+  const s = strings().plan;
+  if (flags.includes('assessment_incomplete')) return s.assessmentIncomplete;
+  if (flags.includes('swallowing_difficulty') || flags.includes('swallowing_unknown')) return s.swallowing;
+  if (flags.includes('fluid_restriction_without_quantity') || flags.includes('fluid_restriction_unknown')) return s.restriction;
+  return s.fallback;
 }
 
 /** Percentual de meta: apenas quando existe meta válida; nunca extrapola 100 no indicador visual. */

@@ -1,5 +1,6 @@
 import type { ISODateTime, Medication, MedicationOccurrence, OccurrenceStatus } from '../types';
 import { addDays, atLocalTime, iso, parseISODate, startOfLocalDay, toISODate, weekdayOf } from '../time/time';
+import { strings } from '@/i18n';
 
 export function occurrenceId(medicationId: string, plannedAt: Date): string {
   return `${medicationId}@${plannedAt.toISOString()}`;
@@ -72,7 +73,7 @@ export function materializeOccurrences(
         takenAt: null,
         snoozedUntil: null,
         note: '',
-        history: [{ at: iso(now), from: null, to: 'scheduled', reason: 'planejada' }],
+        history: [{ at: iso(now), from: null, to: 'scheduled', reason: strings().occurrenceReason.planned }],
         updatedAt: iso(now),
       });
     }
@@ -107,7 +108,7 @@ export function markUnconfirmedIfLate(
   if (occ.status !== 'scheduled' && occ.status !== 'snoozed') return occ;
   const reference = occ.status === 'snoozed' && occ.snoozedUntil ? new Date(occ.snoozedUntil) : new Date(occ.plannedAt);
   if (now.getTime() - reference.getTime() > toleranceMinutes * 60_000) {
-    return transition(occ, 'unconfirmed', now, 'sem confirmação após o horário');
+    return transition(occ, 'unconfirmed', now, strings().occurrenceReason.lateUnconfirmed);
   }
   return occ;
 }
@@ -132,7 +133,7 @@ export function transition(
 export function confirmTaken(occ: MedicationOccurrence, now: Date): { occ: MedicationOccurrence; alreadyConfirmed: boolean } {
   if (occ.status === 'taken') return { occ, alreadyConfirmed: true };
   return {
-    occ: transition(occ, 'taken', now, 'confirmada pelo usuário', { takenAt: iso(now), snoozedUntil: null }),
+    occ: transition(occ, 'taken', now, strings().occurrenceReason.confirmedByUser, { takenAt: iso(now), snoozedUntil: null }),
     alreadyConfirmed: false,
   };
 }
@@ -144,11 +145,11 @@ export function confirmTaken(occ: MedicationOccurrence, now: Date): { occ: Medic
 export function snooze(occ: MedicationOccurrence, now: Date, minutes: number): MedicationOccurrence {
   if (occ.status === 'taken') return occ;
   const until = new Date(now.getTime() + minutes * 60_000);
-  return transition(occ, 'snoozed', now, `adiada ${minutes} min`, { snoozedUntil: iso(until) });
+  return transition(occ, 'snoozed', now, strings().occurrenceReason.snoozed(minutes), { snoozedUntil: iso(until) });
 }
 
 export function markNotTaken(occ: MedicationOccurrence, now: Date, note = ''): MedicationOccurrence {
-  return transition(occ, 'not_taken', now, 'informada como não tomada', { note, snoozedUntil: null });
+  return transition(occ, 'not_taken', now, strings().occurrenceReason.reportedNotTaken, { note, snoozedUntil: null });
 }
 
 /**
@@ -156,19 +157,16 @@ export function markNotTaken(occ: MedicationOccurrence, now: Date, note = ''): M
  * a pessoa tomou (ex.: "tomei às 8h e esqueci de marcar"); sem ela, mantém a já registrada ou usa agora.
  */
 export function correctStatus(occ: MedicationOccurrence, to: OccurrenceStatus, now: Date, note: string, takenAt?: ISODateTime): MedicationOccurrence {
-  return transition(occ, to, now, `correção manual: ${note}`, {
+  return transition(occ, to, now, strings().occurrenceReason.manualCorrection(note), {
     note,
     takenAt: to === 'taken' ? takenAt ?? occ.takenAt ?? iso(now) : null,
   });
 }
 
-export const OCCURRENCE_STATUS_PT: Record<OccurrenceStatus, string> = {
-  scheduled: 'Agendada',
-  taken: 'Tomada',
-  snoozed: 'Adiada',
-  unconfirmed: 'Sem confirmação',
-  not_taken: 'Não tomada',
-};
+/** Rótulo da situação de uma dose no idioma atual. */
+export function occurrenceStatusLabel(status: OccurrenceStatus): string {
+  return strings().occurrenceStatus[status];
+}
 
 export function occurrencesForDay(occs: MedicationOccurrence[], day: Date): MedicationOccurrence[] {
   const key = toISODate(day);

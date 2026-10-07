@@ -15,7 +15,11 @@ const MODEL = Deno.env.get('MODELO_LEITURA') ?? 'claude-opus-5-5';
 const LEITURAS_POR_DIA = Number(Deno.env.get('LEITURAS_POR_DIA') ?? '20');
 const MAX_BASE64 = 6_000_000; // ~4,5 MB de imagem
 
-const SISTEMA = `Você transcreve informações de uma foto de receita médica ou de caixa de medicamento, em português do Brasil, para preencher um rascunho de cadastro que a pessoa vai conferir campo a campo.
+// O app informa o idioma da interface (`language`: "pt-BR" ou "en"). A transcrição copia a receita como
+// está, em qualquer idioma; só as observações ("notes") são escritas no idioma do app.
+type Idioma = 'pt-BR' | 'en';
+
+const SISTEMA = (idioma: Idioma) => `Você transcreve informações de uma foto de receita médica ou de caixa de medicamento para preencher um rascunho de cadastro que a pessoa vai conferir campo a campo. A receita pode estar em português ou em inglês.
 
 Regras obrigatórias:
 - Copie apenas o que está escrito na imagem. Não deduza, não complete e não corrija nada.
@@ -27,7 +31,8 @@ Regras obrigatórias:
 - "times": horários explícitos no formato "HH:mm" (24 h) SOMENTE se a receita escrever horários. "intervalHours": número de horas se a receita disser "de X em X horas". Se disser apenas "2 vezes ao dia" sem horários, deixe ambos vazios e explique em "notes".
 - "instructions": instruções do prescritor (com alimento, em jejum, duração do tratamento...), como escritas.
 - "readable": true se você identificou pelo menos o nome de um medicamento; false caso contrário.
-- "notes": em uma ou duas frases, o que não ficou claro ou o que a pessoa deve conferir. Se a foto tiver mais de um medicamento, transcreva só o primeiro e avise em "notes".`;
+- "notes": em uma ou duas frases, o que não ficou claro ou o que a pessoa deve conferir. Se a foto tiver mais de um medicamento, transcreva só o primeiro e avise em "notes".
+- Escreva "notes" ${idioma === 'en' ? 'em inglês (English)' : 'em português do Brasil'}. Os demais campos copiam o texto da imagem como está, sem traduzir.`;
 
 const FORMATO = {
   type: 'json_schema' as const,
@@ -53,6 +58,9 @@ const FORMATO = {
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
+/** Erro com código estável (o app traduz pelo `code`) e mensagem em português (compatível com apps antigos). */
+const erro = (status: number, code: string, error: string) => json(status, { code, error });
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return json(405, { error: 'método não permitido' });
 
@@ -71,9 +79,9 @@ Deno.serve(async (req) => {
   const admin = createClient(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   const since = new Date(Date.now() - 24 * 3600_000).toISOString();
   const { count } = await admin.from('leituras_receita').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', since);
-  if ((count ?? 0) >= LEITURAS_POR_DIA) return json(429, { error: 'limite diário de leituras atingido; tente amanhã' });
+  if ((count ?? 0) >= LEITURAS_POR_DIA) return erro(429, 'daily_limit', 'limite diário de leituras atingido; tente amanhã');
 
-  let body: { imageBase64?: string; mediaType?: string };
+  let body: { imageBase64?: string; mediaType?: string; language?: string };
   try {
     body = await req.json();
   } catch {
@@ -81,8 +89,9 @@ Deno.serve(async (req) => {
   }
   const imageBase64 = body.imageBase64 ?? '';
   const mediaType = body.mediaType ?? 'image/jpeg';
-  if (!imageBase64 || imageBase64.length > MAX_BASE64) return json(400, { error: 'imagem ausente ou grande demais' });
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(mediaType)) return json(400, { error: 'formato de imagem não aceito' });
+  const idioma: Idioma = body.language === 'en' ? 'en' : 'pt-BR';
+  if (!imageBase64 || imageBase64.length > MAX_BASE64) return erro(400, 'image_too_large', 'imagem ausente ou grande demais');
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(mediaType)) return erro(400, 'image_format', 'formato de imagem não aceito');
 
   await admin.from('leituras_receita').insert({ user_id: userId });
 
@@ -92,25 +101,25 @@ Deno.serve(async (req) => {
       model: MODEL,
       max_tokens: 2048,
       output_config: { effort: 'low', format: FORMATO },
-      system: SISTEMA,
+      system: SISTEMA(idioma),
       messages: [
         {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType as 'image/jpeg' | 'image/png' | 'image/webp', data: imageBase64 } },
-            { type: 'text', text: 'Transcreva o medicamento desta foto no formato pedido.' },
+            { type: 'text', text: idioma === 'en' ? 'Transcribe the medication in this photo in the requested format.' : 'Transcreva o medicamento desta foto no formato pedido.' },
           ],
         },
       ],
     });
-    if (response.stop_reason === 'refusal') return json(422, { error: 'o serviço não conseguiu processar esta imagem' });
+    if (response.stop_reason === 'refusal') return erro(422, 'refused', 'o serviço não conseguiu processar esta imagem');
     const text = response.content.find((b) => b.type === 'text');
-    if (!text || text.type !== 'text') return json(502, { error: 'resposta vazia do modelo' });
+    if (!text || text.type !== 'text') return erro(502, 'read_failed', 'resposta vazia do modelo');
     return json(200, { draft: JSON.parse(text.text) });
   } catch (e) {
     const status = e instanceof Anthropic.RateLimitError ? 429 : e instanceof Anthropic.APIError ? 502 : 500;
     const message = e instanceof Error ? e.message : String(e);
     console.error('ler-receita', status, message);
-    return json(status, { error: status === 429 ? 'serviço ocupado; tente de novo em instantes' : 'falha ao ler a imagem' });
+    return status === 429 ? erro(429, 'busy', 'serviço ocupado; tente de novo em instantes') : erro(status, 'read_failed', 'falha ao ler a imagem');
   }
 });

@@ -1,4 +1,5 @@
 import * as TaskManager from 'expo-task-manager';
+import { strings } from '@/i18n';
 import * as BackgroundTask from 'expo-background-task';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
@@ -70,7 +71,7 @@ export async function registerBackgroundTasks(): Promise<{ periodic: boolean; no
       if (!registered) await BackgroundTask.registerTaskAsync(RESCHEDULE_TASK, { minimumInterval: 6 * 60 });
       result.periodic = true;
     } else {
-      result.reason = 'Tarefas em segundo plano restritas pelo sistema.';
+      result.reason = strings().notificationTest.bgRestricted;
     }
   } catch (e) {
     result.reason = e instanceof Error ? e.message : String(e);

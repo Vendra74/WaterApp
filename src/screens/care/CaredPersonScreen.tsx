@@ -8,8 +8,9 @@ import { Card } from '@/ui/components/Card';
 import { Banner } from '@/ui/components/Fields';
 import { acknowledgeAlert, fetchCaredSummary, type CaredSummary } from '@/services/sync/careService';
 import { currentUser } from '@/services/sync/authService';
-import { addDays, formatDateBR, formatTimeBR, startOfLocalDay } from '@/domain/time/time';
-import { OCCURRENCE_STATUS_PT } from '@/domain/medication/occurrences';
+import { addDays, startOfLocalDay } from '@/domain/time/time';
+import { occurrenceStatusLabel } from '@/domain/medication/occurrences';
+import { formatClock as formatTimeBR, formatDate as formatDateBR } from '@/i18n/format';
 import type { OccurrenceStatus } from '@/domain/types';
 
 export function CaredPersonScreen() {
@@ -57,7 +58,7 @@ export function CaredPersonScreen() {
           <Card>
             <AppText variant="heading">Medicamentos de hoje</AppText>
             {summary.occurrences.length === 0 ? <AppText muted>Nenhuma dose prevista hoje.</AppText> : null}
-            {summary.occurrences.map((o) => <AppText key={o.id}>{formatTimeBR(new Date(o.planned_at))} · {medName(o.medication_id)} · {OCCURRENCE_STATUS_PT[o.status as OccurrenceStatus] ?? o.status}</AppText>)}
+            {summary.occurrences.map((o) => <AppText key={o.id}>{formatTimeBR(new Date(o.planned_at))} · {medName(o.medication_id)} · {occurrenceStatusLabel(o.status as OccurrenceStatus) ?? o.status}</AppText>)}
           </Card>
         </>
       ) : null}

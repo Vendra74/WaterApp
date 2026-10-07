@@ -4,9 +4,11 @@ import { enqueue } from '@/data/repositories/hydration';
 import type { HydrationSettings, Profile } from '@/domain/types';
 import { defaultHydrationSettings } from '@/domain/hydration/schedule';
 import { newId } from '@/domain/ids';
+import { strings } from '@/i18n';
 
 export function emptyProfile(): Profile {
   const now = new Date().toISOString();
+  const d = strings().defaults;
   return {
     id: newId('p-'),
     name: '',
@@ -16,21 +18,12 @@ export function emptyProfile(): Profile {
     wakeTime: '07:00',
     sleepTime: '22:00',
     naps: [],
-    meals: [
-      { label: 'Café da manhã', time: '07:30' },
-      { label: 'Almoço', time: '12:00' },
-      { label: 'Lanche da tarde', time: '15:30' },
-      { label: 'Jantar', time: '19:00' },
-    ],
+    meals: d.meals.map((m) => ({ ...m })),
     activities: [],
     heatExposure: 'unknown',
-    drinkPreferences: ['Água'],
+    drinkPreferences: [d.drink],
     fruitPreferences: [],
-    containers: [
-      { id: newId('c-'), label: 'Copo pequeno', volumeMl: 150 },
-      { id: newId('c-'), label: 'Copo', volumeMl: 200 },
-      { id: newId('c-'), label: 'Garrafinha', volumeMl: 300 },
-    ],
+    containers: d.containers.map((c) => ({ id: newId('c-'), ...c })),
     allergies: [],
     dietaryRestrictions: [],
     healthConditions: [],

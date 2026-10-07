@@ -1,6 +1,7 @@
 import type { HydrationSettings, Medication, MedicationOccurrence, PlannedNotification } from '../types';
 import { iso } from '../time/time';
 import type { HydrationSlot } from '../hydration/schedule';
+import { strings } from '@/i18n';
 
 export const CATEGORY_HYDRATION = 'cuidar.hydration';
 export const CATEGORY_MEDICATION = 'cuidar.medication';
@@ -51,6 +52,7 @@ export function buildNotificationPlan(input: PlanInput): PlannedNotification[] {
   const budget = input.budget ?? DEFAULT_BUDGET;
   const nowMs = input.now.getTime();
   const medsById = new Map(input.medications.map((m) => [m.id, m]));
+  const s = strings().notifications;
 
   const medication: PlannedNotification[] = [];
   for (const occ of input.occurrences) {
@@ -63,10 +65,10 @@ export function buildNotificationPlan(input: PlanInput): PlannedNotification[] {
 
     const detailed = input.settings.showDetailsOnLockScreen;
     if (fireAt.getTime() > nowMs) {
-      const title = detailed ? `Medicamento: ${med.name}` : 'Hora do seu medicamento';
+      const title = detailed ? s.medicationTitleDetailed(med.name) : s.medicationTitleGeneric;
       const body = detailed
         ? `${med.doseAmount} ${med.doseUnit}${med.instructions ? ` · ${med.instructions}` : ''}`.trim()
-        : 'Toque para ver os detalhes e confirmar.';
+        : s.medicationBodyGeneric;
       const content = `${title}|${body}`;
       medication.push({
         identifier: `med@${occ.id}@${fireAt.toISOString()}@${hash(content)}`,
@@ -89,8 +91,8 @@ export function buildNotificationPlan(input: PlanInput): PlannedNotification[] {
       for (let i = 1; i <= repeatCount; i++) {
         const at = new Date(fireAt.getTime() + i * repeatMin * 60_000);
         if (at.getTime() <= nowMs) continue;
-        const rTitle = detailed ? `Ainda não confirmado: ${med.name}` : 'Medicamento ainda não confirmado';
-        const rBody = detailed ? `${med.doseAmount} ${med.doseUnit}`.trim() : 'Toque para ver os detalhes e confirmar.';
+        const rTitle = detailed ? s.medicationRepeatTitleDetailed(med.name) : s.medicationRepeatTitleGeneric;
+        const rBody = detailed ? `${med.doseAmount} ${med.doseUnit}`.trim() : s.medicationBodyGeneric;
         medication.push({
           identifier: `med@${occ.id}@${at.toISOString()}@r${i}@${hash(rTitle + rBody)}`,
           kind: 'medication',
@@ -109,8 +111,8 @@ export function buildNotificationPlan(input: PlanInput): PlannedNotification[] {
   const hydration: PlannedNotification[] = [];
   for (const slot of input.hydrationSlots) {
     if (slot.at.getTime() <= nowMs) continue;
-    const title = 'Hora de beber água';
-    const body = input.preferredName ? `${input.preferredName}, que tal um copo de água agora?` : 'Que tal um copo de água agora?';
+    const title = s.hydrationTitle;
+    const body = s.hydrationBody(input.preferredName);
     hydration.push({
       identifier: `hyd@${slot.at.toISOString()}@${hash(title + body)}`,
       kind: 'hydration',
@@ -129,8 +131,8 @@ export function buildNotificationPlan(input: PlanInput): PlannedNotification[] {
       identifier: `review@${input.healthReviewDue.toISOString()}`,
       kind: 'health_review',
       fireAt: iso(input.healthReviewDue),
-      title: 'Suas orientações mudaram?',
-      body: 'De tempos em tempos vale conferir se as orientações da sua equipe de saúde continuam as mesmas.',
+      title: s.healthReviewTitle,
+      body: s.healthReviewBody,
       categoryId: CATEGORY_GENERIC,
       channelId: CHANNEL_GENERIC,
       data: { kind: 'health_review' },

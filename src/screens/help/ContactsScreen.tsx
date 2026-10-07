@@ -7,34 +7,37 @@ import { Card } from '@/ui/components/Card';
 import { TextField } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
 import { newId } from '@/domain/ids';
+import { strings } from '@/i18n';
 
 export function ContactsScreen() {
   const { contacts, saveContact, removeContact } = useAppStore();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [relationship, setRelationship] = useState('');
+  const s = strings();
+  const c = s.contacts;
   const add = async () => {
     if (name.trim().length < 2 || phone.replace(/\D/g, '').length < 3) return;
     await saveContact({ id: newId('ct-'), name: name.trim(), phone: phone.trim(), relationship: relationship.trim() });
     setName(''); setPhone(''); setRelationship('');
   };
   return (
-    <Screen title="Contatos de ajuda">
-      <AppText muted>Pessoas para quem você quer ligar ao tocar em “Preciso de ajuda”.</AppText>
-      {contacts.map((c) => (
-        <Card key={c.id}>
-          <AppText variant="heading">{c.name}</AppText>
-          <AppText>{c.phone}{c.relationship ? ` · ${c.relationship}` : ''}</AppText>
-          <BigButton kind="ghost" compact label="Remover" onPress={() => void removeContact(c.id)} />
+    <Screen title={c.title}>
+      <AppText muted>{c.intro}</AppText>
+      {contacts.map((ct) => (
+        <Card key={ct.id}>
+          <AppText variant="heading">{ct.name}</AppText>
+          <AppText>{ct.phone}{ct.relationship ? ` · ${ct.relationship}` : ''}</AppText>
+          <BigButton kind="ghost" compact label={s.common.remove} onPress={() => void removeContact(ct.id)} />
         </Card>
       ))}
       <Card>
-        <AppText variant="heading">Novo contato</AppText>
+        <AppText variant="heading">{c.newContact}</AppText>
         <View style={{ gap: 12 }}>
-          <TextField label="Nome" value={name} onChangeText={setName} autoCapitalize="words" />
-          <TextField label="Telefone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-          <TextField label="Parentesco ou relação (opcional)" value={relationship} onChangeText={setRelationship} />
-          <BigButton label="Adicionar contato" onPress={() => void add()} />
+          <TextField label={c.name} value={name} onChangeText={setName} autoCapitalize="words" />
+          <TextField label={c.phone} value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+          <TextField label={c.relationship} value={relationship} onChangeText={setRelationship} />
+          <BigButton label={c.add} onPress={() => void add()} />
         </View>
       </Card>
     </Screen>

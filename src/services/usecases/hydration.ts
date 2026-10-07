@@ -5,6 +5,7 @@ import type { BeverageKind, HydrationLog } from '@/domain/types';
 import { newId } from '@/domain/ids';
 import { isValidVolume, looksLikeDuplicate } from '@/domain/hydration/logs';
 import { addDays, startOfLocalDay } from '@/domain/time/time';
+import { strings } from '@/i18n';
 
 export interface AddLogInput {
   volumeMl: number;
@@ -49,21 +50,21 @@ export async function addHydrationLog(input: AddLogInput): Promise<AddLogResult>
 export async function editHydrationLog(log: HydrationLog, changes: Partial<Pick<HydrationLog, 'volumeMl' | 'beverage' | 'at' | 'note'>>): Promise<HydrationLog> {
   const db = await getDb();
   const next: HydrationLog = { ...log, ...changes, updatedAt: new Date().toISOString() };
-  await updateLog(db, next, `edição: ${JSON.stringify({ de: pick(log), para: pick(next) })}`);
+  await updateLog(db, next, `${strings().hydrationLogReason.edit}: ${JSON.stringify({ from: pick(log), to: pick(next) })}`);
   return next;
 }
 
 export async function undoHydrationLog(log: HydrationLog): Promise<HydrationLog> {
   const db = await getDb();
   const next: HydrationLog = { ...log, deletedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-  await updateLog(db, next, 'desfeito pelo usuário');
+  await updateLog(db, next, strings().hydrationLogReason.undone);
   return next;
 }
 
 export async function restoreHydrationLog(log: HydrationLog): Promise<HydrationLog> {
   const db = await getDb();
   const next: HydrationLog = { ...log, deletedAt: null, updatedAt: new Date().toISOString() };
-  await updateLog(db, next, 'restaurado pelo usuário');
+  await updateLog(db, next, strings().hydrationLogReason.restored);
   return next;
 }
 

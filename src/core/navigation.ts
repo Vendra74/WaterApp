@@ -1,10 +1,10 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
 export type TabParamList = {
-  Hoje: undefined;
-  Medicamentos: undefined;
-  Histórico: undefined;
-  Mais: undefined;
+  Today: undefined;
+  Medications: undefined;
+  History: undefined;
+  More: undefined;
 };
 
 export type RootStackParamList = {

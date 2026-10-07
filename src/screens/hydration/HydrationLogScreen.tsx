@@ -8,19 +8,25 @@ import { Banner, ChoiceGroup, Stepper } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
 import type { BeverageKind } from '@/domain/types';
 import { speak } from '@/services/speech/speech';
+import { strings } from '@/i18n';
 
-const BEVERAGES: { value: BeverageKind; label: string }[] = [
-  { value: 'water', label: 'Água' },
-  { value: 'tea', label: 'Chá' },
-  { value: 'juice', label: 'Suco' },
-  { value: 'milk', label: 'Leite' },
-  { value: 'coffee', label: 'Café' },
-  { value: 'soup', label: 'Sopa / caldo' },
-  { value: 'other', label: 'Outra bebida' },
-];
+const beverages = (): { value: BeverageKind; label: string }[] => {
+  const h = strings().hydration;
+  return [
+    { value: 'water', label: h.beverageWater },
+    { value: 'tea', label: h.beverageTea },
+    { value: 'juice', label: h.beverageJuice },
+    { value: 'milk', label: h.beverageMilk },
+    { value: 'coffee', label: h.beverageCoffee },
+    { value: 'soup', label: h.beverageSoup },
+    { value: 'other', label: h.beverageOther },
+  ];
+};
 
 export function HydrationLogScreen() {
   const nav = useNavigation();
+  const s = strings();
+  const h = s.hydration;
   const { profile, plan, logWater } = useAppStore();
   const containers = profile?.containers ?? [];
   const [volume, setVolume] = useState(containers[0]?.volumeMl ?? 200);
@@ -35,31 +41,31 @@ export function HydrationLogScreen() {
     setError(null);
     const r = await logWater({ volumeMl: volume, beverage, containerLabel: container, force });
     if (r.ok) {
-      if (profile?.accessibility.speakReminders) speak(`Registrado: ${volume} mililitros.`);
+      if (profile?.accessibility.speakReminders) speak(h.spokenLogged(volume));
       nav.goBack();
       return;
     }
     if (r.reason === 'possible_duplicate') {
       setPendingDup(true);
-      setError('Você registrou a mesma quantidade há pouco. Quer registrar de novo mesmo assim?');
-    } else setError('Quantidade inválida. Use entre 1 e 2000 ml.');
+      setError(h.duplicate);
+    } else setError(h.invalidVolume);
   };
 
   return (
     <Screen
-      title="Registrar água"
+      title={h.title}
       footer={
         <View style={{ gap: 8 }}>
-          {pendingDup ? <BigButton kind="secondary" label="Sim, registrar de novo" onPress={() => void save(true)} /> : null}
-          <BigButton label={`Registrar ${volume} ml`} icon="✓" onPress={() => void save(false)} />
-          <BigButton kind="ghost" compact label="Cancelar" onPress={() => nav.goBack()} />
+          {pendingDup ? <BigButton kind="secondary" label={h.confirmDuplicate} onPress={() => void save(true)} /> : null}
+          <BigButton label={h.logAmount(volume)} icon="✓" onPress={() => void save(false)} />
+          <BigButton kind="ghost" compact label={s.common.cancel} onPress={() => nav.goBack()} />
         </View>
       }
     >
-      <AppText muted>Escolha o recipiente e ajuste a quantidade se precisar.</AppText>
+      <AppText muted>{h.intro}</AppText>
       <ChoiceGroup
-        label="Recipiente"
-        options={containers.map((c) => ({ value: c.label, label: `${c.label} — ${c.volumeMl} ml` }))}
+        label={h.container}
+        options={containers.map((c) => ({ value: c.label, label: h.containerOption(c.label, c.volumeMl) }))}
         value={container}
         onChange={(v) => {
           const c = containers.find((x) => x.label === v);
@@ -67,9 +73,9 @@ export function HydrationLogScreen() {
           if (c) setVolume(c.volumeMl);
         }}
       />
-      <Stepper label="Quantidade" value={volume} onChange={setVolume} step={50} min={50} max={2000} />
+      <Stepper label={h.amount} value={volume} onChange={setVolume} step={50} min={50} max={2000} />
       {allowOtherBeverages ? (
-        <ChoiceGroup label="O que você bebeu?" hint="Seu plano contempla controle de líquidos; registre as outras bebidas indicadas." options={BEVERAGES} value={beverage} onChange={(v) => setBeverage(v as BeverageKind)} />
+        <ChoiceGroup label={h.whatDidYouDrink} hint={h.whatDidYouDrinkHint} options={beverages()} value={beverage} onChange={(v) => setBeverage(v as BeverageKind)} />
       ) : null}
       {error ? <Banner tone="warning">{error}</Banner> : null}
     </Screen>

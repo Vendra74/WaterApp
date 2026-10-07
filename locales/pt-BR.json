@@ -1,0 +1,4 @@
+{
+  "NSCameraUsageDescription": "A câmera é usada apenas para fotografar a embalagem ou a receita de um medicamento, se você quiser.",
+  "NSPhotoLibraryUsageDescription": "O acesso às fotos é usado apenas para anexar uma imagem da embalagem ou da receita de um medicamento."
+}

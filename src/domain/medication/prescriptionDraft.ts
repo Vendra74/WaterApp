@@ -1,5 +1,6 @@
 import type { HHmm, Medication, MedicationScheduleType } from '../types';
 import { isValidHHmm } from '../time/time';
+import { strings } from '@/i18n';
 
 /**
  * Rascunho de cadastro de medicamento lido de uma foto (receita ou caixa).
@@ -79,16 +80,17 @@ export function applyPrescriptionDraft(med: Medication, draft: PrescriptionDraft
   return next;
 }
 
-/** Campos preenchidos e campos que ficaram em branco, em pt-BR, para a pessoa conferir. */
+/** Campos preenchidos e campos que ficaram em branco, no idioma atual, para a pessoa conferir. */
 export function describePrescriptionDraft(draft: PrescriptionDraft): { filled: string[]; missing: string[] } {
+  const s = strings().prescription;
   const filled: string[] = [];
   const missing: string[] = [];
   const check = (ok: boolean, label: string) => (ok ? filled : missing).push(label);
-  check(draft.name.length > 0, 'nome');
-  check(draft.presentation.length > 0, 'apresentação');
-  check(draft.doseAmount.length > 0 && draft.doseUnit.length > 0, 'dose');
-  check(draft.scheduleType !== null, 'horários');
-  check(draft.instructions.length > 0, 'instruções');
+  check(draft.name.length > 0, s.fieldName);
+  check(draft.presentation.length > 0, s.fieldPresentation);
+  check(draft.doseAmount.length > 0 && draft.doseUnit.length > 0, s.fieldDose);
+  check(draft.scheduleType !== null, s.fieldTimes);
+  check(draft.instructions.length > 0, s.fieldInstructions);
   return { filled, missing };
 }
 
@@ -103,10 +105,11 @@ function normalizeRoute(v: string): string {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '');
   if (!n) return '';
-  if (n.startsWith('oral') || n.includes('boca') || n.includes('via oral')) return 'oral';
-  if (n.startsWith('top') || n.includes('pele')) return 'tópica';
-  if (n.startsWith('ocul') || n.includes('olho') || n.includes('oftal')) return 'ocular';
-  if (n.startsWith('inal') || n.includes('bombinha')) return 'inalatória';
-  if (n.startsWith('injet') || n.includes('subcut') || n.includes('intramusc') || n.includes('intraven')) return 'injetável';
+  // Aceita o texto em português ou em inglês: a receita pode estar em qualquer um dos dois.
+  if (n.startsWith('oral') || n.includes('boca') || n.includes('via oral') || n.includes('mouth')) return 'oral';
+  if (n.startsWith('top') || n.includes('pele') || n.includes('skin')) return 'tópica';
+  if (n.startsWith('ocul') || n.includes('olho') || n.includes('oftal') || n.includes('eye') || n.includes('ophthal')) return 'ocular';
+  if (n.startsWith('inal') || n.startsWith('inhal') || n.includes('bombinha')) return 'inalatória';
+  if (n.startsWith('injet') || n.startsWith('inject') || n.includes('subcut') || n.includes('intramusc') || n.includes('intraven')) return 'injetável';
   return 'outra';
 }

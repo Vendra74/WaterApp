@@ -8,9 +8,12 @@ import { BigButton } from '@/ui/components/BigButton';
 import { Card } from '@/ui/components/Card';
 import { Banner, TextField, TimeField } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
-import { OCCURRENCE_STATUS_PT } from '@/domain/medication/occurrences';
-import { atLocalTime, formatDateBR, formatTimeBR } from '@/domain/time/time';
+import { occurrenceStatusLabel } from '@/domain/medication/occurrences';
+import { atLocalTime, formatTimeBR } from '@/domain/time/time';
 import { speak } from '@/services/speech/speech';
+import { strings } from '@/i18n';
+import { formatClock, formatDate } from '@/i18n/format';
+import { routeLabel } from './format';
 
 export function OccurrenceActionScreen() {
   const nav = useNavigation();
@@ -22,63 +25,65 @@ export function OccurrenceActionScreen() {
   const [note, setNote] = useState('');
   const [correcting, setCorrecting] = useState(false);
   const [takenTime, setTakenTime] = useState<string | null>(null);
+  const s = strings();
+  const oc = s.occurrence;
 
-  if (!occ || !med) return <Screen title="Medicamento"><AppText>Registro não encontrado.</AppText><BigButton label="Voltar" onPress={() => nav.goBack()} /></Screen>;
+  if (!occ || !med) return <Screen title={s.common.medication}><AppText>{oc.notFound}</AppText><BigButton label={s.common.back} onPress={() => nav.goBack()} /></Screen>;
 
   const planned = new Date(occ.plannedAt);
   const isTaken = occ.status === 'taken';
 
   const doTaken = async () => {
     const r = await confirmTaken(occ.id);
-    if (r?.alreadyConfirmed) setMsg('Esta dose já estava confirmada. Nada foi duplicado.');
+    if (r?.alreadyConfirmed) setMsg(oc.alreadyConfirmed);
     else {
-      if (profile?.accessibility.speakReminders) speak(`${med.name} confirmado.`);
+      if (profile?.accessibility.speakReminders) speak(oc.spokenConfirmed(med.name));
       nav.goBack();
     }
   };
 
-  const readAloud = () => speak(`${med.name}, ${med.doseAmount} ${med.doseUnit}, ${med.route}. Horário: ${formatTimeBR(planned)}. ${med.instructions}`);
+  const readAloud = () => speak(oc.spokenDetails(med.name, `${med.doseAmount} ${med.doseUnit}`, routeLabel(med.route), formatClock(planned), med.instructions));
 
   return (
     <Screen title={med.name}>
       <Card tone={isTaken ? 'success' : 'alt'}>
-        <AppText variant="heading">{formatDateBR(planned)} às {formatTimeBR(planned)}</AppText>
-        <AppText>{`${med.doseAmount} ${med.doseUnit}`.trim()}{med.presentation ? ` · ${med.presentation}` : ''} · {med.route}</AppText>
-        {med.instructions ? <AppText>Instruções: {med.instructions}</AppText> : null}
-        <AppText bold>Situação: {OCCURRENCE_STATUS_PT[occ.status]}{occ.takenAt ? ` às ${formatTimeBR(new Date(occ.takenAt))}` : ''}{occ.status === 'snoozed' && occ.snoozedUntil ? ` até ${formatTimeBR(new Date(occ.snoozedUntil))}` : ''}</AppText>
-        <BigButton kind="secondary" compact icon="🔊" label="Ler em voz alta" onPress={readAloud} />
+        <AppText variant="heading">{oc.dateAt(formatDate(planned), formatClock(planned))}</AppText>
+        <AppText>{`${med.doseAmount} ${med.doseUnit}`.trim()}{med.presentation ? ` · ${med.presentation}` : ''} · {routeLabel(med.route)}</AppText>
+        {med.instructions ? <AppText>{oc.instructions(med.instructions)}</AppText> : null}
+        <AppText bold>{oc.status(occurrenceStatusLabel(occ.status))}{occ.takenAt ? oc.atTime(formatClock(new Date(occ.takenAt))) : ''}{occ.status === 'snoozed' && occ.snoozedUntil ? oc.untilTime(formatClock(new Date(occ.snoozedUntil))) : ''}</AppText>
+        <BigButton kind="secondary" compact icon="🔊" label={s.common.readAloud} onPress={readAloud} />
       </Card>
       {msg ? <Banner tone="info">{msg}</Banner> : null}
       {isTaken ? (
-        <Banner tone="success" title="Dose já confirmada">Se marcou por engano, use “Corrigir registro” abaixo.</Banner>
+        <Banner tone="success" title={oc.alreadyTitle}>{oc.alreadyBody}</Banner>
       ) : (
         <View style={{ gap: 8 }}>
-          <BigButton label="Tomei" icon="✓" onPress={() => void doTaken()} />
-          <BigButton kind="secondary" label={`Lembrar depois (${settings?.snoozeMinutes ?? 15} min)`} icon="⏰" hint="Adia apenas este aviso. Os próximos horários não mudam." onPress={() => void snooze(occ.id, settings?.snoozeMinutes ?? 15).then(() => nav.goBack())} />
-          <BigButton kind="secondary" label="Não tomei" onPress={() => void notTaken(occ.id).then(() => nav.goBack())} />
-          <AppText muted variant="small">Adiar não altera a prescrição. O aplicativo não orienta compensar ou dobrar doses: em dúvida, fale com quem prescreveu.</AppText>
+          <BigButton label={oc.taken} icon="✓" onPress={() => void doTaken()} />
+          <BigButton kind="secondary" label={oc.snooze(settings?.snoozeMinutes ?? 15)} icon="⏰" hint={oc.snoozeHint} onPress={() => void snooze(occ.id, settings?.snoozeMinutes ?? 15).then(() => nav.goBack())} />
+          <BigButton kind="secondary" label={oc.notTaken} onPress={() => void notTaken(occ.id).then(() => nav.goBack())} />
+          <AppText muted variant="small">{oc.noCompensation}</AppText>
         </View>
       )}
       {correcting ? (
         <Card>
-          <AppText variant="heading">Corrigir registro</AppText>
-          <AppText muted variant="small">A alteração fica no histórico desta dose.</AppText>
-          <TextField label="Motivo" value={note} onChangeText={setNote} placeholder="Ex.: tomei mas esqueci de marcar" />
-          <TimeField label="Horário em que tomou" hint="Para marcar como tomada. Fica no histórico desta dose." value={takenTime ?? formatTimeBR(occ.takenAt ? new Date(occ.takenAt) : planned)} onChange={setTakenTime} />
-          <BigButton compact label="Marcar como tomada" onPress={() => void correct(occ.id, 'taken', note || 'correção', atLocalTime(planned, takenTime ?? formatTimeBR(occ.takenAt ? new Date(occ.takenAt) : planned)).toISOString()).then(() => nav.goBack())} />
-          <BigButton compact kind="secondary" label="Marcar como não tomada" onPress={() => void correct(occ.id, 'not_taken', note || 'correção').then(() => nav.goBack())} />
-          <BigButton compact kind="secondary" label="Voltar para agendada" onPress={() => void correct(occ.id, 'scheduled', note || 'correção').then(() => nav.goBack())} />
+          <AppText variant="heading">{oc.correctTitle}</AppText>
+          <AppText muted variant="small">{oc.correctNote}</AppText>
+          <TextField label={oc.reason} value={note} onChangeText={setNote} placeholder={oc.reasonPlaceholder} />
+          <TimeField label={oc.takenTime} hint={oc.takenTimeHint} value={takenTime ?? formatTimeBR(occ.takenAt ? new Date(occ.takenAt) : planned)} onChange={setTakenTime} />
+          <BigButton compact label={oc.markTaken} onPress={() => void correct(occ.id, 'taken', note || s.occurrenceReason.correction, atLocalTime(planned, takenTime ?? formatTimeBR(occ.takenAt ? new Date(occ.takenAt) : planned)).toISOString()).then(() => nav.goBack())} />
+          <BigButton compact kind="secondary" label={oc.markNotTaken} onPress={() => void correct(occ.id, 'not_taken', note || s.occurrenceReason.correction).then(() => nav.goBack())} />
+          <BigButton compact kind="secondary" label={oc.backToScheduled} onPress={() => void correct(occ.id, 'scheduled', note || s.occurrenceReason.correction).then(() => nav.goBack())} />
         </Card>
       ) : (
-        <BigButton kind="ghost" compact label="Corrigir registro" onPress={() => setCorrecting(true)} />
+        <BigButton kind="ghost" compact label={oc.correct} onPress={() => setCorrecting(true)} />
       )}
       <Card>
-        <AppText variant="label" bold>Histórico desta dose</AppText>
+        <AppText variant="label" bold>{oc.historyTitle}</AppText>
         {occ.history.map((h, i) => (
-          <AppText key={i} variant="small" muted>{formatDateBR(new Date(h.at))} {formatTimeBR(new Date(h.at))} — {OCCURRENCE_STATUS_PT[h.to]} ({h.reason})</AppText>
+          <AppText key={i} variant="small" muted>{formatDate(new Date(h.at))} {formatClock(new Date(h.at))} — {occurrenceStatusLabel(h.to)} ({h.reason})</AppText>
         ))}
       </Card>
-      <BigButton kind="ghost" compact label="Voltar" onPress={() => nav.goBack()} />
+      <BigButton kind="ghost" compact label={s.common.back} onPress={() => nav.goBack()} />
     </Screen>
   );
 }
