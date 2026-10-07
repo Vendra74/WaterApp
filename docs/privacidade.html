@@ -7,19 +7,21 @@
   <style>
     body { font-family: -apple-system, system-ui, Segoe UI, Roboto, sans-serif; max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; line-height: 1.6; color: #1d2430; background: #fff; }
     h1 { font-size: 1.8rem; } h2 { font-size: 1.25rem; margin-top: 2rem; }
-    a { color: #0B5FA5; } p.meta { color: #5a6472; }
+    a { color: #0B5FA5; } p.meta, p.lang { color: #5a6472; } p.lang { font-size: 0.95rem; }
   </style>
 </head>
 <body>
+  <p class="lang">Português (Brasil) · <a href="en/privacy.html">English</a></p>
   <h1>Política de Privacidade do Cuidar</h1>
-  <p class="meta">Última atualização: 6 de outubro de 2026.</p>
+  <p class="meta">Última atualização: 7 de outubro de 2026.</p>
 
-  <p>O Cuidar é um aplicativo de lembretes de hidratação e de medicamentos para iPhone e Android. Esta política explica quais informações o aplicativo guarda, onde elas ficam e quais são os seus direitos.</p>
+  <p>O Cuidar é um aplicativo de lembretes de hidratação e de medicamentos para iPhone e Android. Esta política explica quais informações o aplicativo guarda, onde elas ficam, o que sai do aparelho (e só quando você escolhe) e quais são os seus direitos.</p>
 
   <h2>Resumo</h2>
   <ul>
     <li>Tudo o que você registra fica <strong>somente no seu aparelho</strong>.</li>
     <li>O Cuidar <strong>não exige conta</strong>, <strong>não coleta dados</strong> para o desenvolvedor, <strong>não usa anúncios</strong> nem ferramentas de análise de uso.</li>
+    <li>O único recurso opcional que envia algo para fora é a <strong>leitura de receita por foto</strong>: a foto é enviada para transcrição só depois que você autoriza, e não fica guardada.</li>
     <li>Você pode apagar todos os dados a qualquer momento, dentro do próprio aplicativo.</li>
   </ul>
 
@@ -35,10 +37,20 @@
   </ul>
   <p>Essas informações não são enviadas ao desenvolvedor nem a terceiros. Elas são removidas quando você usa a opção <em>Mais → Meus dados → Apagar tudo</em> ou quando desinstala o aplicativo.</p>
 
+  <h2>Leitura de receita por foto (opcional)</h2>
+  <p>Ao cadastrar um medicamento, você pode fotografar a receita ou a caixa para que o cadastro seja preenchido como rascunho. Isso só acontece depois que você dá a autorização no aplicativo, e ela pode ser retirada a qualquer momento em <em>Mais → Meus dados</em>. Quando você usa o recurso:</p>
+  <ul>
+    <li>a foto é enviada ao servidor do Cuidar (hospedado no Supabase) e dali ao serviço de inteligência artificial que faz a transcrição (API da Anthropic);</li>
+    <li>a foto é usada só para essa transcrição e <strong>não fica guardada</strong> no servidor nem com o desenvolvedor;</li>
+    <li>o servidor registra apenas um identificador anônimo e a data de cada leitura, para limitar a quantidade de leituras por dia; não guarda a imagem, o nome do medicamento nem qualquer informação de saúde;</li>
+    <li>o resultado é um rascunho que você confere antes de salvar; nada é salvo automaticamente.</li>
+  </ul>
+  <p>Se você nunca usar esse recurso, nada sai do aparelho.</p>
+
   <h2>Permissões do sistema</h2>
   <ul>
     <li><strong>Notificações:</strong> usadas apenas para os lembretes que você programa. As notificações são geradas no próprio aparelho.</li>
-    <li><strong>Câmera e fotos:</strong> usadas somente se você quiser anexar uma imagem a um medicamento. A imagem fica no aparelho.</li>
+    <li><strong>Câmera e fotos:</strong> usadas somente se você quiser anexar uma imagem a um medicamento ou ler uma receita por foto. A imagem anexada fica no aparelho.</li>
     <li><strong>Alarmes exatos (Android):</strong> garantem que o lembrete chegue no horário definido por você.</li>
     <li><strong>Telefone:</strong> o botão “Preciso de ajuda” abre o discador com o contato escolhido; o aplicativo não faz ligações sozinho nem acessa seu histórico de chamadas.</li>
   </ul>
@@ -56,7 +68,7 @@
   <p>O Cuidar é uma ferramenta de apoio à rotina. Ele não faz diagnóstico, não prescreve, não calcula doses nem metas e não substitui a orientação de profissionais de saúde. Não é um serviço de emergência: em caso de urgência, ligue para o SAMU (192) ou para o serviço de emergência local.</p>
 
   <h2>Seus direitos</h2>
-  <p>Como os dados ficam apenas no seu aparelho, você tem controle total sobre eles: pode consultá-los, alterá-los, exportá-los (<em>Mais → Meus dados → Exportar meus dados</em>) e apagá-los dentro do aplicativo. Nos termos da Lei Geral de Proteção de Dados (Lei 13.709/2018), não há tratamento de dados pessoais pelo desenvolvedor.</p>
+  <p>Como os dados ficam apenas no seu aparelho, você tem controle total sobre eles: pode consultá-los, alterá-los, exportá-los (<em>Mais → Meus dados → Exportar meus dados</em>) e apagá-los dentro do aplicativo. Nos termos da Lei Geral de Proteção de Dados (Lei 13.709/2018), não há tratamento de dados pessoais pelo desenvolvedor, exceto a leitura opcional de receita por foto descrita acima, que não guarda dados pessoais.</p>
 
   <h2>Alterações nesta política</h2>
   <p>Se o aplicativo passar a tratar dados de forma diferente, esta página será atualizada e a data no topo mudará.</p>

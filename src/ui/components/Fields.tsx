@@ -5,6 +5,8 @@ import { AppText } from './AppText';
 import { useTheme } from '../theme';
 import { atLocalTime, formatTimeBR, isValidHHmm } from '@/domain/time/time';
 import type { HHmm } from '@/domain/types';
+import { isEnglish, localeTag, strings } from '@/i18n';
+import { formatHHmm } from '@/i18n/format';
 
 export function TextField({ label, hint, ...rest }: TextInputProps & { label: string; hint?: string }) {
   const t = useTheme();
@@ -47,11 +49,11 @@ export function TimeField({ label, value, onChange, hint }: { label: string; val
       {hint ? <AppText variant="small" muted>{hint}</AppText> : null}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${label}: ${value}. Toque para alterar.`}
+        accessibilityLabel={strings().summary.tapToEdit(label, formatHHmm(value))}
         onPress={() => setOpen((o) => !o)}
         style={{ minHeight: 56, borderWidth: 2, borderColor: t.colors.border, borderRadius: t.radius, justifyContent: 'center', paddingHorizontal: t.space(2), backgroundColor: t.colors.surface }}
       >
-        <AppText variant="heading">{value}</AppText>
+        <AppText variant="heading">{formatHHmm(value)}</AppText>
       </Pressable>
       {open ? (
         // O app só tem paletas claras, mas com userInterfaceStyle "automatic" a roleta do iOS seguia o modo
@@ -59,17 +61,17 @@ export function TimeField({ label, value, onChange, hint }: { label: string; val
         <DateTimePicker
           value={date}
           mode="time"
-          is24Hour
+          is24Hour={!isEnglish()}
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={onPick}
-          locale="pt-BR"
+          locale={localeTag()}
           themeVariant="light"
           textColor={t.colors.text}
         />
       ) : null}
       {open && Platform.OS === 'ios' ? (
         <Pressable accessibilityRole="button" onPress={() => setOpen(false)} style={{ minHeight: 48, justifyContent: 'center', alignItems: 'center' }}>
-          <AppText bold style={{ color: t.colors.primary }}>Pronto</AppText>
+          <AppText bold style={{ color: t.colors.primary }}>{strings().common.done}</AppText>
         </Pressable>
       ) : null}
     </View>
@@ -154,9 +156,9 @@ export function Stepper({ label, value, onChange, step = 50, min = 0, max = 2000
     <View style={{ gap: t.space(0.5) }}>
       <AppText variant="label" bold>{label}</AppText>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        {btn('−', -step, `Diminuir ${step} ${unit}`)}
+        {btn('−', -step, strings().common.decrease(step, unit))}
         <AppText variant="big" accessibilityLiveRegion="polite">{value} {unit}</AppText>
-        {btn('+', step, `Aumentar ${step} ${unit}`)}
+        {btn('+', step, strings().common.increase(step, unit))}
       </View>
     </View>
   );
@@ -174,15 +176,15 @@ export function TagInput({ label, values, onChange, hint, placeholder }: { label
   return (
     <View style={{ gap: t.space(1) }}>
       <TextField label={label} hint={hint} value={text} onChangeText={setText} onSubmitEditing={add} placeholder={placeholder} returnKeyType="done" />
-      <Pressable accessibilityRole="button" accessibilityLabel={`Adicionar ${text || 'item'}`} onPress={add} style={{ minHeight: 48, justifyContent: 'center' }}>
-        <AppText bold style={{ color: t.colors.primary }}>+ Adicionar</AppText>
+      <Pressable accessibilityRole="button" accessibilityLabel={strings().common.addItem(text || strings().common.item)} onPress={add} style={{ minHeight: 48, justifyContent: 'center' }}>
+        <AppText bold style={{ color: t.colors.primary }}>{strings().common.add}</AppText>
       </Pressable>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: t.space(1) }}>
         {values.map((v) => (
           <Pressable
             key={v}
             accessibilityRole="button"
-            accessibilityLabel={`Remover ${v}`}
+            accessibilityLabel={strings().common.removeItem(v)}
             onPress={() => onChange(values.filter((x) => x !== v))}
             style={{ minHeight: 48, paddingHorizontal: t.space(1.5), borderRadius: 24, backgroundColor: t.colors.secondary, borderWidth: 2, borderColor: t.colors.border, justifyContent: 'center' }}
           >
@@ -210,8 +212,8 @@ export function ProgressBar({ current, total }: { current: number; total: number
   const t = useTheme();
   const pct = total > 0 ? Math.round((current / total) * 100) : 0;
   return (
-    <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: current, text: `Pergunta ${current} de ${total}` }} style={{ gap: t.space(0.5) }}>
-      <AppText variant="small" muted>Pergunta {current} de {total}</AppText>
+    <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: total, now: current, text: strings().assessment.questionOf(current, total) }} style={{ gap: t.space(0.5) }}>
+      <AppText variant="small" muted>{strings().assessment.questionOf(current, total)}</AppText>
       <View style={{ height: 12, borderRadius: 6, backgroundColor: t.colors.surfaceAlt, borderWidth: 1, borderColor: t.colors.border, overflow: 'hidden' }}>
         <View style={{ width: `${pct}%`, height: '100%', backgroundColor: t.colors.primary }} />
       </View>
@@ -239,7 +241,7 @@ export function Toggle({ label, value, onChange, hint }: { label: string; value:
       <View style={{ flex: 1 }}>
         <AppText bold>{label}</AppText>
         {hint ? <AppText variant="small" muted>{hint}</AppText> : null}
-        <AppText variant="small" muted>{value ? 'Ligado' : 'Desligado'}</AppText>
+        <AppText variant="small" muted>{value ? strings().common.on : strings().common.off}</AppText>
       </View>
     </Pressable>
   );

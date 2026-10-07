@@ -11,11 +11,11 @@ import { evaluateIndividualPlan } from '@/domain/safety/plan';
 import { settingsAfterAssessment } from '@/domain/hydration/schedule';
 import { requestPermission } from '@/services/notifications/notificationService';
 import { useTheme } from '@/ui/theme';
-import { STEPS } from './steps';
+import { allSteps } from './steps';
 import type { Profile } from '@/domain/types';
 import { env } from '@/config/env';
-
-const tri = (v: string) => (v === 'yes' ? 'Sim' : v === 'no' ? 'Não' : 'Não sei');
+import { strings } from '@/i18n';
+import { formatHHmm, formatRange } from '@/i18n/format';
 
 export function AssessmentSummaryScreen() {
   const nav = useNavigation();
@@ -28,29 +28,32 @@ export function AssessmentSummaryScreen() {
   const [draft, setDraft] = useState<Profile>(profile);
   const [busy, setBusy] = useState(false);
   const plan = evaluateIndividualPlan({ ...draft, assessmentCompleted: true });
+  const s = strings();
+  const sm = s.summary;
+  const tri = (v: string) => (v === 'yes' ? s.common.yes : v === 'no' ? s.common.no : s.common.dontKnow);
 
   const rows: { key: string; label: string; value: string }[] = [
-    { key: 'name', label: 'Nome', value: `${draft.name} (${draft.preferredName || draft.name})` },
-    { key: 'age', label: 'Idade', value: draft.age === null ? 'Não informada' : `${draft.age} anos` },
-    { key: 'sleep', label: 'Acordar / dormir', value: `${draft.wakeTime} / ${draft.sleepTime}` },
-    { key: 'naps', label: 'Cochilos', value: draft.naps.length ? draft.naps.map((n) => `${n.start}–${n.end}`).join(', ') : 'Nenhum' },
-    { key: 'meals', label: 'Refeições', value: draft.meals.map((m) => `${m.label} ${m.time}`).join(', ') },
-    { key: 'containers', label: 'Recipientes', value: draft.containers.map((c) => `${c.label} ${c.volumeMl} ml`).join(', ') },
-    { key: 'fruits', label: 'Frutas', value: draft.fruitPreferences.join(', ') || 'Nenhuma' },
-    { key: 'allergies', label: 'Alergias / restrições', value: [...draft.allergies, ...draft.dietaryRestrictions].join(', ') || 'Nenhuma' },
-    { key: 'restriction', label: 'Orientação profissional de líquidos', value: tri(draft.fluidRestriction) },
+    { key: 'name', label: sm.name, value: `${draft.name} (${draft.preferredName || draft.name})` },
+    { key: 'age', label: sm.age, value: draft.age === null ? s.common.notInformed : sm.years(draft.age) },
+    { key: 'sleep', label: sm.sleep, value: `${formatHHmm(draft.wakeTime)} / ${formatHHmm(draft.sleepTime)}` },
+    { key: 'naps', label: sm.naps, value: draft.naps.length ? draft.naps.map((n) => formatRange(n.start, n.end)).join(', ') : s.common.none },
+    { key: 'meals', label: sm.meals, value: draft.meals.map((m) => `${m.label} ${formatHHmm(m.time)}`).join(', ') },
+    { key: 'containers', label: sm.containers, value: draft.containers.map((c) => `${c.label} ${c.volumeMl} ml`).join(', ') },
+    { key: 'fruits', label: sm.fruits, value: draft.fruitPreferences.join(', ') || s.common.noneF },
+    { key: 'allergies', label: sm.allergies, value: [...draft.allergies, ...draft.dietaryRestrictions].join(', ') || s.common.noneF },
+    { key: 'restriction', label: sm.restriction, value: tri(draft.fluidRestriction) },
     // A quantidade só vale (e só é editável) quando houve orientação; antes ela não aparecia no resumo.
     ...(draft.fluidRestriction === 'yes'
-      ? [{ key: 'goal', label: 'Quantidade orientada', value: draft.professionalGoalMl ? `${draft.professionalGoalMl} ml/dia` : 'Não informada' }]
+      ? [{ key: 'goal', label: sm.goal, value: draft.professionalGoalMl ? sm.goalValue(draft.professionalGoalMl) : s.common.notInformed }]
       : []),
-    { key: 'swallow', label: 'Dificuldade para engolir', value: tri(draft.swallowingDifficulty) },
-    { key: 'help_needs', label: 'Precisa de ajuda', value: `Beber: ${tri(draft.needsHelpToDrink)} · Banheiro: ${tri(draft.needsHelpToBathroom)}` },
+    { key: 'swallow', label: sm.swallow, value: tri(draft.swallowingDifficulty) },
+    { key: 'help_needs', label: sm.helpNeeds, value: sm.helpNeedsValue(tri(draft.needsHelpToDrink), tri(draft.needsHelpToBathroom)) },
     env.caregiverEnabled
-      ? { key: 'extras', label: 'Medicamentos / cuidador', value: `${draft.wantsMedications ? 'Sim' : 'Não'} / ${draft.wantsCaregiver ? 'Sim' : 'Não'}` }
-      : { key: 'extras', label: 'Medicamentos', value: draft.wantsMedications ? 'Sim' : 'Não' },
+      ? { key: 'extras', label: sm.extrasCaregiver, value: `${draft.wantsMedications ? s.common.yes : s.common.no} / ${draft.wantsCaregiver ? s.common.yes : s.common.no}` }
+      : { key: 'extras', label: sm.extras, value: draft.wantsMedications ? s.common.yes : s.common.no },
   ];
 
-  const editingStep = STEPS.find((s) => s.key === editingKey);
+  const editingStep = allSteps().find((st) => st.key === editingKey);
 
   const confirm = async () => {
     setBusy(true);
@@ -67,7 +70,7 @@ export function AssessmentSummaryScreen() {
 
   if (editingStep) {
     return (
-      <Screen title={editingStep.title} footer={<BigButton label="Salvar alteração" onPress={() => setEditingKey(null)} />}>
+      <Screen title={editingStep.title} footer={<BigButton label={sm.saveChange} onPress={() => setEditingKey(null)} />}>
         {editingStep.help ? <AppText muted>{editingStep.help}</AppText> : null}
         {editingStep.render({ draft, update: (patch) => setDraft((d) => ({ ...d, ...patch })) })}
       </Screen>
@@ -76,21 +79,21 @@ export function AssessmentSummaryScreen() {
 
   return (
     <Screen
-      title="Confira suas respostas"
+      title={sm.title}
       footer={
         <View style={{ gap: 8 }}>
-          <BigButton label="Confirmar e ativar lembretes" icon="✓" onPress={() => void confirm()} disabled={busy} />
-          <BigButton kind="ghost" compact label="Voltar" onPress={() => nav.goBack()} />
+          <BigButton label={sm.confirm} icon="✓" onPress={() => void confirm()} disabled={busy} />
+          <BigButton kind="ghost" compact label={s.common.back} onPress={() => nav.goBack()} />
         </View>
       }
     >
-      <AppText muted>Toque em uma linha para corrigir.</AppText>
+      <AppText muted>{sm.tapToFix}</AppText>
       <Card>
         {rows.map((r) => (
           <Pressable
             key={r.key}
             accessibilityRole="button"
-            accessibilityLabel={`${r.label}: ${r.value}. Toque para editar.`}
+            accessibilityLabel={sm.tapToEdit(r.label, r.value)}
             onPress={() => setEditingKey(r.key)}
             style={{ minHeight: 56, justifyContent: 'center', borderBottomWidth: 1, borderBottomColor: t.colors.border, paddingVertical: 8 }}
           >
@@ -99,10 +102,10 @@ export function AssessmentSummaryScreen() {
           </Pressable>
         ))}
       </Card>
-      <Banner tone={plan.mode === 'restricted_no_suggestions' ? 'warning' : 'info'} title="Seu plano">
+      <Banner tone={plan.mode === 'restricted_no_suggestions' ? 'warning' : 'info'} title={sm.yourPlan}>
         {plan.guidance}
       </Banner>
-      <AppText muted variant="small">Ao confirmar, pediremos permissão para enviar notificações. Você pode ajustar horários em Lembretes.</AppText>
+      <AppText muted variant="small">{sm.permissionNote}</AppText>
     </Screen>
   );
 }

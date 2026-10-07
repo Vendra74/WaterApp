@@ -5,21 +5,23 @@ import { AppText } from '@/ui/components/AppText';
 import { BigButton } from '@/ui/components/BigButton';
 import { Card } from '@/ui/components/Card';
 import { useAppStore } from '@/state/appStore';
-import { describeSchedule } from './format';
+import { describeSchedule, routeLabel } from './format';
+import { strings } from '@/i18n';
 
 export function MedicationsScreen() {
   const nav = useNavigation();
-  const medications = useAppStore((s) => s.medications);
+  const medications = useAppStore((st) => st.medications);
+  const s = strings().medications;
   return (
-    <Screen safeTop title="Medicamentos" footer={<BigButton label="Cadastrar medicamento" icon="+" onPress={() => nav.navigate('MedicationForm')} />}>
-      <AppText muted>Cadastre exatamente como está na prescrição. O aplicativo não sugere doses nem horários.</AppText>
-      {medications.length === 0 ? <AppText>Nenhum medicamento cadastrado.</AppText> : null}
+    <Screen safeTop title={s.title} footer={<BigButton label={s.add} icon="+" onPress={() => nav.navigate('MedicationForm')} />}>
+      <AppText muted>{s.intro}</AppText>
+      {medications.length === 0 ? <AppText>{s.none}</AppText> : null}
       {medications.map((m) => (
         <Card key={m.id} tone={m.active ? 'default' : 'alt'}>
-          <AppText variant="heading">{m.name}{m.active ? '' : ' (pausado)'}</AppText>
-          <AppText>{[m.presentation, `${m.doseAmount} ${m.doseUnit}`.trim(), m.route].filter(Boolean).join(' · ')}</AppText>
+          <AppText variant="heading">{m.name}{m.active ? '' : s.paused}</AppText>
+          <AppText>{[m.presentation, `${m.doseAmount} ${m.doseUnit}`.trim(), routeLabel(m.route)].filter(Boolean).join(' · ')}</AppText>
           <AppText muted>{describeSchedule(m)}</AppText>
-          <BigButton kind="secondary" compact label="Ver detalhes e histórico" onPress={() => nav.navigate('MedicationDetail', { id: m.id })} />
+          <BigButton kind="secondary" compact label={s.seeDetails} onPress={() => nav.navigate('MedicationDetail', { id: m.id })} />
         </Card>
       ))}
     </Screen>

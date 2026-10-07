@@ -1,6 +1,8 @@
 import type { HHmm, HydrationLog, HydrationSettings, ISODateTime, Medication, MedicationOccurrence, TimeRange } from '../types';
 import { formatTimeBR, hhmmToMinutes, minutesToHHmm, toISODate } from '../time/time';
 import { isDuringNap } from '../hydration/schedule';
+import { strings } from '@/i18n';
+import { formatHHmm } from '@/i18n/format';
 
 /**
  * Lembretes que aprendem com o horário real.
@@ -271,31 +273,24 @@ export interface SuggestionText {
   reject: string;
 }
 
-/** Texto em pt-BR para a interface. Descreve o que foi observado; não dá orientação clínica. */
+/** Texto para a interface, no idioma atual. Descreve o que foi observado; não dá orientação clínica. */
 export function describeSuggestion(s: ReminderSuggestion): SuggestionText {
+  const t = strings().suggestion;
   const later = hhmmToMinutes(s.to) > hhmmToMinutes(s.from);
-  const when = later ? 'depois' : 'antes';
+  const when = later ? t.later : t.earlier;
+  const to = formatHHmm(s.to);
+  const from = formatHHmm(s.from);
   if (s.kind === 'hydration_time') {
-    return {
-      title: 'Ajustar o lembrete de água?',
-      body: `Nos últimos dias você registrou água por volta das ${s.to}, ${when} do lembrete das ${s.from}. Quer mudar o lembrete para ${s.to}?`,
-      accept: `Mudar para ${s.to}`,
-      reject: `Manter ${s.from}`,
-    };
+    return { title: t.hydrationTitle, body: t.hydrationBody(to, when, from), accept: t.changeTo(to), reject: t.keep(from) };
   }
   if (s.kind === 'hydration_window_start') {
-    return {
-      title: 'Começar os lembretes mais ' + (later ? 'tarde' : 'cedo') + '?',
-      body: `Nos últimos dias o seu primeiro registro de água foi por volta das ${s.to}, ${when} do início dos lembretes às ${s.from}. Quer começar os lembretes às ${s.to}?`,
-      accept: `Começar às ${s.to}`,
-      reject: `Manter ${s.from}`,
-    };
+    return { title: t.windowTitle(later), body: t.windowBody(to, when, from), accept: t.startAt(to), reject: t.keep(from) };
   }
   return {
-    title: `Ajustar o aviso de ${s.medicationName}?`,
-    body: `Nos últimos dias você confirmou ${s.medicationName} por volta das ${s.to}, ${when} do aviso das ${s.from}. Quer mudar o aviso para ${s.to}? O horário combinado com quem prescreveu continua valendo; se tiver dúvida, pergunte a essa pessoa.`,
-    accept: `Mudar para ${s.to}`,
-    reject: `Manter ${s.from}`,
+    title: t.medicationTitle(s.medicationName),
+    body: t.medicationBody(s.medicationName, to, when, from),
+    accept: t.changeTo(to),
+    reject: t.keep(from),
   };
 }
 

@@ -1,6 +1,7 @@
 import type { Profile } from '../types';
 import { hhmmToMinutes } from '../time/time';
 import type { IndividualPlan } from './plan';
+import { strings } from '@/i18n';
 
 export interface Suggestion {
   kind: 'water' | 'fruit';
@@ -19,12 +20,12 @@ export function suggestFor(
   plan: IndividualPlan,
   at: Date,
 ): Suggestion[] {
-  const suggestions: Suggestion[] = [{ kind: 'water', label: 'Água', countsAsFluid: true }];
+  const suggestions: Suggestion[] = [{ kind: 'water', label: strings().plan.water, countsAsFluid: true }];
   if (!plan.allowIndividualSuggestions) return suggestions;
 
   const minute = at.getHours() * 60 + at.getMinutes();
   const snackWindow = profile.meals.some((meal) => {
-    if (!/lanche|colação|ceia/i.test(meal.label)) return false;
+    if (!/lanche|colação|ceia|snack/i.test(meal.label)) return false;
     const mealMin = hhmmToMinutes(meal.time);
     return Math.abs(mealMin - minute) <= 45;
   });

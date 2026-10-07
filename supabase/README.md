@@ -51,3 +51,9 @@ Variáveis opcionais da função: `MODELO_LEITURA` (padrão `claude-opus-5-5`) e
 dado de saúde é gravado no servidor por esta função (a tabela guarda apenas usuário e data).
 Privacidade: a imagem é enviada ao provedor do modelo e descartada; o app pede consentimento
 antes da primeira leitura e permite retirá-lo em "Meus dados".
+
+Idioma: o app envia `language` (`pt-BR` ou `en`) no corpo da chamada. A transcrição copia a receita
+como está (em português ou inglês); só as observações (`notes`) saem no idioma do app. Erros voltam
+com `code` estável (`daily_limit`, `image_too_large`, `image_format`, `refused`, `busy`, `read_failed`),
+que o app traduz, além da mensagem `error` em português para apps antigos. Depois de mudar a função,
+rode `npx supabase functions deploy ler-receita` de novo.

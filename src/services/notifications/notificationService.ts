@@ -28,6 +28,7 @@ import { selectSuperseded } from '@/domain/notifications/supersede';
 import { addDays } from '@/domain/time/time';
 import { loadHydrationSettings, loadProfile } from '@/services/usecases/profile';
 import { loadMedications, refreshOccurrences } from '@/services/usecases/medications';
+import { strings } from '@/i18n';
 
 /** Dias à frente para gerar lembretes de hidratação (o orçamento do planejador limita a quantidade). */
 const HYDRATION_HORIZON_DAYS = 3;
@@ -80,13 +81,14 @@ export async function ensureChannels(_showDetailsOnLockScreen: boolean, sound: b
     lightColor: '#0B5FA5',
     showBadge: true,
   };
-  await Notifications.setNotificationChannelAsync(CHANNEL_HYDRATION, { ...base, bypassDnd: false, name: 'Lembretes de água', description: 'Lembretes para beber água.' });
+  const s = strings().notifications;
+  await Notifications.setNotificationChannelAsync(CHANNEL_HYDRATION, { ...base, bypassDnd: false, name: s.channelHydrationName, description: s.channelHydrationDesc });
   await Notifications.setNotificationChannelAsync(CHANNEL_MEDICATION, {
     ...base,
     // Só tem efeito se o usuário conceder acesso ao "Não perturbe" nas configurações do sistema.
     bypassDnd: true,
-    name: 'Lembretes de medicamentos',
-    description: 'Horários dos medicamentos cadastrados. Independente da pausa noturna da água e, se autorizado, do modo Não perturbe.',
+    name: s.channelMedicationName,
+    description: s.channelMedicationDesc,
   });
   for (const legacy of LEGACY_CHANNELS) {
     try {
@@ -99,8 +101,8 @@ export async function ensureChannels(_showDetailsOnLockScreen: boolean, sound: b
     ...base,
     bypassDnd: false,
     importance: Notifications.AndroidImportance.DEFAULT,
-    name: 'Avisos gerais',
-    description: 'Revisões periódicas e testes.',
+    name: s.channelGenericName,
+    description: s.channelGenericDesc,
   });
 }
 
@@ -115,15 +117,16 @@ export function contentSound(enabled: boolean): boolean | 'default' {
 
 /** Categorias com botões. Android rejeita categorias sem ações, por isso não há categoria "genérica". */
 export async function ensureCategories(): Promise<void> {
+  const s = strings().notifications;
   await Notifications.setNotificationCategoryAsync(CATEGORY_HYDRATION, [
-    { identifier: ACTION_LOG_WATER, buttonTitle: 'Registrar água', options: { opensAppToForeground: true } },
-    { identifier: ACTION_SNOOZE, buttonTitle: 'Lembrar depois', options: { opensAppToForeground: true } },
-    { identifier: ACTION_HELP, buttonTitle: 'Preciso de ajuda', options: { opensAppToForeground: true } },
+    { identifier: ACTION_LOG_WATER, buttonTitle: s.actionLogWater, options: { opensAppToForeground: true } },
+    { identifier: ACTION_SNOOZE, buttonTitle: s.actionSnooze, options: { opensAppToForeground: true } },
+    { identifier: ACTION_HELP, buttonTitle: s.actionHelp, options: { opensAppToForeground: true } },
   ]);
   await Notifications.setNotificationCategoryAsync(CATEGORY_MEDICATION, [
-    { identifier: ACTION_TAKEN, buttonTitle: 'Tomei', options: { opensAppToForeground: true } },
-    { identifier: ACTION_SNOOZE, buttonTitle: 'Lembrar depois', options: { opensAppToForeground: true } },
-    { identifier: ACTION_HELP, buttonTitle: 'Preciso de ajuda', options: { opensAppToForeground: true } },
+    { identifier: ACTION_TAKEN, buttonTitle: s.actionTaken, options: { opensAppToForeground: true } },
+    { identifier: ACTION_SNOOZE, buttonTitle: s.actionSnooze, options: { opensAppToForeground: true } },
+    { identifier: ACTION_HELP, buttonTitle: s.actionHelp, options: { opensAppToForeground: true } },
   ]);
 }
 
@@ -190,7 +193,7 @@ async function doReschedule(): Promise<NotificationState> {
       // Sem permissão: garante que nada nosso fique pendente e registra o motivo.
       const existing = await Notifications.getAllScheduledNotificationsAsync();
       for (const n of existing) if (isOwnedIdentifier(n.identifier)) await Notifications.cancelScheduledNotificationAsync(n.identifier);
-      const next: NotificationState = { ...state, lastRescheduleAt: now.toISOString(), scheduledCount: 0, plannedCount: 0, truncated: false, lastError: 'Permissão de notificações não concedida.' };
+      const next: NotificationState = { ...state, lastRescheduleAt: now.toISOString(), scheduledCount: 0, plannedCount: 0, truncated: false, lastError: strings().notifications.permissionNotGranted };
       await setDocument(db, DOC_NOTIFICATION_STATE, next);
       return next;
     }
@@ -289,8 +292,8 @@ export async function scheduleHydrationSnooze(minutes: number, sound: boolean): 
   await Notifications.scheduleNotificationAsync({
     identifier: id,
     content: {
-      title: 'Hora de beber água',
-      body: 'Lembrete adiado. Que tal agora?',
+      title: strings().notifications.hydrationTitle,
+      body: strings().notifications.hydrationSnoozedBody,
       data: { kind: 'hydration', slotAt: new Date().toISOString() },
       categoryIdentifier: CATEGORY_HYDRATION,
       sound: contentSound(sound),
@@ -307,7 +310,7 @@ export async function scheduleHydrationSnooze(minutes: number, sound: boolean): 
  * ("Cannot read property 'reload' of undefined") e o botão não abria nada.
  */
 export async function openExactAlarmSettings(): Promise<string | null> {
-  if (Platform.OS !== 'android') return 'Disponível apenas no Android.';
+  if (Platform.OS !== 'android') return strings().notifications.androidOnly;
   try {
     await IntentLauncher.startActivityAsync('android.settings.REQUEST_SCHEDULE_EXACT_ALARM', {
       data: `package:${Application.applicationId ?? ''}`,
@@ -324,8 +327,8 @@ export async function presentTestNotificationNow(): Promise<string> {
   await Notifications.scheduleNotificationAsync({
     identifier: id,
     content: {
-      title: 'Teste imediato',
-      body: 'Se você está vendo isto, o canal e a permissão funcionam. Falta só o alarme.',
+      title: strings().notifications.testNowTitle,
+      body: strings().notifications.testNowBody,
       data: { kind: 'test' },
       sound: contentSound(true),
     },
@@ -336,7 +339,7 @@ export async function presentTestNotificationNow(): Promise<string> {
 
 /** Abre a tela do sistema para permitir que lembretes de medicamento ignorem o modo Não perturbe. */
 export async function openDndAccessSettings(): Promise<string | null> {
-  if (Platform.OS !== 'android') return 'Disponível apenas no Android.';
+  if (Platform.OS !== 'android') return strings().notifications.androidOnly;
   try {
     await IntentLauncher.startActivityAsync('android.settings.NOTIFICATION_POLICY_ACCESS_SETTINGS');
     return null;
@@ -348,12 +351,13 @@ export async function openDndAccessSettings(): Promise<string | null> {
 /** Notificação de teste em N segundos (tela "Testar notificações"). */
 export async function scheduleTestNotification(seconds: number, kind: 'hydration' | 'medication'): Promise<string> {
   const id = `test@${Date.now()}`;
+  const s = strings().notifications;
   await ensureCategories();
   await Notifications.scheduleNotificationAsync({
     identifier: id,
     content: {
-      title: kind === 'hydration' ? 'Teste: hora de beber água' : 'Teste: hora do seu medicamento',
-      body: 'Esta é uma notificação de teste. Você pode usar os botões para conferir as ações.',
+      title: kind === 'hydration' ? s.testHydrationTitle : s.testMedicationTitle,
+      body: s.testBody,
       data: { kind: 'test' },
       categoryIdentifier: kind === 'hydration' ? CATEGORY_HYDRATION : CATEGORY_MEDICATION,
       sound: contentSound(true),

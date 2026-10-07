@@ -11,6 +11,7 @@ import { visibleSteps } from './steps';
 import type { Profile } from '@/domain/types';
 import { emptyProfile } from '@/services/usecases/profile';
 import { speak } from '@/services/speech/speech';
+import { strings } from '@/i18n';
 
 export function AssessmentScreen() {
   const nav = useNavigation();
@@ -27,6 +28,7 @@ export function AssessmentScreen() {
   const [error, setError] = useState<string | null>(null);
   const step = steps[Math.min(index, steps.length - 1)]!;
   const update = (patch: Partial<Profile>) => setDraft((d) => ({ ...d, ...patch }));
+  const s = strings();
 
   useEffect(() => {
     setError(null);
@@ -64,13 +66,13 @@ export function AssessmentScreen() {
 
   return (
     <Screen
-      title="Vamos conhecer sua rotina?"
+      title={s.assessment.title}
       footer={
         <View style={{ gap: 8 }}>
-          <BigButton label={index >= steps.length - 1 ? 'Ver resumo' : 'Próxima'} icon="→" onPress={() => void next()} />
+          <BigButton label={index >= steps.length - 1 ? s.assessment.seeSummary : s.common.next} icon="→" onPress={() => void next()} />
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <BigButton kind="secondary" compact label="Voltar" style={{ flex: 1 }} onPress={back} />
-            <BigButton kind="ghost" compact label="Salvar e continuar depois" style={{ flex: 1 }} onPress={() => void saveForLater()} />
+            <BigButton kind="secondary" compact label={s.common.back} style={{ flex: 1 }} onPress={back} />
+            <BigButton kind="ghost" compact label={s.assessment.saveForLater} style={{ flex: 1 }} onPress={() => void saveForLater()} />
           </View>
         </View>
       }

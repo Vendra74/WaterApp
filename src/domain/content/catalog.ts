@@ -1,4 +1,5 @@
 import type { EducationalContent } from '../types';
+import { strings } from '@/i18n';
 
 /**
  * Catálogo editável de conteúdo educativo. Cada item tem fonte, data de revisão e status.
@@ -55,4 +56,17 @@ export const CONTENT_CATALOG: EducationalContent[] = [
 
 export function visibleContent(catalog: EducationalContent[], demoMode: boolean): EducationalContent[] {
   return catalog.filter((c) => c.status === 'validated' || (demoMode && c.status === 'draft'));
+}
+
+/**
+ * Catálogo com título, texto e fonte no idioma atual. Os metadados (id, data de revisão, status,
+ * etiquetas) vêm de `CONTENT_CATALOG`; o texto em português acima é a referência editorial e o
+ * inglês fica em `src/i18n/en.ts`. Um item sem tradução mantém o texto em português.
+ */
+export function localizedContent(catalog: EducationalContent[] = CONTENT_CATALOG): EducationalContent[] {
+  const texts = strings().content.items;
+  return catalog.map((c) => {
+    const t = texts[c.id];
+    return t ? { ...c, title: t.title, body: t.body, source: t.source } : c;
+  });
 }

@@ -14,6 +14,7 @@ import { configureNotificationHandler, dismissSuperseded, recordHydrationFired, 
 import { createResponseDeduper, responseKey } from '@/domain/notifications/responseDedupe';
 import { registerBackgroundTasks } from '@/services/background/backgroundTasks';
 import { speak } from '@/services/speech/speech';
+import { strings } from '@/i18n';
 
 import { WelcomeScreen } from '@/screens/WelcomeScreen';
 import { AssessmentScreen } from '@/screens/assessment/AssessmentScreen';
@@ -60,6 +61,7 @@ function MainTabs() {
   const theme = buildTheme(prefs);
   // Altura fixa ignora a área segura: no Android com botões de navegação a barra do sistema cobria as abas.
   const insets = useSafeAreaInsets();
+  const s = strings().nav;
   return (
     <Tabs.Navigator
       screenOptions={{
@@ -71,10 +73,10 @@ function MainTabs() {
         tabBarStyle: { height: 76 + insets.bottom, paddingBottom: 10 + insets.bottom, paddingTop: 6, backgroundColor: theme.colors.surface, borderTopColor: theme.colors.border },
       }}
     >
-      <Tabs.Screen name="Hoje" component={TodayScreen} options={{ tabBarIcon: (p) => <TabIcon label="🏠" {...p} /> }} />
-      <Tabs.Screen name="Medicamentos" component={MedicationsScreen} options={{ tabBarIcon: (p) => <TabIcon label="💊" {...p} /> }} />
-      <Tabs.Screen name="Histórico" component={HistoryScreen} options={{ tabBarIcon: (p) => <TabIcon label="📅" {...p} /> }} />
-      <Tabs.Screen name="Mais" component={MoreScreen} options={{ tabBarIcon: (p) => <TabIcon label="☰" {...p} /> }} />
+      <Tabs.Screen name="Today" component={TodayScreen} options={{ title: s.today, tabBarIcon: (p) => <TabIcon label="🏠" {...p} /> }} />
+      <Tabs.Screen name="Medications" component={MedicationsScreen} options={{ title: s.medications, tabBarIcon: (p) => <TabIcon label="💊" {...p} /> }} />
+      <Tabs.Screen name="History" component={HistoryScreen} options={{ title: s.history, tabBarIcon: (p) => <TabIcon label="📅" {...p} /> }} />
+      <Tabs.Screen name="More" component={MoreScreen} options={{ title: s.more, tabBarIcon: (p) => <TabIcon label="☰" {...p} /> }} />
     </Tabs.Navigator>
   );
 }
@@ -113,7 +115,7 @@ async function processResponse(response: Notifications.NotificationResponse) {
         const minutes = store.settings?.snoozeMinutes ?? 15;
         await scheduleHydrationSnooze(minutes, store.settings?.sound ?? true);
         navigationRef.navigate('Main');
-        Alert.alert('Lembrete adiado', `Vamos lembrar você de novo em ${minutes} min.`);
+        Alert.alert(strings().notifications.snoozedAlertTitle, strings().notifications.snoozedAlertBody(minutes));
       } else navigateForHydrationAction(routed.action === 'open' ? 'log_water' : routed.action); // toque simples abre o registro
       break;
     case 'medication':
@@ -134,7 +136,7 @@ async function processResponse(response: Notifications.NotificationResponse) {
       // Notificação da tela "Testar notificações": mesmas telas do lembrete real, sem registrar nem adiar.
       navigateForHydrationAction(routed.action);
       if (routed.action === 'snooze') {
-        Alert.alert('Lembrete de teste', `Nada foi adiado. Em um lembrete de verdade, o aviso voltaria em ${store.settings?.snoozeMinutes ?? 15} min.`);
+        Alert.alert(strings().notifications.testSnoozeAlertTitle, strings().notifications.testSnoozeAlertBody(store.settings?.snoozeMinutes ?? 15));
       }
       break;
     default:
@@ -194,6 +196,7 @@ export default function App() {
 
   const navTheme = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: theme.colors.background, card: theme.colors.surface, text: theme.colors.text, primary: theme.colors.primary, border: theme.colors.border } };
   const initial: keyof RootStackParamList = profile?.assessmentCompleted ? 'Main' : 'Welcome';
+  const s = strings().nav;
 
   return (
     <SafeAreaProvider>
@@ -210,22 +213,22 @@ export default function App() {
             }}
           >
             <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Assessment" component={AssessmentScreen} options={{ title: 'Avaliação inicial' }} />
-            <Stack.Screen name="AssessmentSummary" component={AssessmentSummaryScreen} options={{ title: 'Resumo' }} />
+            <Stack.Screen name="Assessment" component={AssessmentScreen} options={{ title: s.assessment }} />
+            <Stack.Screen name="AssessmentSummary" component={AssessmentSummaryScreen} options={{ title: s.summary }} />
             <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
-            <Stack.Screen name="HydrationLog" component={HydrationLogScreen} options={{ title: 'Registrar água', presentation: 'modal' }} />
-            <Stack.Screen name="MedicationForm" component={MedicationFormScreen} options={{ title: 'Medicamento' }} />
-            <Stack.Screen name="MedicationDetail" component={MedicationDetailScreen} options={{ title: 'Medicamento' }} />
-            <Stack.Screen name="OccurrenceAction" component={OccurrenceActionScreen} options={{ title: 'Dose' }} />
-            <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Perfil e plano' }} />
-            <Stack.Screen name="ReminderSettings" component={ReminderSettingsScreen} options={{ title: 'Lembretes' }} />
-            <Stack.Screen name="Caregiver" component={CaregiverScreen} options={{ title: 'Cuidador' }} />
-            <Stack.Screen name="CaredPerson" component={CaredPersonScreen} options={{ title: 'Acompanhamento' }} />
-            <Stack.Screen name="Help" component={HelpScreen} options={{ title: 'Ajuda', presentation: 'modal' }} />
-            <Stack.Screen name="Contacts" component={ContactsScreen} options={{ title: 'Contatos' }} />
-            <Stack.Screen name="NotificationTest" component={NotificationTestScreen} options={{ title: 'Notificações' }} />
-            <Stack.Screen name="Data" component={DataScreen} options={{ title: 'Meus dados' }} />
-            <Stack.Screen name="Content" component={ContentScreen} options={{ title: 'Saiba mais' }} />
+            <Stack.Screen name="HydrationLog" component={HydrationLogScreen} options={{ title: s.logWater, presentation: 'modal' }} />
+            <Stack.Screen name="MedicationForm" component={MedicationFormScreen} options={{ title: s.medication }} />
+            <Stack.Screen name="MedicationDetail" component={MedicationDetailScreen} options={{ title: s.medication }} />
+            <Stack.Screen name="OccurrenceAction" component={OccurrenceActionScreen} options={{ title: s.dose }} />
+            <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: s.profile }} />
+            <Stack.Screen name="ReminderSettings" component={ReminderSettingsScreen} options={{ title: s.reminders }} />
+            <Stack.Screen name="Caregiver" component={CaregiverScreen} options={{ title: s.caregiver }} />
+            <Stack.Screen name="CaredPerson" component={CaredPersonScreen} options={{ title: s.caredPerson }} />
+            <Stack.Screen name="Help" component={HelpScreen} options={{ title: s.help, presentation: 'modal' }} />
+            <Stack.Screen name="Contacts" component={ContactsScreen} options={{ title: s.contacts }} />
+            <Stack.Screen name="NotificationTest" component={NotificationTestScreen} options={{ title: s.notifications }} />
+            <Stack.Screen name="Data" component={DataScreen} options={{ title: s.data }} />
+            <Stack.Screen name="Content" component={ContentScreen} options={{ title: s.content }} />
           </Stack.Navigator>
         </NavigationContainer>
       </ThemeContext.Provider>

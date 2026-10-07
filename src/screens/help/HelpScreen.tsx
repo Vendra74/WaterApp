@@ -9,11 +9,14 @@ import { Banner } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
 import { sendHelpRequestedAlert } from '@/services/sync/careService';
 import { speak } from '@/services/speech/speech';
+import { strings } from '@/i18n';
 
 export function HelpScreen() {
   const nav = useNavigation();
   const { contacts, sync } = useAppStore();
   const [notice, setNotice] = useState<string | null>(null);
+  const s = strings();
+  const h = s.help;
 
   const call = async (phone: string) => {
     const url = `tel:${phone.replace(/[^\d+]/g, '')}`;
@@ -22,36 +25,34 @@ export function HelpScreen() {
     try {
       await Linking.openURL(url);
     } catch {
-      setNotice('Este aparelho não conseguiu abrir o discador. Use o telefone para ligar.');
+      setNotice(h.dialerFailed);
     }
   };
 
   const notifyCaregiver = async () => {
-    setNotice('Enviando aviso…');
+    setNotice(h.sending);
     const sent = await sendHelpRequestedAlert();
-    setNotice(sent ? 'Aviso registrado para o cuidador. Ele verá ao abrir o aplicativo. Não há garantia de que ele veja agora.' : 'Não foi possível enviar o aviso (sem internet, sem conta ou sem cuidador vinculado). Ligue para alguém.');
+    setNotice(sent ? h.sent : h.notSent);
   };
 
   return (
-    <Screen title="Preciso de ajuda">
-      <Banner tone="warning" title="Este aplicativo não é um serviço de emergência">
-        Ninguém monitora o aplicativo em tempo real. Em emergência, ligue para o SAMU (192).
-      </Banner>
-      <BigButton kind="danger" icon="☎" label="Ligar para o SAMU (192)" onPress={() => void call('192')} />
+    <Screen title={h.title}>
+      <Banner tone="warning" title={h.notEmergencyTitle}>{h.notEmergencyBody}</Banner>
+      <BigButton kind="danger" icon="☎" label={h.callEmergency} onPress={() => void call(h.emergencyNumber)} />
       <Card>
-        <AppText variant="heading">Meus contatos</AppText>
-        {contacts.length === 0 ? <AppText muted>Nenhum contato cadastrado.</AppText> : null}
+        <AppText variant="heading">{h.myContacts}</AppText>
+        {contacts.length === 0 ? <AppText muted>{h.noContacts}</AppText> : null}
         {contacts.map((c) => (
-          <BigButton key={c.id} icon="☎" label={`Ligar para ${c.name}${c.relationship ? ` (${c.relationship})` : ''}`} onPress={() => void call(c.phone)} />
+          <BigButton key={c.id} icon="☎" label={h.callContact(c.name, c.relationship)} onPress={() => void call(c.phone)} />
         ))}
-        <BigButton kind="secondary" compact label="Gerenciar contatos" onPress={() => nav.navigate('Contacts')} />
+        <BigButton kind="secondary" compact label={h.manageContacts} onPress={() => nav.navigate('Contacts')} />
       </Card>
       {sync?.configured && sync.signedIn ? (
-        <BigButton kind="secondary" label="Avisar meu cuidador pelo aplicativo" hint="Registra um aviso; o cuidador vê quando abrir o aplicativo" onPress={() => void notifyCaregiver()} />
+        <BigButton kind="secondary" label={h.notifyCaregiver} hint={h.notifyCaregiverHint} onPress={() => void notifyCaregiver()} />
       ) : null}
       {notice ? <Banner tone="info">{notice}</Banner> : null}
-      <BigButton kind="ghost" compact icon="🔊" label="Ler esta tela em voz alta" onPress={() => speak('Tela de ajuda. Este aplicativo não é um serviço de emergência. Em emergência, ligue para o SAMU, 192. ' + contacts.map((c) => `Ligar para ${c.name}.`).join(' '))} />
-      <BigButton kind="ghost" compact label="Voltar" onPress={() => nav.goBack()} />
+      <BigButton kind="ghost" compact icon="🔊" label={h.readScreen} onPress={() => speak(h.spokenIntro + contacts.map((c) => h.spokenCall(c.name)).join(' '))} />
+      <BigButton kind="ghost" compact label={s.common.back} onPress={() => nav.goBack()} />
     </Screen>
   );
 }

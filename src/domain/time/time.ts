@@ -70,30 +70,12 @@ export function isWithinRange(minuteOfDay: number, startMin: number, endMin: num
   return minuteOfDay >= startMin || minuteOfDay < endMin;
 }
 
+/** Hora local no formato de armazenamento "HH:mm" (24 h). Para exibir, use `formatClock` de `@/i18n/format`. */
 export function formatTimeBR(date: Date): string {
   return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
+/** Data local "DD/MM/AAAA" (formato brasileiro). Para exibir, use `formatDate` de `@/i18n/format`. */
 export function formatDateBR(date: Date): string {
   return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
 }
-
-export const WEEKDAY_LABELS_PT: Record<Weekday, string> = {
-  0: 'Dom',
-  1: 'Seg',
-  2: 'Ter',
-  3: 'Qua',
-  4: 'Qui',
-  5: 'Sex',
-  6: 'Sáb',
-};
-
-export const WEEKDAY_LONG_PT: Record<Weekday, string> = {
-  0: 'domingo',
-  1: 'segunda-feira',
-  2: 'terça-feira',
-  3: 'quarta-feira',
-  4: 'quinta-feira',
-  5: 'sexta-feira',
-  6: 'sábado',
-};

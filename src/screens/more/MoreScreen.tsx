@@ -6,23 +6,26 @@ import { BigButton } from '@/ui/components/BigButton';
 import { APP_NAME } from '@/config/branding';
 import { useAppStore } from '@/state/appStore';
 import { env } from '@/config/env';
+import { strings } from '@/i18n';
 
 export function MoreScreen() {
   const nav = useNavigation();
   const { sync, demoMode } = useAppStore();
+  const s = strings();
+  const m = s.more;
   return (
-    <Screen safeTop title="Mais">
-      <BigButton kind="secondary" icon="👤" label="Perfil e plano" onPress={() => nav.navigate('Profile')} />
-      <BigButton kind="secondary" icon="⏰" label="Lembretes de água" onPress={() => nav.navigate('ReminderSettings')} />
-      <BigButton kind="secondary" icon="☎" label="Contatos de ajuda" onPress={() => nav.navigate('Contacts')} />
+    <Screen safeTop title={m.title}>
+      <BigButton kind="secondary" icon="👤" label={m.profile} onPress={() => nav.navigate('Profile')} />
+      <BigButton kind="secondary" icon="⏰" label={m.reminders} onPress={() => nav.navigate('ReminderSettings')} />
+      <BigButton kind="secondary" icon="☎" label={m.contacts} onPress={() => nav.navigate('Contacts')} />
       {env.caregiverEnabled ? (
-        <BigButton kind="secondary" icon="👥" label={`Compartilhar com cuidador${sync?.pending ? ` (${sync.pending} pendentes)` : ''}`} onPress={() => nav.navigate('Caregiver')} />
+        <BigButton kind="secondary" icon="👥" label={m.caregiver(sync?.pending ?? 0)} onPress={() => nav.navigate('Caregiver')} />
       ) : null}
-      <BigButton kind="secondary" icon="🔔" label="Testar notificações" onPress={() => nav.navigate('NotificationTest')} />
-      <BigButton kind="secondary" icon="📖" label="Saiba mais" onPress={() => nav.navigate('Content')} />
-      <BigButton kind="secondary" icon="🗂" label="Meus dados (exportar / apagar)" onPress={() => nav.navigate('Data')} />
-      <AppText muted variant="small">{APP_NAME} · versão 0.1.0{demoMode ? ' · MODO DEMONSTRAÇÃO' : ''}</AppText>
-      <AppText muted variant="small">Ferramenta de apoio à rotina. Não faz diagnóstico, não prescreve e não substitui orientação profissional.</AppText>
+      <BigButton kind="secondary" icon="🔔" label={m.testNotifications} onPress={() => nav.navigate('NotificationTest')} />
+      <BigButton kind="secondary" icon="📖" label={m.content} onPress={() => nav.navigate('Content')} />
+      <BigButton kind="secondary" icon="🗂" label={m.data} onPress={() => nav.navigate('Data')} />
+      <AppText muted variant="small">{s.common.appVersion(APP_NAME, '0.1.0')}{demoMode ? m.demoTag : ''}</AppText>
+      <AppText muted variant="small">{m.disclaimer}</AppText>
     </Screen>
   );
 }

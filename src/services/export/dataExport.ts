@@ -7,6 +7,7 @@ import { listContacts } from '@/data/repositories/misc';
 import { DOC_HYDRATION_SETTINGS, DOC_PROFILE, getDocument } from '@/data/repositories/documents';
 import { cancelAllOwned } from '@/services/notifications/notificationService';
 import { APP_NAME } from '@/config/branding';
+import { strings } from '@/i18n';
 
 /** Exporta todos os dados locais em JSON legível e abre o compartilhamento do sistema. */
 export async function exportAllData(): Promise<string> {
@@ -24,7 +25,7 @@ export async function exportAllData(): Promise<string> {
   const file = new File(Paths.cache, `${APP_NAME.toLowerCase()}-dados-${Date.now()}.json`);
   file.write(JSON.stringify(payload, null, 2));
   if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Exportar meus dados' });
+    await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: strings().data.exportDialog });
   }
   return file.uri;
 }
