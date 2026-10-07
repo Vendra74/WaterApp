@@ -185,7 +185,8 @@ quando a pessoa autoriza, então refaça o questionário:
 - Nenhuma outra categoria (sem conta, sem análise de uso, sem anúncios). Se a Apple perguntar por
   “Informações de saúde”, a resposta continua “não”: o conteúdo da foto não é guardado nem
   vinculado à pessoa; só ficam um identificador anônimo e a data da leitura.
-- A política de privacidade (PT e EN) já descreve esse envio.
+- A política de privacidade (PT e EN) já descreve esse envio; as respostas equivalentes da Play estão em
+  [PLAY-STORE.md](PLAY-STORE.md).
 - Se uma versão futura ativar o compartilhamento com cuidador (Supabase), refaça o questionário de
   novo: passaria a coletar “Informações de saúde” e “Informações de contato”, vinculadas ao usuário.
 

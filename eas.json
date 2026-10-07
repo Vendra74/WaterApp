@@ -7,7 +7,10 @@
       "env": { "EXPO_PUBLIC_DEMO_MODE": "false" }
     },
     "preview": { "distribution": "internal" },
-    "production": {}
+    "production": {
+      "android": { "buildType": "app-bundle" },
+      "env": { "EXPO_PUBLIC_DEMO_MODE": "false", "EXPO_PUBLIC_CAREGIVER_ENABLED": "false" }
+    }
   },
   "submit": { "production": {} }
 }

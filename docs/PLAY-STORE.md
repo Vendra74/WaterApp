@@ -71,14 +71,143 @@ Grave no celular (tela bloqueada ao final) e envie junto com a justificativa:
 
 O app não declara microfone, localização, contatos nem acesso a arquivos.
 
-## Declarações do Play Console
+## Build de produção (AAB)
 
-- **Segurança dos dados**: sem Supabase configurado, nenhum dado sai do aparelho. Com Supabase,
-  o app envia registros de água, medicamentos e perfil à conta da pessoa, cifrados em trânsito,
-  com exclusão disponível em *Mais → Meus dados → Apagar tudo*. Declare conforme o build enviado.
-- **Apps de saúde**: o Cuidar é ferramenta de rotina. Não diagnostica, não prescreve, não calcula
-  doses nem metas e não é serviço de emergência (texto em `src/config/branding.ts`). Use essa
-  descrição ao preencher a categoria e a declaração de conteúdo de saúde.
-- **Público-alvo**: adultos. O app não é dirigido a crianças.
-- **Política de privacidade**: a Play exige uma URL pública. O texto está em `docs/privacidade.html`,
-  publicado pelo GitHub Pages (ver [APP-STORE.md](APP-STORE.md)); use a mesma URL aqui.
+A Play Store aceita só **Android App Bundle** (`.aab`), assinado com a chave de upload. O perfil
+`production` em `eas.json` já gera o bundle. No Mac (mesmo ambiente de `docs/BUILD.md`):
+
+```bash
+export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
+export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+npx eas-cli@latest build --local --profile production --platform android --output cuidar-1.aab
+```
+
+- O build lê o `.env` do projeto: deixe `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+  preenchidos para que a leitura de receita por foto exista no app da loja (sem eles o recurso
+  fica oculto e as declarações de dados abaixo mudam).
+- A chave de assinatura é a mesma do EAS (`eas credentials -p android` mostra e permite baixar o
+  keystore; guarde uma cópia fora do Mac). Na primeira publicação o Play Console propõe a
+  **Assinatura de apps pelo Google Play**: aceite e deixe o Google gerar a chave de assinatura final;
+  a chave do EAS vira a chave de upload.
+- Cada envio novo precisa de `android.versionCode` maior em `app.config.ts` (hoje `1`); a `version`
+  (`0.1.0`) só muda quando quiser mostrar uma versão nova na ficha.
+- Antes de enviar, instale o AAB no Motorola com `bundletool` (`build-apks --connected-device` e
+  `install-apks`) ou, mais simples, suba o AAB num teste interno e instale pela Play Store.
+
+## Conta de desenvolvedor e caminho até a produção
+
+1. **Conta** em https://play.google.com/console (taxa única de US$ 25) com verificação de identidade.
+   Conta pessoal: nome, endereço e documento; a Play exibe o nome e o e-mail na ficha. Com conta de
+   organização (CNPJ), a Play pede o número D-U-N-S e a verificação demora mais.
+2. **Conta pessoal nova** (criada depois de novembro de 2023): antes de poder publicar em produção,
+   o app precisa passar por um **teste fechado com pelo menos 12 testadores inscritos durante 14 dias
+   seguidos**. Depois disso o Console libera o botão “Solicitar acesso à produção”, que ainda passa
+   por uma revisão rápida. Conta de organização não tem essa exigência.
+3. **Criar o app** no Console: nome “Cuidar: água e remédios”, idioma português (Brasil), tipo App,
+   gratuito. O nome não pode mudar para pago depois.
+4. Preencher **Conteúdo do app** (lista abaixo), **Ficha da loja** e subir o AAB em **Teste fechado**
+   (ou direto em Produção, se a conta permitir).
+5. Enviar para revisão. A primeira revisão de um app novo costuma levar até 7 dias; respostas chegam
+   por e-mail e na página do app.
+
+## Ficha da loja (Play Console → Presença na loja → Ficha principal)
+
+| Campo | Valor |
+|---|---|
+| Nome do app (30) | Cuidar: água e remédios |
+| Descrição breve (80) | Lembretes de água e medicamentos, com letras grandes e botões fáceis. |
+| Categoria | Aplicativo · Saúde e fitness |
+| Tags | Lembretes, Saúde |
+| E-mail de contato | contato@bookler.com.br |
+| Site | https://vendra74.github.io/WaterApp/ |
+| Política de privacidade | https://vendra74.github.io/WaterApp/privacidade.html |
+
+### Descrição completa (até 4000 caracteres)
+
+```
+O Cuidar ajuda a manter a rotina de hidratação e a lembrar dos medicamentos, com uma tela simples, letras grandes e botões fáceis de tocar. Foi pensado para pessoas idosas e para quem cuida delas.
+
+LEMBRETES DE MEDICAMENTOS
+• Cadastre cada remédio com horários e dose, ou fotografe a receita para preencher o cadastro e conferir.
+• O lembrete chega no horário exato, inclusive com a tela bloqueada.
+• Confirme, adie ou pule a dose com um toque, direto na notificação.
+• Veja o que ainda falta no dia na tela Hoje.
+
+LEMBRETES DE ÁGUA
+• Escolha os horários e a frequência dos lembretes.
+• Registre a água com um toque e acompanhe o dia.
+• Os lembretes de água respeitam o Não perturbe; os de medicamento, não.
+
+FEITO PARA SER FÁCIL
+• Letras ampliáveis e alto contraste.
+• Leitura em voz alta da tela Hoje.
+• Botão “Preciso de ajuda” que liga para os contatos que você escolher.
+
+PRIVACIDADE
+• Não precisa criar conta.
+• Seus registros ficam no seu aparelho. Só a foto de receita que você autorizar ler é enviada para leitura, e não fica guardada.
+• Sem anúncios.
+
+O Cuidar é uma ferramenta de apoio à rotina. Não faz diagnóstico, não prescreve, não calcula doses nem metas e não substitui a orientação de profissionais de saúde. Não é um serviço de emergência.
+```
+
+### Imagens obrigatórias
+
+| Item | Tamanho | Onde está |
+|---|---|---|
+| Ícone | 512 × 512 px, PNG | `/mnt/project-files/cuidar/play/icone-512.png` (gerado de `assets/icon.png`) |
+| Gráfico de destaque | 1024 × 500 px, PNG ou JPG | `/mnt/project-files/cuidar/play/grafico-destaque.png` |
+| Capturas de tela de celular | mínimo 2, máximo 8; 16:9 ou 9:16, lado maior entre 320 e 3840 px | Tirar no Motorola com o build de produção (sequência sugerida em `APP-STORE.md`, seção “Capturas de tela”). |
+
+Capturas de tablet (7" e 10") só são exigidas se o app for declarado como otimizado para tablets.
+
+## Conteúdo do app (Play Console → Política → Conteúdo do app)
+
+| Declaração | Resposta |
+|---|---|
+| Política de privacidade | https://vendra74.github.io/WaterApp/privacidade.html |
+| Anúncios | Não contém anúncios. |
+| Acesso ao app | Todas as funções disponíveis sem login (a leitura por foto usa uma sessão anônima criada pelo próprio app). |
+| Classificação de conteúdo | Questionário IARC, categoria Utilitário/Produtividade; responda “não” a tudo. Resultado esperado: Livre. |
+| Público-alvo | 18 anos ou mais. Não é dirigido a crianças. |
+| App de notícias | Não. |
+| Apps de saúde | Sim: “Rastreamento e gerenciamento de saúde” (lembretes de medicamentos e hidratação). Não é dispositivo médico, não faz diagnóstico nem recomendações clínicas. |
+| Rastreamento de contatos / COVID | Não. |
+| Recursos financeiros | Não. |
+| Apps governamentais | Não. |
+| Segurança dos dados | Ver tabela abaixo. |
+
+### Segurança dos dados (build com leitura de receita por foto)
+
+- **Coleta ou compartilha dados do usuário?** Sim.
+- **Criptografia em trânsito?** Sim (HTTPS).
+- **Mecanismo para pedir exclusão?** Sim: a foto não é retida; demais dados são apagados pelo próprio
+  app (*Mais → Meus dados → Apagar tudo*). Informe o e-mail de contato para pedidos.
+- Tipos de dados:
+
+| Tipo | Coletado | Compartilhado | Obrigatório | Finalidade |
+|---|---|---|---|---|
+| Fotos e vídeos → Fotos | Sim, só quando a pessoa envia uma receita para leitura | Sim, com o provedor de IA que faz a leitura | Opcional | Funcionalidade do app |
+| Informações de saúde | Não é coletado: horários, doses e registros ficam só no aparelho | Não | — | — |
+| IDs do dispositivo ou outros | Sim: identificador anônimo criado pelo app, só para contar leituras | Não | Opcional | Funcionalidade, prevenção de abuso |
+
+Nenhum dado é usado para publicidade, análise ou personalização. A foto é processada e descartada:
+a Play aceita marcar como “processamento efêmero” se a imagem não for retida por mais tempo que a
+leitura, mas, como o provedor de IA pode guardá-la por um período curto conforme a própria política,
+a declaração acima é a mais segura.
+
+Se o AAB for gerado **sem** as credenciais do Supabase, a leitura por foto fica oculta e a resposta
+passa a ser “Não coleta nem compartilha dados”, como na versão da App Store.
+
+## Antes de clicar em “Enviar para revisão”
+
+- [ ] Conta de desenvolvedor verificada.
+- [ ] App criado no Console com o nome e o idioma acima.
+- [ ] AAB de produção gerado e instalado num aparelho real (notificação de medicamento com a tela
+      bloqueada, Não perturbe, reinício do aparelho).
+- [ ] Ficha da loja: textos, ícone 512, gráfico de destaque, 2 a 8 capturas.
+- [ ] Conteúdo do app: todas as declarações acima preenchidas.
+- [ ] Justificativa de alarmes exatos e vídeo (seção acima) salvos para responder à revisão, se pedir.
+- [ ] Países: Brasil (acrescente outros se quiser).
+- [ ] Conta pessoal nova: teste fechado com 12 testadores por 14 dias concluído e acesso à produção
+      solicitado.

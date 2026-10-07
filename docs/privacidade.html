@@ -20,8 +20,8 @@
   <h2>Resumo</h2>
   <ul>
     <li>Tudo o que você registra fica <strong>somente no seu aparelho</strong>.</li>
-    <li>O Cuidar <strong>não exige conta</strong>, <strong>não coleta dados</strong> para o desenvolvedor, <strong>não usa anúncios</strong> nem ferramentas de análise de uso.</li>
-    <li>O único recurso opcional que envia algo para fora é a <strong>leitura de receita por foto</strong>: a foto é enviada para transcrição só depois que você autoriza, e não fica guardada.</li>
+    <li>A única informação que pode sair do aparelho é a <strong>foto de uma receita ou embalagem</strong> que você mesmo escolher enviar para leitura automática, e só depois de autorizar. Ela não fica guardada.</li>
+    <li>O Cuidar <strong>não exige conta</strong>, <strong>não usa anúncios</strong> nem ferramentas de análise de uso.</li>
     <li>Você pode apagar todos os dados a qualquer momento, dentro do próprio aplicativo.</li>
   </ul>
 
@@ -35,17 +35,7 @@
     <li>fotos da embalagem ou da receita de um medicamento, se você optar por anexá-las;</li>
     <li>preferências de acessibilidade (tamanho das letras, leitura em voz alta).</li>
   </ul>
-  <p>Essas informações não são enviadas ao desenvolvedor nem a terceiros. Elas são removidas quando você usa a opção <em>Mais → Meus dados → Apagar tudo</em> ou quando desinstala o aplicativo.</p>
-
-  <h2>Leitura de receita por foto (opcional)</h2>
-  <p>Ao cadastrar um medicamento, você pode fotografar a receita ou a caixa para que o cadastro seja preenchido como rascunho. Isso só acontece depois que você dá a autorização no aplicativo, e ela pode ser retirada a qualquer momento em <em>Mais → Meus dados</em>. Quando você usa o recurso:</p>
-  <ul>
-    <li>a foto é enviada ao servidor do Cuidar (hospedado no Supabase) e dali ao serviço de inteligência artificial que faz a transcrição (API da Anthropic);</li>
-    <li>a foto é usada só para essa transcrição e <strong>não fica guardada</strong> no servidor nem com o desenvolvedor;</li>
-    <li>o servidor registra apenas um identificador anônimo e a data de cada leitura, para limitar a quantidade de leituras por dia; não guarda a imagem, o nome do medicamento nem qualquer informação de saúde;</li>
-    <li>o resultado é um rascunho que você confere antes de salvar; nada é salvo automaticamente.</li>
-  </ul>
-  <p>Se você nunca usar esse recurso, nada sai do aparelho.</p>
+  <p>Essas informações não são enviadas ao desenvolvedor nem a terceiros (a única exceção é a leitura de receita por foto, descrita abaixo). Elas são removidas quando você usa a opção <em>Mais → Meus dados → Apagar tudo</em> ou quando desinstala o aplicativo.</p>
 
   <h2>Permissões do sistema</h2>
   <ul>
@@ -54,6 +44,16 @@
     <li><strong>Alarmes exatos (Android):</strong> garantem que o lembrete chegue no horário definido por você.</li>
     <li><strong>Telefone:</strong> o botão “Preciso de ajuda” abre o discador com o contato escolhido; o aplicativo não faz ligações sozinho nem acessa seu histórico de chamadas.</li>
   </ul>
+
+  <h2>Leitura de receita por foto (opcional)</h2>
+  <p>Ao cadastrar um medicamento, você pode fotografar a receita ou a embalagem para que o aplicativo preencha o cadastro. Esse recurso é opcional e só funciona depois que você autoriza, na primeira vez ou em <em>Mais → Meus dados</em>. Quando você o usa:</p>
+  <ul>
+    <li>a foto é enviada, cifrada, ao servidor do Cuidar (Supabase, hospedado em São Paulo) e, de lá, ao serviço de inteligência artificial que faz a leitura (Anthropic);</li>
+    <li>a imagem é usada apenas para gerar um rascunho do cadastro e <strong>não é guardada</strong> pelo Cuidar; o serviço de inteligência artificial a trata conforme a própria política e não a usa para treinar modelos;</li>
+    <li>o servidor registra somente a data da leitura e um identificador anônimo do aparelho, para limitar o uso do serviço; esse identificador não está ligado ao seu nome;</li>
+    <li>o resultado é um rascunho que você confere e pode corrigir antes de salvar. Nada é salvo sem a sua confirmação.</li>
+  </ul>
+  <p>Você pode retirar a autorização a qualquer momento em <em>Mais → Meus dados</em>. Fotos anexadas ao medicamento como imagem de referência, sem leitura automática, continuam só no aparelho.</p>
 
   <h2>Leitura em voz alta</h2>
   <p>A leitura em voz alta usa o sintetizador de voz do próprio sistema. O texto lido não sai do aparelho.</p>
@@ -68,7 +68,7 @@
   <p>O Cuidar é uma ferramenta de apoio à rotina. Ele não faz diagnóstico, não prescreve, não calcula doses nem metas e não substitui a orientação de profissionais de saúde. Não é um serviço de emergência: em caso de urgência, ligue para o SAMU (192) ou para o serviço de emergência local.</p>
 
   <h2>Seus direitos</h2>
-  <p>Como os dados ficam apenas no seu aparelho, você tem controle total sobre eles: pode consultá-los, alterá-los, exportá-los (<em>Mais → Meus dados → Exportar meus dados</em>) e apagá-los dentro do aplicativo. Nos termos da Lei Geral de Proteção de Dados (Lei 13.709/2018), não há tratamento de dados pessoais pelo desenvolvedor, exceto a leitura opcional de receita por foto descrita acima, que não guarda dados pessoais.</p>
+  <p>Como os dados ficam apenas no seu aparelho, você tem controle total sobre eles: pode consultá-los, alterá-los, exportá-los (<em>Mais → Meus dados → Exportar meus dados</em>) e apagá-los dentro do aplicativo. Nos termos da Lei Geral de Proteção de Dados (Lei 13.709/2018), o único tratamento feito pelo desenvolvedor é a leitura de receita por foto, com base no seu consentimento, que pode ser retirado a qualquer momento. Para exercer qualquer direito previsto na lei, escreva para o contato abaixo.</p>
 
   <h2>Alterações nesta política</h2>
   <p>Se o aplicativo passar a tratar dados de forma diferente, esta página será atualizada e a data no topo mudará.</p>
