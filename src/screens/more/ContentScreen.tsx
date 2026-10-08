@@ -11,6 +11,7 @@ import { formatISODate } from '@/i18n/format';
 
 export function ContentScreen() {
   const demoMode = useAppStore((st) => st.demoMode);
+  useAppStore((st) => st.locale);
   const s = strings();
   const items = visibleContent(localizedContent(), demoMode);
   return (

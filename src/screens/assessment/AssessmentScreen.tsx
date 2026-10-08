@@ -18,6 +18,7 @@ export function AssessmentScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'Assessment'>>();
   const profile = useAppStore((s) => s.profile);
   const updateProfile = useAppStore((s) => s.updateProfile);
+  useAppStore((s) => s.locale);
 
   const [draft, setDraft] = useState<Profile>(() => {
     if (route.params?.resume === false && profile && !profile.assessmentCompleted) return { ...emptyProfile(), id: profile.id, createdAt: profile.createdAt };
