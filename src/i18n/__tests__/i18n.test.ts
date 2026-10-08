@@ -1,7 +1,7 @@
 import { pt } from '../pt';
 import { en } from '../en';
 import { getLocale, resolveLocale, resolvePreference, setLocale, strings } from '../index';
-import { formatClock, formatDate, formatHHmm, formatISODate, weekdayShort } from '../format';
+import { formatClock, formatDate, formatDose, formatHHmm, formatISODate, weekdayShort } from '../format';
 import { buildNotificationPlan } from '@/domain/notifications/planner';
 import { describeSuggestion } from '@/domain/adaptive/reminderSuggestions';
 import { describeSchedule } from '@/screens/medications/format';
@@ -122,5 +122,48 @@ describe('preferência de idioma', () => {
     expect(resolvePreference('auto', undefined)).toBe('pt-BR');
     expect(resolvePreference('en', 'pt-BR')).toBe('en');
     expect(resolvePreference('pt-BR', 'en')).toBe('pt-BR');
+  });
+});
+
+describe('unidade da dose', () => {
+  it('mostra a unidade digitada em português no idioma atual, com singular e plural', () => {
+    expect(formatDose('1', 'comprimido')).toBe('1 comprimido');
+    expect(formatDose('2', 'comprimido')).toBe('2 comprimidos');
+    setLocale('en');
+    expect(formatDose('1', 'comprimido')).toBe('1 tablet');
+    expect(formatDose('2', 'comprimido')).toBe('2 tablets');
+    expect(formatDose('0,5', 'comprimido')).toBe('0,5 tablets');
+    expect(formatDose('10', 'gotas')).toBe('10 drops');
+    expect(formatDose('5', 'ml')).toBe('5 ml');
+  });
+
+  it('entende o que foi digitado em inglês ao voltar para o português', () => {
+    expect(formatDose('1', 'tablet')).toBe('1 comprimido');
+    expect(formatDose('2', 'Tablets')).toBe('2 comprimidos');
+    expect(formatDose('1', ' CAPSULE ')).toBe('1 cápsula');
+  });
+
+  it('não mexe em unidade desconhecida nem no que fica gravado', () => {
+    setLocale('en');
+    expect(formatDose('1', 'bisnaga')).toBe('1 bisnaga');
+    expect(formatDose('1', '')).toBe('1');
+    const med = medication({ doseAmount: '1', doseUnit: 'comprimido' });
+    expect(med.doseUnit).toBe('comprimido');
+  });
+
+  it('a notificação detalhada usa a unidade no idioma atual', () => {
+    setLocale('en');
+    const med = medication({ doseAmount: '1', doseUnit: 'comprimido', instructions: '' });
+    const now = new Date(2026, 9, 8, 10, 0);
+    const plan = buildNotificationPlan({
+      now,
+      hydrationSlots: [],
+      medications: [med],
+      occurrences: [{ id: 'o1', medicationId: med.id, plannedAt: new Date(2026, 9, 8, 12, 0).toISOString(), status: 'scheduled', takenAt: null, snoozedUntil: null, note: '', history: [], updatedAt: now.toISOString() }],
+      settings: { showDetailsOnLockScreen: true },
+      preferredName: 'Mary',
+      healthReviewDue: null,
+    });
+    expect(plan.find((p) => p.kind === 'medication')?.body).toBe('1 tablet');
   });
 });

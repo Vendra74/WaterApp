@@ -12,7 +12,7 @@ import { occurrenceStatusLabel } from '@/domain/medication/occurrences';
 import { atLocalTime, formatTimeBR } from '@/domain/time/time';
 import { speak } from '@/services/speech/speech';
 import { strings } from '@/i18n';
-import { formatClock, formatDate } from '@/i18n/format';
+import { formatClock, formatDate, formatDose } from '@/i18n/format';
 import { routeLabel } from './format';
 
 export function OccurrenceActionScreen() {
@@ -42,13 +42,13 @@ export function OccurrenceActionScreen() {
     }
   };
 
-  const readAloud = () => speak(oc.spokenDetails(med.name, `${med.doseAmount} ${med.doseUnit}`, routeLabel(med.route), formatClock(planned), med.instructions));
+  const readAloud = () => speak(oc.spokenDetails(med.name, formatDose(med.doseAmount, med.doseUnit), routeLabel(med.route), formatClock(planned), med.instructions));
 
   return (
     <Screen title={med.name}>
       <Card tone={isTaken ? 'success' : 'alt'}>
         <AppText variant="heading">{oc.dateAt(formatDate(planned), formatClock(planned))}</AppText>
-        <AppText>{`${med.doseAmount} ${med.doseUnit}`.trim()}{med.presentation ? ` · ${med.presentation}` : ''} · {routeLabel(med.route)}</AppText>
+        <AppText>{formatDose(med.doseAmount, med.doseUnit)}{med.presentation ? ` · ${med.presentation}` : ''} · {routeLabel(med.route)}</AppText>
         {med.instructions ? <AppText>{oc.instructions(med.instructions)}</AppText> : null}
         <AppText bold>{oc.status(occurrenceStatusLabel(occ.status))}{occ.takenAt ? oc.atTime(formatClock(new Date(occ.takenAt))) : ''}{occ.status === 'snoozed' && occ.snoozedUntil ? oc.untilTime(formatClock(new Date(occ.snoozedUntil))) : ''}</AppText>
         <BigButton kind="secondary" compact icon="🔊" label={s.common.readAloud} onPress={readAloud} />

@@ -10,7 +10,7 @@ import { useAppStore } from '@/state/appStore';
 import { occurrenceStatusLabel } from '@/domain/medication/occurrences';
 import { describeSchedule, routeLabel } from './format';
 import { strings } from '@/i18n';
-import { formatClock, formatDate } from '@/i18n/format';
+import { formatClock, formatDate, formatDose } from '@/i18n/format';
 
 export function MedicationDetailScreen() {
   const nav = useNavigation();
@@ -38,7 +38,7 @@ export function MedicationDetailScreen() {
   return (
     <Screen title={m.name}>
       <Card>
-        <AppText>{[m.presentation, `${m.doseAmount} ${m.doseUnit}`.trim(), routeLabel(m.route)].filter(Boolean).join(' · ')}</AppText>
+        <AppText>{[m.presentation, formatDose(m.doseAmount, m.doseUnit), routeLabel(m.route)].filter(Boolean).join(' · ')}</AppText>
         <AppText muted>{describeSchedule(m)}</AppText>
         {m.instructions ? <AppText>{md.instructions(m.instructions)}</AppText> : null}
         {m.photoUri ? <Image source={{ uri: m.photoUri }} accessibilityLabel={md.photoA11y} style={{ width: '100%', height: 220, borderRadius: 12 }} resizeMode="cover" /> : null}

@@ -2,6 +2,8 @@ import type { HHmm, ISODate, Weekday } from '@/domain/types';
 import { HHMM_REGEX } from '@/domain/time/time';
 import { isEnglish } from './locale';
 import { strings } from './index';
+import { pt, type Strings } from './pt';
+import { en } from './en';
 
 /**
  * Formatação de datas e horas para exibição, conforme o idioma. Os valores armazenados continuam
@@ -56,4 +58,40 @@ function twelveHour(h: number, m: number): string {
   const suffix = h >= 12 ? 'PM' : 'AM';
   const hour12 = h % 12 === 0 ? 12 : h % 12;
   return `${hour12}:${String(m).padStart(2, '0')} ${suffix}`;
+}
+
+/**
+ * Dose para a tela ("1 comprimido", "2 tablets"). A unidade é texto livre gravado como o usuário
+ * digitou (ou como a receita foi lida); aqui só as unidades conhecidas são mostradas no idioma
+ * atual, no singular ou plural conforme a quantidade. Uma unidade desconhecida sai como está.
+ */
+export function formatDose(amount: string, unit: string): string {
+  return `${amount} ${formatDoseUnit(unit, amount)}`.trim();
+}
+
+export function formatDoseUnit(unit: string, amount: string): string {
+  const key = doseUnitKey(unit);
+  if (!key) return unit;
+  const forms = strings().medicationForm.doseUnits[key];
+  return (isSingular(amount) ? forms[0] : forms[1]) ?? unit;
+}
+
+type DoseUnitKey = keyof Strings['medicationForm']['doseUnits'];
+
+/** Procura a unidade digitada em todos os idiomas, sem diferenciar maiúsculas nem espaços extras. */
+function doseUnitKey(unit: string): DoseUnitKey | null {
+  const typed = unit.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!typed) return null;
+  for (const dict of [pt, en]) {
+    for (const [key, forms] of Object.entries(dict.medicationForm.doseUnits)) {
+      if (forms.some((f) => f.toLowerCase() === typed)) return key as DoseUnitKey;
+    }
+  }
+  return null;
+}
+
+/** "1", "1.0" e "1,0" são singular; "2", "0,5", "1/2" e "1 a 2" usam o plural. */
+function isSingular(amount: string): boolean {
+  const n = Number(amount.trim().replace(',', '.'));
+  return n === 1;
 }
