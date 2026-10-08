@@ -54,6 +54,7 @@ export const en: Strings = {
     notifications: 'Notifications',
     data: 'My data',
     content: 'Learn more',
+    language: 'Language',
   },
   notifications: {
     channelHydrationName: 'Water reminders',
@@ -485,8 +486,18 @@ export const en: Strings = {
     testNotifications: 'Test notifications',
     content: 'Learn more',
     data: 'My data (export / delete)',
+    language: 'Language / Idioma',
     demoTag: ' · DEMO MODE',
     disclaimer: 'A tool to support your routine. It does not diagnose, prescribe or replace professional guidance.',
+  },
+  language: {
+    title: 'Language',
+    question: 'Which language should the app use?',
+    auto: 'Automatic (same as the device)',
+    autoHint: (device) => `Your device is currently set to ${device}.`,
+    ptBR: 'Português (Brasil)',
+    en: 'English',
+    note: 'The change applies right away, including notifications. Everything you have logged stays the same.',
   },
   profile: {
     title: 'Profile and plan',

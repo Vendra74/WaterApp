@@ -35,6 +35,7 @@ import { ContactsScreen } from '@/screens/help/ContactsScreen';
 import { NotificationTestScreen } from '@/screens/more/NotificationTestScreen';
 import { DataScreen } from '@/screens/more/DataScreen';
 import { ContentScreen } from '@/screens/more/ContentScreen';
+import { LanguageScreen } from '@/screens/more/LanguageScreen';
 import { MoreScreen } from '@/screens/more/MoreScreen';
 
 configureNotificationHandler();
@@ -58,6 +59,7 @@ function TabLabel({ label, color, fontSize }: { label: string; color: string; fo
 
 function MainTabs() {
   const prefs = useAppStore((s) => s.profile?.accessibility ?? DEFAULT_PREFS);
+  useAppStore((s) => s.locale); // nomes das abas acompanham o idioma escolhido
   const theme = buildTheme(prefs);
   // Altura fixa ignora a área segura: no Android com botões de navegação a barra do sistema cobria as abas.
   const insets = useSafeAreaInsets();
@@ -229,6 +231,7 @@ export default function App() {
             <Stack.Screen name="NotificationTest" component={NotificationTestScreen} options={{ title: s.notifications }} />
             <Stack.Screen name="Data" component={DataScreen} options={{ title: s.data }} />
             <Stack.Screen name="Content" component={ContentScreen} options={{ title: s.content }} />
+            <Stack.Screen name="Language" component={LanguageScreen} options={{ title: s.language }} />
           </Stack.Navigator>
         </NavigationContainer>
       </ThemeContext.Provider>

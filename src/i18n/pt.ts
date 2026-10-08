@@ -54,6 +54,7 @@ export const pt = {
     notifications: 'Notificações',
     data: 'Meus dados',
     content: 'Saiba mais',
+    language: 'Idioma',
   },
   /** Textos das notificações do sistema (título, corpo, botões, canais). */
   notifications: {
@@ -489,8 +490,18 @@ export const pt = {
     testNotifications: 'Testar notificações',
     content: 'Saiba mais',
     data: 'Meus dados (exportar / apagar)',
+    language: 'Idioma / Language',
     demoTag: ' · MODO DEMONSTRAÇÃO',
     disclaimer: 'Ferramenta de apoio à rotina. Não faz diagnóstico, não prescreve e não substitui orientação profissional.',
+  },
+  language: {
+    title: 'Idioma',
+    question: 'Em que idioma o aplicativo deve aparecer?',
+    auto: 'Automático (igual ao aparelho)',
+    autoHint: (device: string) => `Hoje o aparelho está em ${device}.`,
+    ptBR: 'Português (Brasil)',
+    en: 'English',
+    note: 'A mudança vale na hora, inclusive para as notificações. O que você já registrou continua igual.',
   },
   profile: {
     title: 'Perfil e plano',

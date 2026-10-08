@@ -8,13 +8,15 @@ import { Card } from '@/ui/components/Card';
 import { APP_NAME, appTagline } from '@/config/branding';
 import { useAppStore } from '@/state/appStore';
 import { useTheme } from '@/ui/theme';
-import { strings } from '@/i18n';
+import { isEnglish, strings } from '@/i18n';
 
 export function WelcomeScreen() {
   const nav = useNavigation();
   const t = useTheme();
   const s = strings().welcome;
   const profile = useAppStore((s) => s.profile);
+  const setLanguage = useAppStore((s) => s.setLanguage);
+  useAppStore((s) => s.locale);
   const canResume = !!profile && profile.assessmentStep > 0 && !profile.assessmentCompleted;
   return (
     <Screen safeTop>
@@ -31,6 +33,7 @@ export function WelcomeScreen() {
       </Card>
       <BigButton label={canResume ? s.resume : s.start} icon="→" onPress={() => nav.navigate('Assessment', { resume: canResume })} />
       {canResume ? <BigButton kind="secondary" label={s.restart} onPress={() => nav.navigate('Assessment', { resume: false })} /> : null}
+      <BigButton kind="ghost" compact icon="🌐" label={isEnglish() ? strings().language.ptBR : strings().language.en} onPress={() => void setLanguage(isEnglish() ? 'pt-BR' : 'en')} />
     </Screen>
   );
 }

@@ -30,3 +30,5 @@ export const DOC_OCCURRENCES_QUEUED = 'occurrences_queued';
 export const DOC_DISMISSED_SUGGESTIONS = 'dismissed_suggestions';
 /** Consentimento para enviar fotos de receita ao serviço de leitura: { acceptedAt } ou ausente. */
 export const DOC_AI_CONSENT = 'ai_consent';
+/** Idioma escolhido em Mais → Idioma: { preference: 'auto' | 'pt-BR' | 'en' } ou ausente (= auto). */
+export const DOC_LANGUAGE = 'language';
