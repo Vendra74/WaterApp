@@ -1,3 +1,4 @@
+import { describeDose } from '@/domain/medication/dose';
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '@/ui/components/Screen';
@@ -19,7 +20,7 @@ export function MedicationsScreen() {
       {medications.map((m) => (
         <Card key={m.id} tone={m.active ? 'default' : 'alt'}>
           <AppText variant="heading">{m.name}{m.active ? '' : s.paused}</AppText>
-          <AppText>{[m.presentation, `${m.doseAmount} ${m.doseUnit}`.trim(), routeLabel(m.route)].filter(Boolean).join(' · ')}</AppText>
+          <AppText>{[m.presentation, describeDose(m.doseAmount, m.doseUnit), routeLabel(m.route)].filter(Boolean).join(' · ')}</AppText>
           <AppText muted>{describeSchedule(m)}</AppText>
           <BigButton kind="secondary" compact label={s.seeDetails} onPress={() => nav.navigate('MedicationDetail', { id: m.id })} />
         </Card>

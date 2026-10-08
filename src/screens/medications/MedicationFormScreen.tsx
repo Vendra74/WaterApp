@@ -14,6 +14,7 @@ import type { Medication, Weekday } from '@/domain/types';
 import { newId } from '@/domain/ids';
 import { isValidHHmm } from '@/domain/time/time';
 import { applyPrescriptionDraft, describePrescriptionDraft } from '@/domain/medication/prescriptionDraft';
+import { FORM_DOSE_UNITS, formDoseUnit, storedDoseUnit } from '@/domain/medication/dose';
 import { consentTextAi, hasAiConsent, isPrescriptionReadingAvailable, readPrescriptionPhoto, setAiConsent } from '@/services/ai/prescriptionReader';
 import { strings } from '@/i18n';
 import { weekdayShort } from '@/i18n/format';
@@ -37,6 +38,8 @@ export function MedicationFormScreen() {
   const [reading, setReading] = useState(false);
   const [readResult, setReadResult] = useState<{ filled: string[]; missing: string[]; notes: string } | null>(null);
   const [consent, setConsent] = useState<boolean | null>(null);
+  /** “Outra” escolhida na lista de unidades (texto livre), mesmo com o campo ainda vazio. */
+  const [unitOther, setUnitOther] = useState(() => (existing ? formDoseUnit(existing.doseUnit) === null : false));
   const t = useTheme();
   const s = strings();
   const f = s.medicationForm;
@@ -78,6 +81,7 @@ export function MedicationFormScreen() {
         return;
       }
       setM((x) => applyPrescriptionDraft({ ...x, photoUri: asset.uri }, result.draft));
+      if (result.draft.doseUnit && formDoseUnit(result.draft.doseUnit) === null) setUnitOther(true);
       setReadResult({ ...describePrescriptionDraft(result.draft), notes: result.draft.notes });
     } finally {
       setReading(false);
@@ -154,10 +158,23 @@ export function MedicationFormScreen() {
       {error ? <Banner tone="warning">{error}</Banner> : null}
       <TextField label={f.name} value={m.name} onChangeText={(v) => set({ name: v })} autoCapitalize="words" />
       <TextField label={f.presentation} hint={f.presentationHint} value={m.presentation} onChangeText={(v) => set({ presentation: v })} />
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <View style={{ flex: 1 }}><TextField label={f.dose} value={m.doseAmount} onChangeText={(v) => set({ doseAmount: v })} /></View>
-        <View style={{ flex: 2 }}><TextField label={f.unit} hint={f.unitHint} value={m.doseUnit} onChangeText={(v) => set({ doseUnit: v })} /></View>
-      </View>
+      <TextField label={f.dose} value={m.doseAmount} onChangeText={(v) => set({ doseAmount: v })} />
+      <ChoiceGroup
+        wrap
+        label={f.unit}
+        options={[...FORM_DOSE_UNITS.map((k) => ({ value: k as string, label: k === 'ml' ? 'ml' : s.doseUnits[k].one })), { value: 'other', label: f.unitOther }]}
+        value={unitOther ? 'other' : formDoseUnit(m.doseUnit)}
+        onChange={(v) => {
+          if (v === 'other') {
+            setUnitOther(true);
+            if (formDoseUnit(m.doseUnit) !== null) set({ doseUnit: '' });
+          } else {
+            setUnitOther(false);
+            set({ doseUnit: storedDoseUnit(v as (typeof FORM_DOSE_UNITS)[number]) });
+          }
+        }}
+      />
+      {unitOther ? <TextField label={f.unitOtherLabel} hint={f.unitHint} value={m.doseUnit} onChangeText={(v) => set({ doseUnit: v })} /> : null}
       <ChoiceGroup
         label={f.route}
         options={[{ value: 'oral', label: f.routeOral }, { value: 'tópica', label: f.routeTopical }, { value: 'ocular', label: f.routeOcular }, { value: 'inalatória', label: f.routeInhaled }, { value: 'injetável', label: f.routeInjection }, { value: 'outra', label: f.routeOther }]}

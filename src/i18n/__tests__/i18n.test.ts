@@ -5,6 +5,7 @@ import { formatClock, formatDate, formatHHmm, formatISODate, weekdayShort } from
 import { buildNotificationPlan } from '@/domain/notifications/planner';
 import { describeSuggestion } from '@/domain/adaptive/reminderSuggestions';
 import { describeSchedule } from '@/screens/medications/format';
+import { describeDose, formDoseUnit, storedDoseUnit } from '@/domain/medication/dose';
 import { makeMedication as medication } from '@/domain/__tests__/fixtures';
 
 /** Caminhos de todas as chaves de um dicionário, com o tipo da folha. */
@@ -33,7 +34,7 @@ describe('dicionários', () => {
   });
 
   it('nenhum texto em inglês ficou igual ao português por descuido (exceto os que são iguais mesmo)', () => {
-    const same = new Set(['common.ml', 'medicationForm.dose', 'assessment.fontNormal', 'prescription.fieldDose', 'nav.dose', 'common.item', 'common.medication', 'occurrenceStatus.taken', 'hydration.beverageSoup', 'help.emergencyNumber', 'medications.instructions', 'occurrence.instructions', 'profile.instructions', 'medicationForm.dateHint', 'medicationForm.routeOther', 'language.ptBR', 'language.en']);
+    const same = new Set(['common.ml', 'medicationForm.dose', 'assessment.fontNormal', 'prescription.fieldDose', 'nav.dose', 'common.item', 'common.medication', 'occurrenceStatus.taken', 'hydration.beverageSoup', 'help.emergencyNumber', 'medications.instructions', 'occurrence.instructions', 'profile.instructions', 'medicationForm.dateHint', 'medicationForm.routeOther', 'language.ptBR', 'language.en', 'doseUnits.dose.one', 'doseUnits.dose.many']);
     const a = leaves(pt);
     const pick = (o: unknown, path: string) => path.split('.').reduce<unknown>((acc, k) => (acc as Record<string, unknown>)[k], o);
     for (const [path, type] of a) {
@@ -122,5 +123,38 @@ describe('preferência de idioma', () => {
     expect(resolvePreference('auto', undefined)).toBe('pt-BR');
     expect(resolvePreference('en', 'pt-BR')).toBe('en');
     expect(resolvePreference('pt-BR', 'en')).toBe('pt-BR');
+  });
+});
+
+describe('unidade da dose no idioma em uso', () => {
+  it('traduz unidades conhecidas com plural e mantém o resto', () => {
+    expect(describeDose('1', 'comprimido')).toBe('1 comprimido');
+    expect(describeDose('2', 'tablet')).toBe('2 comprimidos');
+    expect(describeDose('meio', 'comprimido')).toBe('meio comprimido');
+    expect(describeDose('10', 'ml')).toBe('10 ml');
+    expect(describeDose('1', 'pastilha')).toBe('1 pastilha');
+    setLocale('en');
+    expect(describeDose('1', 'comprimido')).toBe('1 tablet');
+    expect(describeDose('2', 'comprimidos')).toBe('2 tablets');
+    expect(describeDose('1,5', 'cápsula')).toBe('1,5 capsules');
+    expect(describeDose('20', 'gotas')).toBe('20 drops');
+    expect(describeDose('2', 'colher de chá')).toBe('2 teaspoons');
+    setLocale('pt-BR');
+    expect(describeDose('1', 'tbsp')).toBe('1 colher de sopa');
+    setLocale('en');
+    expect(describeDose('10', 'ml')).toBe('10 ml');
+    expect(describeDose('1', 'pastilha')).toBe('1 pastilha');
+  });
+});
+
+describe('lista de unidades do cadastro', () => {
+  it('grava a palavra em português e reconhece o gravado em qualquer idioma', () => {
+    expect(storedDoseUnit('tablet')).toBe('comprimido');
+    expect(storedDoseUnit('ml')).toBe('ml');
+    expect(formDoseUnit('comprimido')).toBe('tablet');
+    expect(formDoseUnit('Tablets')).toBe('tablet');
+    expect(formDoseUnit('ML')).toBe('ml');
+    expect(formDoseUnit('pastilha')).toBeNull();
+    expect(formDoseUnit('')).toBeNull();
   });
 });
