@@ -394,6 +394,8 @@ export const en: Strings = {
     capsule: { one: 'capsule', many: 'capsules' },
     drop: { one: 'drop', many: 'drops' },
     spoon: { one: 'spoonful', many: 'spoonfuls' },
+    teaspoon: { one: 'teaspoon', many: 'teaspoons' },
+    tablespoon: { one: 'tablespoon', many: 'tablespoons' },
     sachet: { one: 'sachet', many: 'sachets' },
     ampoule: { one: 'ampoule', many: 'ampoules' },
     application: { one: 'application', many: 'applications' },

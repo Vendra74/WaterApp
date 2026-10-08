@@ -399,6 +399,8 @@ export const pt = {
     capsule: { one: 'cápsula', many: 'cápsulas' },
     drop: { one: 'gota', many: 'gotas' },
     spoon: { one: 'colher', many: 'colheres' },
+    teaspoon: { one: 'colher de chá', many: 'colheres de chá' },
+    tablespoon: { one: 'colher de sopa', many: 'colheres de sopa' },
     sachet: { one: 'sachê', many: 'sachês' },
     ampoule: { one: 'ampola', many: 'ampolas' },
     application: { one: 'aplicação', many: 'aplicações' },

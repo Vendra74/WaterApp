@@ -138,6 +138,10 @@ describe('unidade da dose no idioma em uso', () => {
     expect(describeDose('2', 'comprimidos')).toBe('2 tablets');
     expect(describeDose('1,5', 'cápsula')).toBe('1,5 capsules');
     expect(describeDose('20', 'gotas')).toBe('20 drops');
+    expect(describeDose('2', 'colher de chá')).toBe('2 teaspoons');
+    setLocale('pt-BR');
+    expect(describeDose('1', 'tbsp')).toBe('1 colher de sopa');
+    setLocale('en');
     expect(describeDose('10', 'ml')).toBe('10 ml');
     expect(describeDose('1', 'pastilha')).toBe('1 pastilha');
   });
