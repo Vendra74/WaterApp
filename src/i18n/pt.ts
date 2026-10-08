@@ -393,6 +393,23 @@ export const pt = {
     doseHint: 'Abre as opções de confirmação ou correção',
     deleteButton: 'Apagar medicamento',
   },
+  /** Unidades de dose conhecidas, para exibir no idioma em uso (o gravado fica como foi digitado). */
+  doseUnits: {
+    tablet: { one: 'comprimido', many: 'comprimidos' },
+    capsule: { one: 'cápsula', many: 'cápsulas' },
+    drop: { one: 'gota', many: 'gotas' },
+    spoon: { one: 'colher', many: 'colheres' },
+    sachet: { one: 'sachê', many: 'sachês' },
+    ampoule: { one: 'ampola', many: 'ampolas' },
+    application: { one: 'aplicação', many: 'aplicações' },
+    puff: { one: 'jato', many: 'jatos' },
+    dose: { one: 'dose', many: 'doses' },
+    unit: { one: 'unidade', many: 'unidades' },
+    patch: { one: 'adesivo', many: 'adesivos' },
+    suppository: { one: 'supositório', many: 'supositórios' },
+    injection: { one: 'injeção', many: 'injeções' },
+    vial: { one: 'frasco', many: 'frascos' },
+  },
   medicationForm: {
     titleEdit: 'Editar medicamento',
     titleNew: 'Cadastrar medicamento',

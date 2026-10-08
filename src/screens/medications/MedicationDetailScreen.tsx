@@ -1,3 +1,4 @@
+import { describeDose } from '@/domain/medication/dose';
 import React from 'react';
 import { Alert, Image } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -38,7 +39,7 @@ export function MedicationDetailScreen() {
   return (
     <Screen title={m.name}>
       <Card>
-        <AppText>{[m.presentation, `${m.doseAmount} ${m.doseUnit}`.trim(), routeLabel(m.route)].filter(Boolean).join(' · ')}</AppText>
+        <AppText>{[m.presentation, describeDose(m.doseAmount, m.doseUnit), routeLabel(m.route)].filter(Boolean).join(' · ')}</AppText>
         <AppText muted>{describeSchedule(m)}</AppText>
         {m.instructions ? <AppText>{md.instructions(m.instructions)}</AppText> : null}
         {m.photoUri ? <Image source={{ uri: m.photoUri }} accessibilityLabel={md.photoA11y} style={{ width: '100%', height: 220, borderRadius: 12 }} resizeMode="cover" /> : null}

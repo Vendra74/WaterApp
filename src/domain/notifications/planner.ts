@@ -1,3 +1,4 @@
+import { describeDose } from '@/domain/medication/dose';
 import type { HydrationSettings, Medication, MedicationOccurrence, PlannedNotification } from '../types';
 import { iso } from '../time/time';
 import type { HydrationSlot } from '../hydration/schedule';
@@ -67,7 +68,7 @@ export function buildNotificationPlan(input: PlanInput): PlannedNotification[] {
     if (fireAt.getTime() > nowMs) {
       const title = detailed ? s.medicationTitleDetailed(med.name) : s.medicationTitleGeneric;
       const body = detailed
-        ? `${med.doseAmount} ${med.doseUnit}${med.instructions ? ` · ${med.instructions}` : ''}`.trim()
+        ? `${describeDose(med.doseAmount, med.doseUnit)}${med.instructions ? ` · ${med.instructions}` : ''}`.trim()
         : s.medicationBodyGeneric;
       const content = `${title}|${body}`;
       medication.push({
@@ -92,7 +93,7 @@ export function buildNotificationPlan(input: PlanInput): PlannedNotification[] {
         const at = new Date(fireAt.getTime() + i * repeatMin * 60_000);
         if (at.getTime() <= nowMs) continue;
         const rTitle = detailed ? s.medicationRepeatTitleDetailed(med.name) : s.medicationRepeatTitleGeneric;
-        const rBody = detailed ? `${med.doseAmount} ${med.doseUnit}`.trim() : s.medicationBodyGeneric;
+        const rBody = detailed ? describeDose(med.doseAmount, med.doseUnit) : s.medicationBodyGeneric;
         medication.push({
           identifier: `med@${occ.id}@${at.toISOString()}@r${i}@${hash(rTitle + rBody)}`,
           kind: 'medication',
