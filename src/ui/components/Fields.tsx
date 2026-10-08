@@ -85,6 +85,7 @@ export function ChoiceGroup<T extends string>({
   onChange,
   multi,
   hint,
+  wrap,
 }: {
   label?: string;
   options: { value: T; label: string; description?: string }[];
@@ -92,6 +93,8 @@ export function ChoiceGroup<T extends string>({
   onChange: (v: T[] | T) => void;
   multi?: boolean;
   hint?: string;
+  /** Opções lado a lado, quebrando linha (listas curtas de palavras). */
+  wrap?: boolean;
 }) {
   const t = useTheme();
   const selected = new Set<T>(Array.isArray(value) ? value : value ? [value] : []);
@@ -99,6 +102,7 @@ export function ChoiceGroup<T extends string>({
     <View style={{ gap: t.space(1) }} accessibilityRole={multi ? undefined : 'radiogroup'}>
       {label ? <AppText variant="label" bold>{label}</AppText> : null}
       {hint ? <AppText variant="small" muted>{hint}</AppText> : null}
+      <View style={wrap ? { flexDirection: 'row', flexWrap: 'wrap', gap: t.space(1) } : { gap: t.space(1) }}>
       {options.map((o) => {
         const on = selected.has(o.value);
         return (
@@ -126,16 +130,18 @@ export function ChoiceGroup<T extends string>({
               flexDirection: 'row',
               alignItems: 'center',
               gap: t.space(1.5),
+              flexGrow: wrap ? 1 : undefined,
             }}
           >
             <AppText variant="heading" style={{ color: on ? t.colors.primary : t.colors.textMuted }} importantForAccessibility="no">{on ? '☑' : '☐'}</AppText>
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: wrap ? undefined : 1 }}>
               <AppText bold={on}>{o.label}</AppText>
               {o.description ? <AppText variant="small" muted>{o.description}</AppText> : null}
             </View>
           </Pressable>
         );
       })}
+      </View>
     </View>
   );
 }

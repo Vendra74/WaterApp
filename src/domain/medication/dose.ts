@@ -1,4 +1,5 @@
 import { strings } from '@/i18n';
+import { pt } from '@/i18n/pt';
 
 /**
  * Dose para exibição ("1 comprimido" / "1 tablet"). A unidade fica gravada como a pessoa digitou (ou
@@ -51,4 +52,20 @@ export function doseUnitLabel(unit: string, amount: string): string {
 
 export function describeDose(amount: string, unit: string): string {
   return `${amount} ${doseUnitLabel(unit, amount)}`.trim();
+}
+
+/** Unidades oferecidas no cadastro, na ordem da tela. "ml" é medida e fica igual nos dois idiomas. */
+export const FORM_DOSE_UNITS: readonly (DoseUnitKey | 'ml')[] = ['tablet', 'capsule', 'drop', 'ml', 'teaspoon', 'tablespoon', 'application', 'puff', 'sachet', 'ampoule'];
+
+/** O que fica gravado ao escolher na lista: a palavra em português (referência), igual aos cadastros antigos. */
+export function storedDoseUnit(key: DoseUnitKey | 'ml'): string {
+  return key === 'ml' ? 'ml' : pt.doseUnits[key].one;
+}
+
+/** Opção da lista correspondente ao gravado, ou null para texto livre. */
+export function formDoseUnit(unit: string): DoseUnitKey | 'ml' | null {
+  const plain = unit.trim().toLowerCase();
+  if (plain === 'ml') return 'ml';
+  const key = doseUnitKey(unit);
+  return key && (FORM_DOSE_UNITS as readonly string[]).includes(key) ? key : null;
 }

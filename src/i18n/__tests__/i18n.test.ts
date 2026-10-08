@@ -5,7 +5,7 @@ import { formatClock, formatDate, formatHHmm, formatISODate, weekdayShort } from
 import { buildNotificationPlan } from '@/domain/notifications/planner';
 import { describeSuggestion } from '@/domain/adaptive/reminderSuggestions';
 import { describeSchedule } from '@/screens/medications/format';
-import { describeDose } from '@/domain/medication/dose';
+import { describeDose, formDoseUnit, storedDoseUnit } from '@/domain/medication/dose';
 import { makeMedication as medication } from '@/domain/__tests__/fixtures';
 
 /** Caminhos de todas as chaves de um dicionário, com o tipo da folha. */
@@ -144,5 +144,17 @@ describe('unidade da dose no idioma em uso', () => {
     setLocale('en');
     expect(describeDose('10', 'ml')).toBe('10 ml');
     expect(describeDose('1', 'pastilha')).toBe('1 pastilha');
+  });
+});
+
+describe('lista de unidades do cadastro', () => {
+  it('grava a palavra em português e reconhece o gravado em qualquer idioma', () => {
+    expect(storedDoseUnit('tablet')).toBe('comprimido');
+    expect(storedDoseUnit('ml')).toBe('ml');
+    expect(formDoseUnit('comprimido')).toBe('tablet');
+    expect(formDoseUnit('Tablets')).toBe('tablet');
+    expect(formDoseUnit('ML')).toBe('ml');
+    expect(formDoseUnit('pastilha')).toBeNull();
+    expect(formDoseUnit('')).toBeNull();
   });
 });
