@@ -12,6 +12,7 @@ import { strings } from '@/i18n';
 export function MedicationsScreen() {
   const nav = useNavigation();
   const medications = useAppStore((st) => st.medications);
+  useAppStore((st) => st.locale); // a aba fica montada: precisa redesenhar quando o idioma muda
   const s = strings().medications;
   return (
     <Screen safeTop title={s.title} footer={<BigButton label={s.add} icon="+" onPress={() => nav.navigate('MedicationForm')} />}>

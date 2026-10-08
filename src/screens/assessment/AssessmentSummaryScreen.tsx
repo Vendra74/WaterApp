@@ -24,6 +24,7 @@ export function AssessmentSummaryScreen() {
   const settings = useAppStore((s) => s.settings);
   const updateProfile = useAppStore((s) => s.updateProfile);
   const updateSettings = useAppStore((s) => s.updateSettings);
+  useAppStore((s) => s.locale);
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [draft, setDraft] = useState<Profile>(profile);
   const [busy, setBusy] = useState(false);
