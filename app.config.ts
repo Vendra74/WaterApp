@@ -23,7 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundleIdentifier: BUNDLE_ID,
     // Número do build enviado ao App Store Connect/TestFlight. Cada envio precisa de um número maior
     // que o anterior (a `version` pode continuar igual). Ver docs/TESTFLIGHT.md.
-    buildNumber: '5',
+    buildNumber: '6',
     // iPad desligado na primeira versão da loja: o layout nunca foi validado em tablet e a Apple
     // exigiria capturas de iPad na ficha (ver docs/APP-STORE.md).
     supportsTablet: false,
@@ -85,6 +85,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     ['expo-notifications', { icon: './assets/notification-icon.png', color: '#0B5FA5', defaultChannel: 'hydration' }],
+    [
+      'expo-build-properties',
+      {
+        ios: {
+          // iOS 27 encerra na abertura todo app compilado com o SDK do iOS 27 (Xcode 27) que ainda usa o
+          // ciclo de vida antigo (só AppDelegate). O template do Expo SDK 57 não adota as cenas (UIScene),
+          // então esta opção faz o prebuild registrar o ExpoAppSceneDelegate. Foi o motivo da rejeição do
+          // build 5 pela Apple (crash em iPadOS 27). Pode sair ao migrar para o SDK 58, que já traz isso.
+          enableSceneSupport: true,
+        },
+      },
+    ],
     'expo-sqlite',
     'expo-secure-store',
     'expo-background-task',
