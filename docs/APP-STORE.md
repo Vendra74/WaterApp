@@ -2,7 +2,9 @@
 
 Material para preencher o App Store Connect. Os textos podem ser colados como estão; mantenha-os
 alinhados com o comportamento real do app (sem metas automáticas, sem conversões, sem recomendações
-clínicas). O build enviado é o mesmo já aprovado no TestFlight (ver [TESTFLIGHT.md](TESTFLIGHT.md)).
+clínicas). A versão 1.0 (build 3, só pt-BR, sem leitura por foto) foi aprovada e liberada em 08/10/2026.
+A próxima é a **1.1.0 (build 5)**: inglês, idioma em Mais → Idioma e cadastro de medicamento por foto.
+Veja [Atualizar a versão publicada](#atualizar-a-versão-publicada) no fim deste arquivo.
 
 ## Páginas públicas (GitHub Pages)
 
@@ -51,6 +53,7 @@ O Cuidar ajuda a manter a rotina de hidratação e a lembrar dos medicamentos, c
 
 LEMBRETES DE MEDICAMENTOS
 • Cadastre cada remédio com horários e dose.
+• Se quiser, preencha o cadastro pela foto da receita ou da caixa, como um rascunho que você confere antes de salvar.
 • O lembrete chega no horário, inclusive com a tela bloqueada.
 • Confirme, adie ou pule a dose com um toque, direto na notificação.
 • Veja o que ainda falta no dia na tela Hoje.
@@ -68,16 +71,22 @@ FEITO PARA SER FÁCIL
 PRIVACIDADE
 • Não precisa criar conta.
 • Todos os dados ficam no seu aparelho. Nada é enviado ao desenvolvedor.
+• A leitura por foto, opcional, envia a foto só para transcrição, depois que você autoriza, e não a guarda.
 • Sem anúncios.
 
 O Cuidar é uma ferramenta de apoio à rotina. Não faz diagnóstico, não prescreve, não calcula doses nem metas e não substitui a orientação de profissionais de saúde. Não é um serviço de emergência.
 ```
 
-### Novidades desta versão (0.1.0)
+### Novidades desta versão (1.1.0)
 
 ```
-Primeira versão do Cuidar: lembretes de água e de medicamentos, confirmação de dose pela notificação, leitura em voz alta e botão de ajuda.
+• Cadastre um medicamento pela foto da receita ou da caixa: o app preenche um rascunho e você confere antes de salvar.
+• O Cuidar agora fala inglês: segue o idioma do aparelho ou o que você escolher em Mais → Idioma.
+• Unidade da dose escolhida numa lista e textos revisados.
 ```
+
+Texto da 1.0 (0.1.0, build 3), para referência: “Primeira versão do Cuidar: lembretes de água e de
+medicamentos, confirmação de dose pela notificação, leitura em voz alta e botão de ajuda.”
 
 ## Ficha em inglês (App Store Connect → Cuidar → Localizações → English (U.S.))
 
@@ -174,9 +183,11 @@ qualquer leitura como recomendação.
 
 ## Privacidade do app (App Store Connect → Privacidade do app)
 
-O build 3 (sem leitura de receita por foto) foi declarado como “Dados não coletados”. **A partir do
-build seguinte**, que inclui a leitura de receita por foto (PR #20), o app envia a foto ao servidor
-quando a pessoa autoriza, então refaça o questionário:
+A versão 1.0 (build 3, sem leitura de receita por foto) foi declarada como “Dados não coletados”.
+**A partir da 1.1.0 (build 5)**, que inclui a leitura de receita por foto (PR #20), o app envia a foto ao
+servidor quando a pessoa autoriza, então refaça o questionário **antes de enviar para revisão** (a seção
+Privacidade do app fica fora da versão e vale para a ficha inteira; a Apple exige que esteja coerente com o
+build enviado):
 
 - **Você ou seus parceiros terceirizados coletam dados deste app?** Sim.
 - **Fotos ou vídeos** → usados para **Funcionalidade do app** → **não** vinculados à identidade do
@@ -225,7 +236,27 @@ Connect não pergunta sobre exportação de criptografia.
 
 ## Depois da publicação
 
-- Cada versão nova precisa de `version` novo (`0.1.1`, `0.2.0`…) em `app.config.ts`, além de
+- Cada versão nova precisa de `version` novo (`1.1.0`, `1.2.0`…) em `app.config.ts`, além de
   `ios.buildNumber` maior, e passa pela revisão de novo (geralmente mais rápida).
 - O TestFlight continua servindo para testar o build seguinte antes de publicá-lo.
 - A Play Store tem o próprio material em [PLAY-STORE.md](PLAY-STORE.md).
+
+## Atualizar a versão publicada
+
+Quem já tem o app recebe a versão nova pela App Store (automático, se a pessoa deixou atualizações
+automáticas ligadas). O fluxo, a cada versão:
+
+1. **No código:** suba `version` em `app.config.ts` (e em `package.json`) e `ios.buildNumber` para um
+   número ainda não usado no App Store Connect. A 1.1.0 usa o build 5 (o 4 foi um build local do Xcode).
+2. **Build no Mac:** gere o archive a partir da `main` (ver [TESTFLIGHT.md](TESTFLIGHT.md)) e envie ao
+   App Store Connect. O build aparece em TestFlight em alguns minutos, depois de processar.
+3. **No App Store Connect:** em **Distribuição → iOS App**, clique em **+** ao lado de “iOS App” e
+   informe a versão (`1.1.0`). A ficha nova copia os textos da anterior; cole as “Novidades desta
+   versão” acima e revise a descrição (ela ganhou os itens da foto). Adicione a localização
+   **English (U.S.)** se ainda não existir, com os textos da seção em inglês e as próprias capturas.
+4. **Escolha o build** novo na seção *Build* da versão.
+5. **Privacidade do app:** refaça o questionário conforme a seção acima (passa a declarar Fotos).
+6. **Notas de revisão:** cole o texto atualizado (já menciona a foto e o consentimento).
+7. **Lançamento da versão:** “Lançar manualmente” para escolher o dia, ou automático.
+8. **Adicionar para revisão → Enviar para revisão.** Atualizações costumam ser revisadas em menos
+   de 24 h. Depois de aprovada, libere (ou aguarde o automático).
