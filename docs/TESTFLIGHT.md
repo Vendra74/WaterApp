@@ -27,9 +27,15 @@ cd ~/Documents/WaterApp
 git checkout main && git pull
 npm install
 npx expo prebuild --platform ios --clean      # regera ios/ com buildNumber e Info.plist atuais
-(cd ios && pod install)
+(cd ios && LANG=en_US.UTF-8 pod install)   # sem LANG, o CocoaPods com Ruby 4 falha com Encoding::CompatibilityError
 open ios/Cuidar.xcworkspace
 ```
+
+Com o **Xcode 27** (SDK do iOS 27), o iOS 27 encerra na abertura qualquer app que ainda use só o AppDelegate.
+O template do Expo SDK 57 não adota as cenas (UIScene); por isso `app.config.ts` liga
+`expo-build-properties` → `ios.enableSceneSupport`, que faz o `prebuild` registrar o `ExpoAppSceneDelegate`
+no Info.plist. Confira depois do prebuild: `/usr/libexec/PlistBuddy -c 'Print UIApplicationSceneManifest' ios/Cuidar/Info.plist`.
+Foi o motivo da rejeição do build 5 (2.1.0, crash em iPadOS 27). Ao migrar para o SDK 58 a opção pode sair.
 
 No Xcode:
 

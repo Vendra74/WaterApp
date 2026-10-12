@@ -3,7 +3,10 @@
 Material para preencher o App Store Connect. Os textos podem ser colados como estão; mantenha-os
 alinhados com o comportamento real do app (sem metas automáticas, sem conversões, sem recomendações
 clínicas). A versão 1.0 (build 3, só pt-BR, sem leitura por foto) foi aprovada e liberada em 08/10/2026.
-A próxima é a **1.1.0 (build 5)**: inglês, idioma em Mais → Idioma e cadastro de medicamento por foto.
+A próxima é a **1.1.0 (build 6)**: inglês, idioma em Mais → Idioma e cadastro de medicamento por foto.
+O build 5 foi rejeitado pela Apple (2.1.0, crash na abertura em iPadOS 27): compilado com o Xcode 27 sem
+adotar o ciclo de vida por cenas (UIScene). Corrigido com `expo-build-properties` → `ios.enableSceneSupport`
+em `app.config.ts`; ver [TESTFLIGHT.md](TESTFLIGHT.md).
 Veja [Atualizar a versão publicada](#atualizar-a-versão-publicada) no fim deste arquivo.
 
 ## Páginas públicas (GitHub Pages)
@@ -247,7 +250,7 @@ Quem já tem o app recebe a versão nova pela App Store (automático, se a pesso
 automáticas ligadas). O fluxo, a cada versão:
 
 1. **No código:** suba `version` em `app.config.ts` (e em `package.json`) e `ios.buildNumber` para um
-   número ainda não usado no App Store Connect. A 1.1.0 usa o build 5 (o 4 foi um build local do Xcode).
+   número ainda não usado no App Store Connect. A 1.1.0 usa o build 6 (o 4 foi um build local do Xcode; o 5 foi rejeitado, ver o topo).
 2. **Build no Mac:** gere o archive a partir da `main` (ver [TESTFLIGHT.md](TESTFLIGHT.md)) e envie ao
    App Store Connect. O build aparece em TestFlight em alguns minutos, depois de processar.
 3. **No App Store Connect:** em **Distribuição → iOS App**, clique em **+** ao lado de “iOS App” e
