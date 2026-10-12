@@ -252,7 +252,10 @@ automáticas ligadas). O fluxo, a cada versão:
 1. **No código:** suba `version` em `app.config.ts` (e em `package.json`) e `ios.buildNumber` para um
    número ainda não usado no App Store Connect. A 1.1.0 usa o build 6 (o 4 foi um build local do Xcode; o 5 foi rejeitado, ver o topo).
 2. **Build no Mac:** gere o archive a partir da `main` (ver [TESTFLIGHT.md](TESTFLIGHT.md)) e envie ao
-   App Store Connect. O build aparece em TestFlight em alguns minutos, depois de processar.
+   App Store Connect. O build aparece em TestFlight em alguns minutos, depois de processar. Se o
+   build for feito num clone novo, copie antes o `.env` do projeto para ele: sem as credenciais do
+   Supabase a leitura por foto fica fora do app (o build 5 saiu assim). Confira no TestFlight, antes
+   de enviar para revisão, que Medicamentos → Novo mostra “Preencher pela foto”.
 3. **No App Store Connect:** em **Distribuição → iOS App**, clique em **+** ao lado de “iOS App” e
    informe a versão (`1.1.0`). A ficha nova copia os textos da anterior; cole as “Novidades desta
    versão” acima e revise a descrição (ela ganhou os itens da foto). Adicione a localização
