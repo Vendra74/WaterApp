@@ -23,9 +23,10 @@ versão `0.1.0`, `buildNumber` `1`.
 Caminho recomendado: Xcode, que já está conectado ao Apple ID do Andre.
 
 ```bash
-cd ~/Documents/WaterApp
+cd ~/Documents/WaterApp            # ou o clone de release (ex.: ~/cuidar-build)
 git checkout main && git pull
 npm install
+ls .env || cp ~/Documents/WaterApp/.env .   # num clone novo o .env não vem junto (não é versionado)
 npx expo prebuild --platform ios --clean      # regera ios/ com buildNumber e Info.plist atuais
 (cd ios && LANG=en_US.UTF-8 pod install)   # sem LANG, o CocoaPods com Ruby 4 falha com Encoding::CompatibilityError
 open ios/Cuidar.xcworkspace
@@ -47,6 +48,12 @@ No Xcode:
    *Manage version and build number* desmarcado). Entre com o Apple ID se o Xcode pedir.
 5. Em 5 a 15 minutos chega um e-mail "Cuidar has completed processing". Se vier "Missing Compliance",
    confira que o build tem `ITSAppUsesNonExemptEncryption = false` (passo de `prebuild` acima).
+
+O `.env` precisa ter `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_ANON_KEY` preenchidos: eles
+entram no JavaScript embutido e, sem eles, o cartão “Preencher pela foto” nem aparece no app gerado
+(foi o que aconteceu com o build 5 da 1.1.0, feito num clone sem `.env`). Desde então o `prebuild`,
+o archive e o `eas build` param com um erro se faltarem; para gerar um build sem o recurso de
+propósito, use `CUIDAR_SEM_LEITURA_POR_FOTO=1` na frente do comando.
 
 Alternativa sem Xcode aberto (também local, sem fila do EAS):
 
