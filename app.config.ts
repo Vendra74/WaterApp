@@ -34,7 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: APP_DISPLAY_NAME,
     slug: APP_SLUG,
-    version: '1.1.0',
+    version: '1.1.1',
     orientation: 'portrait',
     icon: './assets/icon.png',
     scheme: APP_SLUG,

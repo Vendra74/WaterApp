@@ -3,7 +3,10 @@
 Material para preencher o App Store Connect. Os textos podem ser colados como estão; mantenha-os
 alinhados com o comportamento real do app (sem metas automáticas, sem conversões, sem recomendações
 clínicas). A versão 1.0 (build 3, só pt-BR, sem leitura por foto) foi aprovada e liberada em 08/10/2026.
-A próxima é a **1.1.0 (build 6)**: inglês, idioma em Mais → Idioma e cadastro de medicamento por foto.
+A 1.1.0 (build 6: inglês, idioma em Mais → Idioma) foi aprovada e publicada, mas saiu SEM o cadastro
+de medicamento por foto, porque o build foi gerado num clone sem `.env` (ver TESTFLIGHT.md). A próxima
+é a **1.1.1 (build 7)**, só para incluir a leitura por foto; a Apple não aceita build novo numa versão
+já aprovada, por isso o `version` sobe.
 O build 5 foi rejeitado pela Apple (2.1.0, crash na abertura em iPadOS 27): compilado com o Xcode 27 sem
 adotar o ciclo de vida por cenas (UIScene). Corrigido com `expo-build-properties` → `ios.enableSceneSupport`
 em `app.config.ts`; ver [TESTFLIGHT.md](TESTFLIGHT.md).
@@ -80,7 +83,14 @@ PRIVACIDADE
 O Cuidar é uma ferramenta de apoio à rotina. Não faz diagnóstico, não prescreve, não calcula doses nem metas e não substitui a orientação de profissionais de saúde. Não é um serviço de emergência.
 ```
 
-### Novidades desta versão (1.1.0)
+### Novidades desta versão (1.1.1)
+
+```
+• Cadastre um medicamento pela foto da receita ou da caixa: o app preenche um rascunho e você confere antes de salvar.
+• Correções e textos revisados.
+```
+
+Texto da 1.1.0 (build 6), para referência:
 
 ```
 • Cadastre um medicamento pela foto da receita ou da caixa: o app preenche um rascunho e você confere antes de salvar.
@@ -250,7 +260,7 @@ Quem já tem o app recebe a versão nova pela App Store (automático, se a pesso
 automáticas ligadas). O fluxo, a cada versão:
 
 1. **No código:** suba `version` em `app.config.ts` (e em `package.json`) e `ios.buildNumber` para um
-   número ainda não usado no App Store Connect. A 1.1.0 usa o build 6 (o 4 foi um build local do Xcode; o 5 foi rejeitado, ver o topo).
+   número ainda não usado no App Store Connect. A 1.1.0 usa o build 6 (o 4 foi um build local do Xcode; o 5 foi rejeitado, ver o topo); a 1.1.1 usa o 7. Uma versão já aprovada não aceita build novo: para corrigir algo depois da aprovação, suba o `version` (ex.: 1.1.1).
 2. **Build no Mac:** gere o archive a partir da `main` (ver [TESTFLIGHT.md](TESTFLIGHT.md)) e envie ao
    App Store Connect. O build aparece em TestFlight em alguns minutos, depois de processar. Se o
    build for feito num clone novo, copie antes o `.env` do projeto para ele: sem as credenciais do
