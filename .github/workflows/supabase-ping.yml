@@ -1,0 +1,46 @@
+name: Manter Supabase ativo
+
+# O plano gratuito do Supabase pausa projetos sem atividade por 7 dias.
+# Esta rotina faz uma consulta leve à API REST (contada como atividade)
+# duas vezes por semana, usando só a chave pública (anon). Não chama a
+# função de leitura por foto, que custa créditos de IA.
+
+on:
+  schedule:
+    - cron: '0 12 * * 1,4' # segundas e quintas às 12:00 UTC (9h em Brasília)
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Consulta leve ao Supabase
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: https://vqpvazseakezfsivxtgq.supabase.co
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+    steps:
+      - name: Conferir segredo
+        run: |
+          if [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::Falta o segredo SUPABASE_ANON_KEY (Settings → Secrets and variables → Actions). É a chave pública (anon) do projeto, a mesma do .env."
+            exit 1
+          fi
+
+      - name: Consultar tabela leituras_receita (limit 1)
+        run: |
+          code=$(curl -sS -m 20 -o /tmp/resp.txt -w '%{http_code}' \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/leituras_receita?select=id&limit=1")
+          echo "HTTP $code"
+          # 200 (RLS devolve lista vazia) é o esperado; 401/403 indicam chave inválida.
+          case "$code" in
+            200|204) echo "Supabase respondeu: atividade registrada." ;;
+            401|403) echo "::error::Chave recusada pelo Supabase (HTTP $code)."; head -c 500 /tmp/resp.txt; exit 1 ;;
+            *) echo "::warning::Resposta inesperada (HTTP $code)."; head -c 500 /tmp/resp.txt ;;
+          esac
+
+      - name: Verificar saúde do Auth
+        run: |
+          curl -sS -f -m 20 -H "apikey: $SUPABASE_ANON_KEY" "$SUPABASE_URL/auth/v1/health"
+          echo
