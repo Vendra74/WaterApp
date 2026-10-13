@@ -92,7 +92,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       predictiveBackGestureEnabled: false,
     },
     web: { favicon: './assets/favicon.png' },
-    // Textos de permissão do iOS por idioma (InfoPlist.strings). O padrão em `ios.infoPlist` é o
+    // Textos de permissão do iOS por idioma (InfoPlist.strings), sob a chave "ios" para o Android
+    // não ganhar strings.xml sem padrão (o lint da release recusa). O padrão em `ios.infoPlist` é o
     // português; o inglês entra quando o iPhone está em inglês. Os textos do app ficam em src/i18n.
     locales: { 'pt-BR': './locales/pt-BR.json', en: './locales/en.json' },
     plugins: [
