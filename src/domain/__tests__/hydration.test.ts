@@ -1,5 +1,5 @@
 import { generateHydrationSlots, isDuringNap, settingsAfterAssessment, settingsAfterManualEdit } from '../hydration/schedule';
-import { looksLikeDuplicate, totalForDay, totalsByDay } from '../hydration/logs';
+import { DEFAULT_QUICK_VOLUME_ML, looksLikeDuplicate, quickLogVolume, totalForDay, totalsByDay } from '../hydration/logs';
 import { formatTimeBR } from '../time/time';
 import { makeSettings, NOW } from './fixtures';
 
@@ -107,5 +107,16 @@ describe('registros de hidratação', () => {
     const logs = [{ ...base, id: '1', at, volumeMl: 200 }];
     expect(looksLikeDuplicate(logs, { at: new Date(2026, 8, 29, 8, 0, 30).toISOString(), volumeMl: 200, beverage: 'water' })).toBe(true);
     expect(looksLikeDuplicate(logs, { at: new Date(2026, 8, 29, 8, 5, 0).toISOString(), volumeMl: 200, beverage: 'water' })).toBe(false);
+  });
+});
+
+describe('registro rápido (botão “Bebi” da notificação)', () => {
+  it('usa o primeiro recipiente cadastrado', () => {
+    expect(quickLogVolume([{ id: 'c1', label: 'Copo', volumeMl: 250 }, { id: 'c2', label: 'Garrafa', volumeMl: 500 }])).toEqual({ volumeMl: 250, containerLabel: 'Copo' });
+  });
+
+  it('sem recipientes válidos, cai no copo padrão de 200 ml', () => {
+    expect(quickLogVolume([])).toEqual({ volumeMl: DEFAULT_QUICK_VOLUME_ML, containerLabel: null });
+    expect(quickLogVolume([{ id: 'c1', label: 'Zero', volumeMl: 0 }, { id: 'c2', label: 'Xícara', volumeMl: 150 }])).toEqual({ volumeMl: 150, containerLabel: 'Xícara' });
   });
 });

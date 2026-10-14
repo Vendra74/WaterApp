@@ -7,6 +7,7 @@ import { BigButton } from '@/ui/components/BigButton';
 import { Banner, ChoiceGroup, Stepper } from '@/ui/components/Fields';
 import { useAppStore } from '@/state/appStore';
 import type { BeverageKind } from '@/domain/types';
+import { quickLogVolume } from '@/domain/hydration/logs';
 import { speak } from '@/services/speech/speech';
 import { strings } from '@/i18n';
 
@@ -29,8 +30,9 @@ export function HydrationLogScreen() {
   const h = s.hydration;
   const { profile, plan, logWater } = useAppStore();
   const containers = profile?.containers ?? [];
-  const [volume, setVolume] = useState(containers[0]?.volumeMl ?? 200);
-  const [container, setContainer] = useState<string | null>(containers[0]?.label ?? null);
+  const quick = quickLogVolume(containers);
+  const [volume, setVolume] = useState(quick.volumeMl);
+  const [container, setContainer] = useState<string | null>(quick.containerLabel);
   const [beverage, setBeverage] = useState<BeverageKind>('water');
   const [error, setError] = useState<string | null>(null);
   const [pendingDup, setPendingDup] = useState(false);

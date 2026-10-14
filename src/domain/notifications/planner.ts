@@ -23,6 +23,8 @@ export const ACTION_LOG_WATER = 'log_water';
 export const ACTION_SNOOZE = 'snooze';
 export const ACTION_HELP = 'help';
 export const ACTION_TAKEN = 'taken';
+/** Botão “Bebi N ml” do lembrete de água: registra sem abrir o app. */
+export const ACTION_DRANK = 'drank';
 
 /**
  * Limites reais das plataformas:

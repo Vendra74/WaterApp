@@ -10,8 +10,7 @@ import * as Notifications from 'expo-notifications';
 import type { RootStackParamList, TabParamList } from './navigation';
 import { ThemeContext, buildTheme, DEFAULT_PREFS } from '@/ui/theme';
 import { useAppStore } from '@/state/appStore';
-import { configureNotificationHandler, dismissSuperseded, recordHydrationFired, routeResponse, scheduleHydrationSnooze, type RoutedResponse } from '@/services/notifications/notificationService';
-import { createResponseDeduper, responseKey } from '@/domain/notifications/responseDedupe';
+import { BACKGROUND_ACTIONS, configureNotificationHandler, dismissSuperseded, handleNotificationResponse, recordHydrationFired, type RoutedResponse } from '@/services/notifications/notificationService';
 import { registerBackgroundTasks } from '@/services/background/backgroundTasks';
 import { speak } from '@/services/speech/speech';
 import { strings } from '@/i18n';
@@ -83,19 +82,12 @@ function MainTabs() {
   );
 }
 
-/** Evita processar duas vezes a mesma resposta (listener + última resposta ao abrir o app). */
-const deduper = createResponseDeduper();
-
 async function handleResponse(response: Notifications.NotificationResponse) {
-  const key = responseKey(response);
-  if (!deduper.begin(key)) return;
   try {
     await processResponse(response);
-    deduper.commit(key);
     // Limpa a resposta guardada pelo módulo nativo para que um recarregamento do JS não a repita.
     await Notifications.clearLastNotificationResponseAsync();
   } catch (e) {
-    deduper.rollback(key);
     console.warn('Falha ao tratar resposta de notificação', e instanceof Error ? e.message : String(e));
   }
 }
@@ -107,29 +99,38 @@ function navigateForHydrationAction(action: RoutedResponse['action']) {
   else navigationRef.navigate('Main');
 }
 
+/**
+ * Primeiro o registro (dose, água, adiamento), que vale em qualquer estado do app; depois a navegação,
+ * só quando o app está de fato na tela. Com “Bebi”/“Tomei”/“Lembrar depois” o sistema não traz o app
+ * para a frente: no iOS ele acorda em segundo plano e cai aqui; no Android a tarefa em segundo plano
+ * chama o mesmo `handleNotificationResponse` (e a resposta volta deduplicada quando o app abre).
+ */
 async function processResponse(response: Notifications.NotificationResponse) {
-  const routed = await routeResponse(response);
+  const { routed, applied, duplicate } = await handleNotificationResponse(response);
+  if (duplicate) return;
   const store = useAppStore.getState();
+  if (applied.type !== 'none') {
+    await store.refresh();
+    void store.refreshSync();
+  }
   if (!navigationRef.isReady()) throw new Error('navegação ainda não pronta');
+  // Botão resolvido em segundo plano: nada de abrir telas por trás; quem abrir o app verá os dados atualizados.
+  if (BACKGROUND_ACTIONS.includes(routed.action) && AppState.currentState !== 'active') return;
+  const s = strings().notifications;
   switch (routed.kind) {
     case 'hydration':
-      if (routed.action === 'snooze') {
-        const minutes = store.settings?.snoozeMinutes ?? 15;
-        await scheduleHydrationSnooze(minutes, store.settings?.sound ?? true);
+      if (applied.type === 'snoozed') {
         navigationRef.navigate('Main');
-        Alert.alert(strings().notifications.snoozedAlertTitle, strings().notifications.snoozedAlertBody(minutes));
-      } else navigateForHydrationAction(routed.action === 'open' ? 'log_water' : routed.action); // toque simples abre o registro
+        Alert.alert(s.snoozedAlertTitle, s.snoozedAlertBody(applied.minutes));
+      } else if (applied.type === 'drank') {
+        navigationRef.navigate('Main');
+        Alert.alert(s.drankAlertTitle, s.drankAlertBody(applied.volumeMl));
+      } else if (routed.action === 'help') navigateForHydrationAction('help');
+      else navigateForHydrationAction('log_water'); // toque simples abre o registro
       break;
     case 'medication':
       if (routed.action === 'help') navigationRef.navigate('Help');
-      else if (routed.occurrenceId) {
-        if (routed.action === 'taken') {
-          await store.confirmTaken(routed.occurrenceId);
-        } else if (routed.action === 'snooze') {
-          await store.snooze(routed.occurrenceId, store.settings?.snoozeMinutes ?? 15);
-        }
-        navigationRef.navigate('OccurrenceAction', { occurrenceId: routed.occurrenceId });
-      }
+      else if (routed.occurrenceId) navigationRef.navigate('OccurrenceAction', { occurrenceId: routed.occurrenceId });
       break;
     case 'health_review':
       navigationRef.navigate('Profile');
@@ -138,7 +139,7 @@ async function processResponse(response: Notifications.NotificationResponse) {
       // Notificação da tela "Testar notificações": mesmas telas do lembrete real, sem registrar nem adiar.
       navigateForHydrationAction(routed.action);
       if (routed.action === 'snooze') {
-        Alert.alert(strings().notifications.testSnoozeAlertTitle, strings().notifications.testSnoozeAlertBody(store.settings?.snoozeMinutes ?? 15));
+        Alert.alert(s.testSnoozeAlertTitle, s.testSnoozeAlertBody(store.settings?.snoozeMinutes ?? 15));
       }
       break;
     default:

@@ -1,4 +1,4 @@
-import type { HydrationLog } from '../types';
+import type { Container, HydrationLog } from '../types';
 import { toISODate } from '../time/time';
 
 /** Soma do volume registrado em um dia local (ignora registros excluídos). */
@@ -49,4 +49,16 @@ export function looksLikeDuplicate(
 
 export function isValidVolume(volumeMl: number): boolean {
   return Number.isFinite(volumeMl) && volumeMl > 0 && volumeMl <= 2000;
+}
+
+/** Volume padrão quando ninguém cadastrou recipientes (um copo comum). */
+export const DEFAULT_QUICK_VOLUME_ML = 200;
+
+/**
+ * Registro rápido (botão “Bebi” da notificação e valor inicial da tela “Registrar água”):
+ * o primeiro recipiente cadastrado pela pessoa, ou um copo de 200 ml.
+ */
+export function quickLogVolume(containers: readonly Container[]): { volumeMl: number; containerLabel: string | null } {
+  const first = containers.find((c) => isValidVolume(c.volumeMl));
+  return first ? { volumeMl: first.volumeMl, containerLabel: first.label } : { volumeMl: DEFAULT_QUICK_VOLUME_ML, containerLabel: null };
 }
