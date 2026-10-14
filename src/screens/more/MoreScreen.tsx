@@ -7,6 +7,14 @@ import { APP_NAME } from '@/config/branding';
 import { useAppStore } from '@/state/appStore';
 import { env } from '@/config/env';
 import { strings } from '@/i18n';
+import * as Application from 'expo-application';
+
+/** Versão e número de build lidos do app instalado (antes era um texto fixo “0.1.0”, que nunca acompanhou as versões). */
+function appVersionLabel(): string {
+  const version = Application.nativeApplicationVersion ?? '';
+  const build = Application.nativeBuildVersion;
+  return build ? `${version} (${build})` : version;
+}
 
 export function MoreScreen() {
   const nav = useNavigation();
@@ -25,7 +33,7 @@ export function MoreScreen() {
       <BigButton kind="secondary" icon="📖" label={m.content} onPress={() => nav.navigate('Content')} />
       <BigButton kind="secondary" icon="🗂" label={m.data} onPress={() => nav.navigate('Data')} />
       <BigButton kind="secondary" icon="🌐" label={m.language} onPress={() => nav.navigate('Language')} />
-      <AppText muted variant="small">{s.common.appVersion(APP_NAME, '0.1.0')}{demoMode ? m.demoTag : ''}</AppText>
+      <AppText muted variant="small">{s.common.appVersion(APP_NAME, appVersionLabel())}{demoMode ? m.demoTag : ''}</AppText>
       <AppText muted variant="small">{m.disclaimer}</AppText>
     </Screen>
   );
