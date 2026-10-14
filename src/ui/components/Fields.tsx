@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Platform, Pressable, TextInput, View, type TextInputProps } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { AppText } from './AppText';
 import { useTheme } from '../theme';
+import { useRevealInScreen } from './Screen';
 import { atLocalTime, formatTimeBR, isValidHHmm } from '@/domain/time/time';
 import type { HHmm } from '@/domain/types';
 import { isEnglish, localeTag, strings } from '@/i18n';
@@ -37,6 +38,8 @@ export function TextField({ label, hint, ...rest }: TextInputProps & { label: st
 export function TimeField({ label, value, onChange, hint }: { label: string; value: HHmm; onChange: (v: HHmm) => void; hint?: string }) {
   const t = useTheme();
   const [open, setOpen] = useState(false);
+  const reveal = useRevealInScreen();
+  const pickerRef = useRef<View>(null);
   const date = atLocalTime(new Date(), isValidHHmm(value) ? value : '08:00');
   const onPick = (e: DateTimePickerEvent, d?: Date) => {
     if (Platform.OS === 'android') setOpen(false);
@@ -56,23 +59,27 @@ export function TimeField({ label, value, onChange, hint }: { label: string; val
         <AppText variant="heading">{formatHHmm(value)}</AppText>
       </Pressable>
       {open ? (
-        // O app só tem paletas claras, mas com userInterfaceStyle "automatic" a roleta do iOS seguia o modo
-        // escuro do sistema: números brancos sobre fundo branco. Fixa a variante clara e a cor do texto.
-        <DateTimePicker
-          value={date}
-          mode="time"
-          is24Hour={!isEnglish()}
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={onPick}
-          locale={localeTag()}
-          themeVariant="light"
-          textColor={t.colors.text}
-        />
-      ) : null}
-      {open && Platform.OS === 'ios' ? (
-        <Pressable accessibilityRole="button" onPress={() => setOpen(false)} style={{ minHeight: 48, justifyContent: 'center', alignItems: 'center' }}>
-          <AppText bold style={{ color: t.colors.primary }}>{strings().common.done}</AppText>
-        </Pressable>
+        // No iOS a roleta abre embaixo do campo e cresce a tela; pede ao Screen para rolar até ela, senão
+        // fica escondida atrás do rodapé fixo (botão “Próximo”) e não dá para ver a hora escolhida.
+        <View ref={pickerRef} onLayout={() => reveal(pickerRef.current)}>
+          {/* O app só tem paletas claras, mas com userInterfaceStyle "automatic" a roleta do iOS seguia o modo
+              escuro do sistema: números brancos sobre fundo branco. Fixa a variante clara e a cor do texto. */}
+          <DateTimePicker
+            value={date}
+            mode="time"
+            is24Hour={!isEnglish()}
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={onPick}
+            locale={localeTag()}
+            themeVariant="light"
+            textColor={t.colors.text}
+          />
+          {Platform.OS === 'ios' ? (
+            <Pressable accessibilityRole="button" onPress={() => setOpen(false)} style={{ minHeight: 48, justifyContent: 'center', alignItems: 'center' }}>
+              <AppText bold style={{ color: t.colors.primary }}>{strings().common.done}</AppText>
+            </Pressable>
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
