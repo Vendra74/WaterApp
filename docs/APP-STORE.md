@@ -6,8 +6,10 @@ clínicas). A versão 1.0 (build 3, só pt-BR, sem leitura por foto) foi aprovad
 A 1.1.0 (build 6: inglês, idioma em Mais → Idioma) foi aprovada e publicada, mas saiu SEM o cadastro
 de medicamento por foto, porque o build foi gerado num clone sem `.env` (ver TESTFLIGHT.md). A 1.1.1 (build 7),
 só para incluir a leitura por foto, foi enviada à revisão em 13/10/2026; a Apple não aceita build novo
-numa versão já aprovada, por isso o `version` sobe. A próxima é a **1.1.2 (build 8)**: corrige a roleta
-de horário do iOS, que ficava escondida atrás do botão “Próximo” na avaliação.
+numa versão já aprovada, por isso o `version` sobe. A próxima é a **1.1.2 (build 9)**: corrige a roleta
+de horário do iOS, que ficava escondida atrás do botão “Próximo” na avaliação, e os botões do lembrete
+(“Bebi”, “Tomei”, “Lembrar depois”) passam a registrar sem abrir o app. O build 8 (só a roleta) foi
+enviado em 14/10/2026 e substituído pelo 9 antes da revisão.
 O build 5 foi rejeitado pela Apple (2.1.0, crash na abertura em iPadOS 27): compilado com o Xcode 27 sem
 adotar o ciclo de vida por cenas (UIScene). Corrigido com `expo-build-properties` → `ios.enableSceneSupport`
 em `app.config.ts`; ver [TESTFLIGHT.md](TESTFLIGHT.md).
@@ -87,6 +89,7 @@ O Cuidar é uma ferramenta de apoio à rotina. Não faz diagnóstico, não presc
 ### Novidades desta versão (1.1.2)
 
 ```
+• Na notificação do lembrete, “Tomei” e “Bebi” registram na hora, sem precisar abrir o app (segure o aviso para ver os botões).
 • A roleta de horário (acordar, dormir, horários de remédio) agora aparece inteira acima do botão “Próximo”.
 • Correções e textos revisados.
 ```
@@ -168,6 +171,7 @@ Cuidar is a tool to support your routine. It does not diagnose, prescribe, calcu
 ### What's New in This Version (1.1.2)
 
 ```
+• In the reminder notification, “Taken” and “I drank” record right away, without opening the app (press and hold the notification to see the buttons).
 • The time picker (wake-up, bedtime, medication times) now shows in full above the “Next” button.
 • Fixes and revised texts.
 ```
@@ -275,7 +279,7 @@ Quem já tem o app recebe a versão nova pela App Store (automático, se a pesso
 automáticas ligadas). O fluxo, a cada versão:
 
 1. **No código:** suba `version` em `app.config.ts` (e em `package.json`) e `ios.buildNumber` para um
-   número ainda não usado no App Store Connect. A 1.1.0 usa o build 6 (o 4 foi um build local do Xcode; o 5 foi rejeitado, ver o topo); a 1.1.1 usa o 7; a 1.1.2 usa o 8. Uma versão já aprovada não aceita build novo: para corrigir algo depois da aprovação, suba o `version` (ex.: 1.1.1).
+   número ainda não usado no App Store Connect. A 1.1.0 usa o build 6 (o 4 foi um build local do Xcode; o 5 foi rejeitado, ver o topo); a 1.1.1 usa o 7; a 1.1.2 usa o 9 (o 8 foi enviado e trocado pelo 9 antes da revisão). Uma versão já aprovada não aceita build novo: para corrigir algo depois da aprovação, suba o `version` (ex.: 1.1.1).
 2. **Build no Mac:** gere o archive a partir da `main` (ver [TESTFLIGHT.md](TESTFLIGHT.md)) e envie ao
    App Store Connect. O build aparece em TestFlight em alguns minutos, depois de processar. Se o
    build for feito num clone novo, copie antes o `.env` do projeto para ele: sem as credenciais do
