@@ -12,17 +12,18 @@ import { registerBackgroundTasks } from '@/services/background/backgroundTasks';
 import { APP_NAME } from '@/config/branding';
 import { strings } from '@/i18n';
 import { formatClock, formatDate } from '@/i18n/format';
+import { quickLogVolume } from '@/domain/hydration/logs';
 
-async function ensureCategoriesSafe() {
+async function ensureCategoriesSafe(quickVolumeMl: number) {
   try {
-    await ensureCategories();
+    await ensureCategories(quickVolumeMl);
   } catch {
     // erro de categoria não impede o teste; o agendamento reporta separadamente
   }
 }
 
 export function NotificationTestScreen() {
-  const { permission, notificationState, reschedule } = useAppStore();
+  const { permission, notificationState, reschedule, profile } = useAppStore();
   const [scheduled, setScheduled] = useState<{ identifier: string; fireAt: string | null; kind: string }[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [bg, setBg] = useState<{ periodic: boolean; notification: boolean; reason?: string } | null>(null);
@@ -43,7 +44,7 @@ export function NotificationTestScreen() {
       }
     }
     try {
-      await ensureCategoriesSafe();
+      await ensureCategoriesSafe(quickLogVolume(profile?.containers ?? []).volumeMl);
       await scheduleTestNotification(10, kind);
       const list = await listOwnedScheduled();
       const pending = list.filter((s) => s.identifier.startsWith('test@')).length;

@@ -32,3 +32,5 @@ export const DOC_DISMISSED_SUGGESTIONS = 'dismissed_suggestions';
 export const DOC_AI_CONSENT = 'ai_consent';
 /** Idioma escolhido em Mais → Idioma: { preference: 'auto' | 'pt-BR' | 'en' } ou ausente (= auto). */
 export const DOC_LANGUAGE = 'language';
+/** Chave da última resposta de notificação tratada (evita registrar duas vezes a mesma ação). */
+export const DOC_LAST_NOTIFICATION_RESPONSE = 'last_notification_response';

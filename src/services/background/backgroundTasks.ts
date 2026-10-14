@@ -43,12 +43,23 @@ TaskManager.defineTask(RESCHEDULE_TASK, async () => {
 });
 
 /**
- * Tarefa executada quando uma notificação chega com o app em segundo plano (Android/iOS conforme suporte).
- * Registra que um lembrete de água foi exibido (contagem "sem confirmação") e verifica avisos ao cuidador.
+ * Tarefa executada quando uma notificação chega com o app em segundo plano (Android/iOS conforme suporte)
+ * e, só no Android, quando a pessoa toca um botão que não abre o app (“Bebi”, “Tomei”, “Lembrar depois”)
+ * com o app em segundo plano ou fechado: registra a ação sem interface.
+ * Na chegada, registra que um lembrete de água foi exibido (contagem "sem confirmação") e verifica avisos ao cuidador.
  */
 TaskManager.defineTask<Notifications.NotificationTaskPayload>(NOTIFICATION_TASK, async ({ data }) => {
   try {
-    if (!data || 'actionIdentifier' in data) return Notifications.BackgroundNotificationTaskResult.NoData;
+    if (!data) return Notifications.BackgroundNotificationTaskResult.NoData;
+    if ('actionIdentifier' in data) {
+      const { applyStoredLanguage } = await import('@/services/usecases/language');
+      const { handleNotificationResponse } = await import('@/services/notifications/notificationService');
+      await applyStoredLanguage(); // o reagendamento gera textos no idioma escolhido
+      const { applied } = await handleNotificationResponse(data);
+      if (applied.type === 'none') return Notifications.BackgroundNotificationTaskResult.NoData;
+      await caregiverCheck(); // envia a dose confirmada ao cuidador, quando ligado
+      return Notifications.BackgroundNotificationTaskResult.NewData;
+    }
     const raw = data as unknown as { request?: { identifier?: string; content?: { data?: Record<string, unknown> } }; data?: Record<string, unknown> };
     const payload = (raw.request?.content?.data ?? raw.data ?? {}) as Record<string, string>;
     const svc = await import('@/services/notifications/notificationService');

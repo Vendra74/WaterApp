@@ -28,8 +28,10 @@ instalados (Expo SDK 57: expo-notifications 57.0.x, expo-sqlite 57.0.x, expo-bac
   intervalos, dias, início/término, instruções, foto opcional sem leitura automática), ocorrências
   com ID determinístico e estados (agendada, tomada, adiada, sem confirmação, não tomada), adiamento
   isolado, correção com histórico, prevenção de duplicidade.
-- Notificações locais agendadas no sistema (gatilhos por data), com ações “Registrar água”,
-  “Lembrar depois”, “Preciso de ajuda” / “Tomei”; canais Android separados; reconciliação por
+- Notificações locais agendadas no sistema (gatilhos por data), com ações “Bebi N ml” (N = primeiro
+  recipiente cadastrado, ou 200 ml), “Lembrar depois”, “Preciso de ajuda” / “Tomei”. “Bebi”, “Tomei” e
+  “Lembrar depois” registram sem abrir o app (Android pela tarefa em segundo plano, iOS acordando o app);
+  a resposta é deduplicada em memória e no banco. Canais Android separados; reconciliação por
   identificador (só agenda/cancela a diferença); orçamento respeitando o limite de 64 do iOS com
   prioridade para medicamentos; reagendamento ao abrir o app, ao voltar ao primeiro plano, ao editar
   dados e em tarefa periódica em segundo plano.

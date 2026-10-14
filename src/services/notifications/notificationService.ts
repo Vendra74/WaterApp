@@ -4,11 +4,14 @@ import * as Application from 'expo-application';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Platform } from 'react-native';
 import { getDb } from '@/data/db';
-import { DOC_NOTIFICATION_STATE, getDocument, setDocument } from '@/data/repositories/documents';
+import { DOC_LAST_NOTIFICATION_RESPONSE, DOC_NOTIFICATION_STATE, getDocument, setDocument } from '@/data/repositories/documents';
 import { recordReminderResponse } from '@/data/repositories/misc';
 import type { PlannedNotification } from '@/domain/types';
 import { generateHydrationSlots } from '@/domain/hydration/schedule';
+import { quickLogVolume } from '@/domain/hydration/logs';
+import { createResponseDeduper, responseKey } from '@/domain/notifications/responseDedupe';
 import {
+  ACTION_DRANK,
   ACTION_HELP,
   ACTION_LOG_WATER,
   ACTION_SNOOZE,
@@ -27,7 +30,8 @@ import {
 import { selectSuperseded } from '@/domain/notifications/supersede';
 import { addDays } from '@/domain/time/time';
 import { loadHydrationSettings, loadProfile } from '@/services/usecases/profile';
-import { loadMedications, refreshOccurrences } from '@/services/usecases/medications';
+import { confirmOccurrenceTaken, loadMedications, refreshOccurrences, snoozeOccurrence } from '@/services/usecases/medications';
+import { addHydrationLog } from '@/services/usecases/hydration';
 import { strings } from '@/i18n';
 
 /** Dias à frente para gerar lembretes de hidratação (o orçamento do planejador limita a quantidade). */
@@ -115,18 +119,26 @@ export function contentSound(enabled: boolean): boolean | 'default' {
   return enabled;
 }
 
-/** Categorias com botões. Android rejeita categorias sem ações, por isso não há categoria "genérica". */
-export async function ensureCategories(): Promise<void> {
+/**
+ * Categorias com botões. Android rejeita categorias sem ações, por isso não há categoria "genérica".
+ * “Bebi”, “Tomei” e “Lembrar depois” agem sem abrir o app (`opensAppToForeground: false`): o sistema
+ * entrega a resposta ao JS em segundo plano (Android pela tarefa `NOTIFICATION_TASK`, iOS acordando o
+ * app) e `handleNotificationResponse` registra. Só “Preciso de ajuda” e o toque no aviso abrem o app.
+ * O volume do “Bebi” é o do primeiro recipiente cadastrado; a categoria é refeita a cada reagendamento.
+ */
+export async function ensureCategories(quickVolumeMl: number): Promise<void> {
   const s = strings().notifications;
+  const background = { opensAppToForeground: false };
+  const foreground = { opensAppToForeground: true };
   await Notifications.setNotificationCategoryAsync(CATEGORY_HYDRATION, [
-    { identifier: ACTION_LOG_WATER, buttonTitle: s.actionLogWater, options: { opensAppToForeground: true } },
-    { identifier: ACTION_SNOOZE, buttonTitle: s.actionSnooze, options: { opensAppToForeground: true } },
-    { identifier: ACTION_HELP, buttonTitle: s.actionHelp, options: { opensAppToForeground: true } },
+    { identifier: ACTION_DRANK, buttonTitle: s.actionDrank(quickVolumeMl), options: background },
+    { identifier: ACTION_SNOOZE, buttonTitle: s.actionSnooze, options: background },
+    { identifier: ACTION_HELP, buttonTitle: s.actionHelp, options: foreground },
   ]);
   await Notifications.setNotificationCategoryAsync(CATEGORY_MEDICATION, [
-    { identifier: ACTION_TAKEN, buttonTitle: s.actionTaken, options: { opensAppToForeground: true } },
-    { identifier: ACTION_SNOOZE, buttonTitle: s.actionSnooze, options: { opensAppToForeground: true } },
-    { identifier: ACTION_HELP, buttonTitle: s.actionHelp, options: { opensAppToForeground: true } },
+    { identifier: ACTION_TAKEN, buttonTitle: s.actionTaken, options: background },
+    { identifier: ACTION_SNOOZE, buttonTitle: s.actionSnooze, options: background },
+    { identifier: ACTION_HELP, buttonTitle: s.actionHelp, options: foreground },
   ]);
 }
 
@@ -201,7 +213,7 @@ async function doReschedule(): Promise<NotificationState> {
     let setupError: string | null = null;
     try {
       await ensureChannels(settings.showDetailsOnLockScreen, settings.sound, settings.vibrate);
-      await ensureCategories();
+      await ensureCategories(quickLogVolume(profile.containers).volumeMl);
     } catch (e) {
       // Falha em canal/categoria não deve impedir o agendamento dos lembretes.
       setupError = e instanceof Error ? e.message : String(e);
@@ -352,7 +364,7 @@ export async function openDndAccessSettings(): Promise<string | null> {
 export async function scheduleTestNotification(seconds: number, kind: 'hydration' | 'medication'): Promise<string> {
   const id = `test@${Date.now()}`;
   const s = strings().notifications;
-  await ensureCategories();
+  await ensureCategories(quickLogVolume((await loadProfile()).containers).volumeMl);
   await Notifications.scheduleNotificationAsync({
     identifier: id,
     content: {
@@ -393,21 +405,140 @@ export async function cancelAllOwned(): Promise<void> {
 
 export interface RoutedResponse {
   kind: 'hydration' | 'medication' | 'health_review' | 'test' | 'unknown';
-  action: 'open' | 'log_water' | 'snooze' | 'help' | 'taken';
+  action: 'open' | 'log_water' | 'snooze' | 'help' | 'taken' | 'drank';
   occurrenceId?: string;
   slotAt?: string;
 }
 
-/** Traduz uma resposta do sistema em uma intenção de navegação; registra o evento para o aviso de "sem confirmação". */
-export async function routeResponse(response: Notifications.NotificationResponse): Promise<RoutedResponse> {
-  const data = (response.notification.request.content.data ?? {}) as Record<string, string>;
+/** Ações que o app resolve sozinho, sem precisar abrir uma tela. */
+export const BACKGROUND_ACTIONS: readonly RoutedResponse['action'][] = ['drank', 'taken', 'snooze'];
+
+/**
+ * Dados gravados na notificação. A tarefa em segundo plano do Android recebe o conteúdo serializado
+ * pelo módulo nativo, que pode trazer os dados como `dataString` (JSON) em vez de objeto.
+ */
+function responseData(response: Notifications.NotificationResponse): Record<string, string> {
+  const content = response.notification.request.content as { data?: unknown; dataString?: unknown };
+  if (content.data && typeof content.data === 'object') return content.data as Record<string, string>;
+  if (typeof content.dataString === 'string') {
+    try {
+      const parsed = JSON.parse(content.dataString) as unknown;
+      if (parsed && typeof parsed === 'object') return parsed as Record<string, string>;
+    } catch {
+      // dados ilegíveis: tratado como notificação desconhecida
+    }
+  }
+  return {};
+}
+
+/** Traduz uma resposta do sistema em uma intenção, sem efeitos colaterais. */
+export function parseResponse(response: Notifications.NotificationResponse): RoutedResponse {
+  const data = responseData(response);
   const kind = (data.kind as RoutedResponse['kind']) ?? 'unknown';
   const actionId = response.actionIdentifier;
   const action: RoutedResponse['action'] =
-    actionId === ACTION_LOG_WATER ? 'log_water' : actionId === ACTION_SNOOZE ? 'snooze' : actionId === ACTION_HELP ? 'help' : actionId === ACTION_TAKEN ? 'taken' : 'open';
-  const db = await getDb();
-  if (kind === 'hydration') await recordReminderResponse(db, 'hydration', data.slotAt ?? '', action === 'open' ? 'opened' : action === 'log_water' ? 'opened' : action === 'snooze' ? 'snoozed' : 'help');
+    actionId === ACTION_DRANK
+      ? 'drank'
+      : actionId === ACTION_LOG_WATER
+        ? 'log_water'
+        : actionId === ACTION_SNOOZE
+          ? 'snooze'
+          : actionId === ACTION_HELP
+            ? 'help'
+            : actionId === ACTION_TAKEN
+              ? 'taken'
+              : 'open';
   return { kind, action, occurrenceId: data.occurrenceId, slotAt: data.slotAt };
+}
+
+/** Registra a resposta a um lembrete de água (base do aviso "sem confirmação" ao cuidador). */
+async function recordRouted(routed: RoutedResponse): Promise<void> {
+  // “Bebi” registra água logo em seguida (`addHydrationLog` grava 'logged'), por isso não conta como 'opened'.
+  if (routed.kind !== 'hydration' || routed.action === 'drank') return;
+  const db = await getDb();
+  await recordReminderResponse(db, 'hydration', routed.slotAt ?? '', routed.action === 'snooze' ? 'snoozed' : routed.action === 'help' ? 'help' : 'opened');
+}
+
+/** O que `handleNotificationResponse` fez com a resposta, para a interface dar retorno quando estiver aberta. */
+export type AppliedAction =
+  | { type: 'drank'; volumeMl: number }
+  | { type: 'taken'; alreadyConfirmed: boolean }
+  | { type: 'snoozed'; minutes: number }
+  | { type: 'none' };
+
+export interface HandledResponse {
+  routed: RoutedResponse;
+  applied: AppliedAction;
+  /** true quando esta mesma resposta já tinha sido tratada (nada foi feito de novo). */
+  duplicate: boolean;
+}
+
+/**
+ * Uma resposta pode chegar mais de uma vez ao JS: listener + "última resposta" ao abrir o app, e no
+ * Android a tarefa em segundo plano + a fila que o módulo nativo entrega na próxima abertura.
+ * O deduplicador em memória cobre o mesmo processo; a chave gravada no banco cobre processos distintos.
+ */
+const deduper = createResponseDeduper();
+
+/**
+ * Trata uma resposta do sistema (toque ou botão) onde quer que ela chegue: em primeiro plano, com o
+ * app em segundo plano ou na tarefa sem interface. Executa as ações que não precisam de tela
+ * (“Bebi”, “Tomei”, “Lembrar depois”), dispensa o aviso e reagenda; a navegação fica a cargo de quem chamou.
+ */
+export async function handleNotificationResponse(response: Notifications.NotificationResponse): Promise<HandledResponse> {
+  const key = responseKey(response);
+  const routed = parseResponse(response);
+  const skip = { routed, applied: { type: 'none' } as const, duplicate: true };
+  if (!deduper.begin(key)) return skip;
+  try {
+    const db = await getDb();
+    if ((await getDocument<string>(db, DOC_LAST_NOTIFICATION_RESPONSE)) === key) {
+      deduper.commit(key);
+      return skip;
+    }
+    await recordRouted(routed);
+    const applied = await applyResponse(routed);
+    await setDocument(db, DOC_LAST_NOTIFICATION_RESPONSE, key);
+    deduper.commit(key);
+    if (BACKGROUND_ACTIONS.includes(routed.action)) {
+      // Botão sem abrir o app: o Android mantém o aviso na barra; o iOS já o removeu (chamada inofensiva).
+      await Notifications.dismissNotificationAsync(response.notification.request.identifier).catch(() => undefined);
+    }
+    if (applied.type !== 'none') await rescheduleAll(); // cancela as repetições "ainda não confirmado" da dose tomada/adiada
+    return { routed, applied, duplicate: false };
+  } catch (e) {
+    deduper.rollback(key);
+    throw e;
+  }
+}
+
+async function applyResponse(routed: RoutedResponse): Promise<AppliedAction> {
+  if (!BACKGROUND_ACTIONS.includes(routed.action) || (routed.kind !== 'hydration' && routed.kind !== 'medication')) return { type: 'none' };
+  const profile = await loadProfile();
+  const settings = await loadHydrationSettings(profile);
+  if (routed.kind === 'hydration') {
+    if (routed.action === 'drank') {
+      const quick = quickLogVolume(profile.containers);
+      // Duplicidade (mesmo volume em 90 s) é tratada como já registrada: não vale abrir diálogo aqui.
+      await addHydrationLog({ ...quick, source: 'notification' });
+      return { type: 'drank', volumeMl: quick.volumeMl };
+    }
+    if (routed.action === 'snooze') {
+      await scheduleHydrationSnooze(settings.snoozeMinutes, settings.sound);
+      return { type: 'snoozed', minutes: settings.snoozeMinutes };
+    }
+    return { type: 'none' };
+  }
+  if (!routed.occurrenceId) return { type: 'none' };
+  if (routed.action === 'taken') {
+    const r = await confirmOccurrenceTaken(routed.occurrenceId);
+    return r ? { type: 'taken', alreadyConfirmed: r.alreadyConfirmed } : { type: 'none' };
+  }
+  if (routed.action === 'snooze') {
+    const r = await snoozeOccurrence(routed.occurrenceId, settings.snoozeMinutes);
+    return r ? { type: 'snoozed', minutes: settings.snoozeMinutes } : { type: 'none' };
+  }
+  return { type: 'none' };
 }
 
 /**
