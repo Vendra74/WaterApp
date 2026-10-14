@@ -45,7 +45,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier: BUNDLE_ID,
       // Número do build enviado ao App Store Connect/TestFlight. Cada envio precisa de um número maior
       // que o anterior (a `version` pode continuar igual). Ver docs/TESTFLIGHT.md.
-      buildNumber: '8',
+      buildNumber: '9',
       // iPad desligado na primeira versão da loja: o layout nunca foi validado em tablet e a Apple
       // exigiria capturas de iPad na ficha (ver docs/APP-STORE.md).
       supportsTablet: false,
