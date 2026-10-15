@@ -9,7 +9,7 @@ import { useAppStore } from '@/state/appStore';
 import type { BeverageKind } from '@/domain/types';
 import { quickLogVolume } from '@/domain/hydration/logs';
 import { speak } from '@/services/speech/speech';
-import { strings } from '@/i18n';
+import { displayLabel, strings } from '@/i18n';
 
 const beverages = (): { value: BeverageKind; label: string }[] => {
   const h = strings().hydration;
@@ -67,7 +67,7 @@ export function HydrationLogScreen() {
       <AppText muted>{h.intro}</AppText>
       <ChoiceGroup
         label={h.container}
-        options={containers.map((c) => ({ value: c.label, label: h.containerOption(c.label, c.volumeMl) }))}
+        options={containers.map((c) => ({ value: c.label, label: h.containerOption(displayLabel(c.label), c.volumeMl) }))}
         value={container}
         onChange={(v) => {
           const c = containers.find((x) => x.label === v);

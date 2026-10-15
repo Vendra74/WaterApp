@@ -1,6 +1,6 @@
 import { pt } from '../pt';
 import { en } from '../en';
-import { getLocale, resolveLocale, resolvePreference, setLocale, strings } from '../index';
+import { displayLabel, getLocale, resolveLocale, resolvePreference, setLocale, strings } from '../index';
 import { formatClock, formatDate, formatHHmm, formatISODate, weekdayShort } from '../format';
 import { buildNotificationPlan } from '@/domain/notifications/planner';
 import { describeSuggestion } from '@/domain/adaptive/reminderSuggestions';
@@ -156,5 +156,27 @@ describe('lista de unidades do cadastro', () => {
     expect(formDoseUnit('ML')).toBe('ml');
     expect(formDoseUnit('pastilha')).toBeNull();
     expect(formDoseUnit('')).toBeNull();
+  });
+});
+
+describe('nomes padrão de recipientes e refeições', () => {
+  it('padrão gravado em português aparece em inglês quando o app está em inglês', () => {
+    setLocale('en');
+    expect(displayLabel('Copo pequeno')).toBe('Small glass');
+    expect(displayLabel('Garrafinha')).toBe('Small bottle');
+    expect(displayLabel('Café da manhã')).toBe('Breakfast');
+    expect(displayLabel('Novo recipiente')).toBe('New container');
+  });
+
+  it('padrão gravado em inglês aparece em português quando o app está em português', () => {
+    setLocale('pt-BR');
+    expect(displayLabel('Glass')).toBe('Copo');
+    expect(displayLabel('Lunch')).toBe('Almoço');
+  });
+
+  it('nome escrito pela pessoa fica como está', () => {
+    setLocale('en');
+    expect(displayLabel('Caneca do vovô')).toBe('Caneca do vovô');
+    expect(displayLabel('')).toBe('');
   });
 });

@@ -7,7 +7,7 @@ import { BigButton } from '@/ui/components/BigButton';
 import { useTheme } from '@/ui/theme';
 import { newId } from '@/domain/ids';
 import { env } from '@/config/env';
-import { strings } from '@/i18n';
+import { displayLabel, strings } from '@/i18n';
 
 export interface StepProps {
   draft: Profile;
@@ -50,7 +50,7 @@ const MealsEditor = ({ draft, update }: StepProps) => {
     <View style={{ gap: t.space(2) }}>
       {draft.meals.map((meal, i) => (
         <View key={i} style={{ gap: t.space(1), borderWidth: 1, borderColor: t.colors.border, borderRadius: t.radius, padding: t.space(1.5) }}>
-          <TextField label={s.assessment.meal} value={meal.label} onChangeText={(v) => update({ meals: draft.meals.map((m, j) => (j === i ? { ...m, label: v } : m)) })} />
+          <TextField label={s.assessment.meal} value={displayLabel(meal.label)} onChangeText={(v) => update({ meals: draft.meals.map((m, j) => (j === i ? { ...m, label: v } : m)) })} />
           <TimeField label={s.assessment.time} value={meal.time} onChange={(v) => update({ meals: draft.meals.map((m, j) => (j === i ? { ...m, time: v } : m)) })} />
           <BigButton kind="ghost" compact label={s.common.remove} onPress={() => update({ meals: draft.meals.filter((_, j) => j !== i) })} />
         </View>
@@ -67,7 +67,7 @@ const ContainersEditor = ({ draft, update }: StepProps) => {
     <View style={{ gap: t.space(2) }}>
       {draft.containers.map((c, i) => (
         <View key={c.id} style={{ gap: t.space(1), borderWidth: 1, borderColor: t.colors.border, borderRadius: t.radius, padding: t.space(1.5) }}>
-          <TextField label={s.assessment.containerName} value={c.label} onChangeText={(v) => update({ containers: draft.containers.map((x, j) => (j === i ? { ...x, label: v } : x)) })} />
+          <TextField label={s.assessment.containerName} value={displayLabel(c.label)} onChangeText={(v) => update({ containers: draft.containers.map((x, j) => (j === i ? { ...x, label: v } : x)) })} />
           <Stepper label={s.assessment.containerVolume} value={c.volumeMl} step={50} min={50} max={2000} onChange={(v) => update({ containers: draft.containers.map((x, j) => (j === i ? { ...x, volumeMl: v } : x)) })} />
           <BigButton kind="ghost" compact label={s.common.remove} onPress={() => update({ containers: draft.containers.filter((_, j) => j !== i) })} />
         </View>
