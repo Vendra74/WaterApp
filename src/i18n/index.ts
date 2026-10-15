@@ -4,6 +4,7 @@ import { en } from './en';
 
 export { getLocale, setLocale, resolveLocale, resolvePreference, isLanguagePreference, isEnglish, localeTag, LANGUAGE_PREFERENCES, type Locale, type LanguagePreference } from './locale';
 export type { Strings } from './pt';
+export { displayLabel } from './labels';
 
 /**
  * Textos da interface no idioma atual. Função (e não constante) porque o idioma é definido na

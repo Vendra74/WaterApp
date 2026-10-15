@@ -14,7 +14,7 @@ import { useTheme } from '@/ui/theme';
 import { allSteps } from './steps';
 import type { Profile } from '@/domain/types';
 import { env } from '@/config/env';
-import { strings } from '@/i18n';
+import { displayLabel, strings } from '@/i18n';
 import { formatHHmm, formatRange } from '@/i18n/format';
 
 export function AssessmentSummaryScreen() {
@@ -38,8 +38,8 @@ export function AssessmentSummaryScreen() {
     { key: 'age', label: sm.age, value: draft.age === null ? s.common.notInformed : sm.years(draft.age) },
     { key: 'sleep', label: sm.sleep, value: `${formatHHmm(draft.wakeTime)} / ${formatHHmm(draft.sleepTime)}` },
     { key: 'naps', label: sm.naps, value: draft.naps.length ? draft.naps.map((n) => formatRange(n.start, n.end)).join(', ') : s.common.none },
-    { key: 'meals', label: sm.meals, value: draft.meals.map((m) => `${m.label} ${formatHHmm(m.time)}`).join(', ') },
-    { key: 'containers', label: sm.containers, value: draft.containers.map((c) => `${c.label} ${c.volumeMl} ml`).join(', ') },
+    { key: 'meals', label: sm.meals, value: draft.meals.map((m) => `${displayLabel(m.label)} ${formatHHmm(m.time)}`).join(', ') },
+    { key: 'containers', label: sm.containers, value: draft.containers.map((c) => `${displayLabel(c.label)} ${c.volumeMl} ml`).join(', ') },
     { key: 'fruits', label: sm.fruits, value: draft.fruitPreferences.join(', ') || s.common.noneF },
     { key: 'allergies', label: sm.allergies, value: [...draft.allergies, ...draft.dietaryRestrictions].join(', ') || s.common.noneF },
     { key: 'restriction', label: sm.restriction, value: tri(draft.fluidRestriction) },
