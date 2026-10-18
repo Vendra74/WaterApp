@@ -105,15 +105,9 @@ export async function upsertOccurrences(db: DB, occs: MedicationOccurrence[], sy
   });
 }
 
-/** Remove ocorrências futuras ainda agendadas que não existem mais na prescrição (após edição). */
-export async function pruneFutureScheduled(db: DB, medicationId: string, keepIds: string[], nowISO: string): Promise<void> {
-  const rows = await db.getAllAsync<{ id: string }>(
-    "SELECT id FROM medication_occurrences WHERE medication_id = ? AND planned_at > ? AND status IN ('scheduled','snoozed')",
-    medicationId, nowISO,
-  );
-  const keep = new Set(keepIds);
-  const toDelete = rows.map((r) => r.id).filter((id) => !keep.has(id));
-  for (const id of toDelete) {
+/** Apaga ocorrências (e avisa o servidor), por exemplo as que uma edição da prescrição tornou obsoletas. */
+export async function deleteOccurrences(db: DB, ids: string[]): Promise<void> {
+  for (const id of ids) {
     await db.runAsync('DELETE FROM medication_occurrences WHERE id = ?', id);
     await enqueue(db, 'medication_occurrence', id, 'delete', { id });
   }

@@ -5,14 +5,14 @@ import {
   listMedications,
   listOccurrencesBetween,
   listOccurrencesForMedication,
-  pruneFutureScheduled,
+  deleteOccurrences,
   upsertMedication,
   upsertOccurrences,
 } from '@/data/repositories/medications';
 import { recordReminderResponse } from '@/data/repositories/misc';
 import type { Medication, MedicationOccurrence, OccurrenceStatus } from '@/domain/types';
 import { DOC_OCCURRENCES_QUEUED, getDocument, setDocument } from '@/data/repositories/documents';
-import { changedOccurrences, confirmTaken, correctStatus, markNotTaken, materializeOccurrences, snooze } from '@/domain/medication/occurrences';
+import { changedOccurrences, confirmTaken, correctStatus, markNotTaken, materializeOccurrences, snooze, staleOccurrencesAfterEdit } from '@/domain/medication/occurrences';
 import { addDays, startOfLocalDay } from '@/domain/time/time';
 
 /** Horizonte de materialização de ocorrências (dias). */
@@ -28,11 +28,15 @@ export async function saveMedication(med: Medication): Promise<void> {
   const db = await getDb();
   const now = new Date();
   await upsertMedication(db, { ...med, updatedAt: now.toISOString() });
-  const existing = await listOccurrencesForMedication(db, med.id);
+  const all = await listOccurrencesForMedication(db, med.id);
+  // Após edição da prescrição (inclusive sugestão de horário aceita), doses de hoje em diante que não
+  // existem mais e nas quais nada foi registrado são removidas; o histórico é preservado.
+  const stale = staleOccurrencesAfterEdit(med, all, now, OCCURRENCE_HORIZON_DAYS);
+  await deleteOccurrences(db, stale.map((o) => o.id));
+  const staleIds = new Set(stale.map((o) => o.id));
+  const existing = all.filter((o) => !staleIds.has(o.id));
   const occs = materializeOccurrences(med, existing, addDays(startOfLocalDay(now), -1), OCCURRENCE_HORIZON_DAYS + 1, now, UNCONFIRMED_AFTER_MINUTES);
   await upsertOccurrences(db, changedOccurrences(existing, occs), true);
-  // Após edição da prescrição, horários futuros que deixaram de existir são removidos (histórico é preservado).
-  await pruneFutureScheduled(db, med.id, occs.map((o) => o.id), now.toISOString());
 }
 
 export async function removeMedication(id: string): Promise<void> {

@@ -88,6 +88,25 @@ export function materializeOccurrences(
   return out;
 }
 
+/** Status em que a pessoa ainda não registrou nada sobre a dose. */
+const PENDING_STATUSES: readonly OccurrenceStatus[] = ['scheduled', 'snoozed', 'unconfirmed'];
+
+/**
+ * Ocorrências que deixam de fazer sentido depois de uma edição da prescrição (horário trocado,
+ * dia removido, sugestão de novo horário aceita): as de hoje e de dias futuros que a prescrição
+ * atual não prevê mais e nas quais a pessoa não registrou nada (agendadas, adiadas ou "sem
+ * confirmação"). Doses tomadas, "não tomei" e tudo de dias anteriores ficam como histórico.
+ * Sem isso, aceitar "mudar 13:00 para 13:30" deixava a dose das 13:00 de hoje na lista de pendentes
+ * ao lado da nova das 13:30.
+ */
+export function staleOccurrencesAfterEdit(med: Medication, existing: MedicationOccurrence[], now: Date, horizonDays: number): MedicationOccurrence[] {
+  const today = startOfLocalDay(now);
+  const plannedIds = new Set(plannedTimesFor(med, today, horizonDays + 1).map((at) => occurrenceId(med.id, at)));
+  return existing.filter(
+    (o) => o.medicationId === med.id && !plannedIds.has(o.id) && PENDING_STATUSES.includes(o.status) && new Date(o.plannedAt).getTime() >= today.getTime(),
+  );
+}
+
 /**
  * Ocorrências novas ou alteradas em relação às já gravadas. Só essas precisam ser regravadas e
  * enviadas ao servidor (o cuidador vê as doses previstas e as que ficaram "sem confirmação").
@@ -173,7 +192,6 @@ export function occurrencesForDay(occs: MedicationOccurrence[], day: Date): Medi
   return occs.filter((o) => toISODate(new Date(o.plannedAt)) === key);
 }
 
-const PENDING_STATUSES: readonly OccurrenceStatus[] = ['scheduled', 'snoozed', 'unconfirmed'];
 
 /**
  * Doses pendentes (agendadas, adiadas ou sem confirmação) do dia local de `now`, em ordem de horário.

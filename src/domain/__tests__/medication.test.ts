@@ -1,4 +1,4 @@
-import { confirmTaken, materializeOccurrences, occurrenceId, pendingOccurrencesToday, plannedTimesFor, snooze, markUnconfirmedIfLate, correctStatus } from '../medication/occurrences';
+import { confirmTaken, materializeOccurrences, occurrenceId, pendingOccurrencesToday, plannedTimesFor, snooze, markUnconfirmedIfLate, correctStatus, markNotTaken, staleOccurrencesAfterEdit } from '../medication/occurrences';
 import { addDays, formatTimeBR, toISODate } from '../time/time';
 import { makeMedication, NOW } from './fixtures';
 
@@ -126,5 +126,48 @@ describe('medicamentos de hoje na tela inicial', () => {
     const done = confirmTaken(today!, NOW).occ;
     expect(rest).toHaveLength(1);
     expect(pendingOccurrencesToday([done, ...rest], NOW)).toEqual([]);
+  });
+});
+
+describe('edição da prescrição (inclusive sugestão de horário aceita)', () => {
+  // Hoje às 19:43: a dose das 13:00 já passou sem confirmação; a pessoa aceita mudar para 13:30.
+  const now = new Date(2026, 9, 17, 19, 43, 0, 0);
+  const before = makeMedication({ times: ['13:00'] });
+  const after = { ...before, times: ['13:30'] };
+
+  it('remove a dose de hoje sem confirmação do horário antigo e as agendadas dos próximos dias', () => {
+    const existing = materializeOccurrences(before, [], addDays(now, -3), 10, now);
+    const stale = staleOccurrencesAfterEdit(after, existing, now, 14);
+    const todayOld = occurrenceId(before.id, new Date(2026, 9, 17, 13, 0));
+    expect(stale.map((o) => o.id)).toContain(todayOld);
+    expect(stale.every((o) => formatTimeBR(new Date(o.plannedAt)) === '13:00')).toBe(true);
+    expect(stale.every((o) => new Date(o.plannedAt).getTime() >= new Date(2026, 9, 17).getTime())).toBe(true);
+    // Dias anteriores (histórico) ficam.
+    expect(stale.map((o) => toISODate(new Date(o.plannedAt)))).not.toContain('2026-10-16');
+    expect(stale.length).toBe(existing.filter((o) => new Date(o.plannedAt).getTime() >= new Date(2026, 9, 17).getTime()).length);
+  });
+
+  it('depois da limpeza só a dose nova aparece nas pendentes de hoje', () => {
+    const existing = materializeOccurrences(before, [], addDays(now, -3), 10, now);
+    const stale = new Set(staleOccurrencesAfterEdit(after, existing, now, 14).map((o) => o.id));
+    const kept = existing.filter((o) => !stale.has(o.id));
+    const next = materializeOccurrences(after, kept, addDays(now, -1), 15, now);
+    expect(pendingOccurrencesToday(next, now).map((o) => formatTimeBR(new Date(o.plannedAt)))).toEqual(['13:30']);
+  });
+
+  it('preserva o que a pessoa registrou, mesmo no horário antigo', () => {
+    const existing = materializeOccurrences(before, [], addDays(now, -1), 3, now);
+    const todayOld = existing.find((o) => o.id === occurrenceId(before.id, new Date(2026, 9, 17, 13, 0)))!;
+    const taken = confirmTaken(todayOld, now).occ;
+    const tomorrowNotTaken = markNotTaken(existing.find((o) => o.id === occurrenceId(before.id, new Date(2026, 9, 18, 13, 0)))!, now);
+    const withRecords = existing.map((o) => (o.id === taken.id ? taken : o.id === tomorrowNotTaken.id ? tomorrowNotTaken : o));
+    const stale = staleOccurrencesAfterEdit(after, withRecords, now, 14);
+    expect(stale.map((o) => o.id)).not.toContain(taken.id);
+    expect(stale.map((o) => o.id)).not.toContain(tomorrowNotTaken.id);
+  });
+
+  it('não mexe em nada quando a prescrição não muda os horários', () => {
+    const existing = materializeOccurrences(before, [], addDays(now, -1), 15, now);
+    expect(staleOccurrencesAfterEdit(before, existing, now, 14)).toEqual([]);
   });
 });
