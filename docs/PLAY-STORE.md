@@ -89,7 +89,13 @@ npx eas-cli@latest build --local --profile production --platform android --outpu
   keystore; guarde uma cópia fora do Mac). Na primeira publicação o Play Console propõe a
   **Assinatura de apps pelo Google Play**: aceite e deixe o Google gerar a chave de assinatura final;
   a chave do EAS vira a chave de upload.
-- Cada envio novo precisa de `android.versionCode` maior em `app.config.ts` (hoje `1`); a `version`
+- Desde o versionCode 3 o build de release roda o R8 (`enableMinifyInReleaseBuilds` em
+  `app.config.ts`): o código Java/Kotlin sai ofuscado e encolhido, como o Play Console exige (aviso de
+  19/10/2026, prazo fev/2027). O arquivo de mapeamento vai embutido no AAB, então não é preciso enviar
+  `mapping.txt` à parte; ele também fica em `android/app/build/outputs/mapping/release/` após o build.
+  Por causa do R8, teste o AAB num aparelho real (teste interno) antes de promover: um recurso que
+  funcione no build de desenvolvimento e falhe só na loja pede uma regra em `extraProguardRules`.
+- Cada envio novo precisa de `android.versionCode` maior em `app.config.ts` (hoje `2`); a `version`
   (`0.1.0`) só muda quando quiser mostrar uma versão nova na ficha.
 - Antes de enviar, instale o AAB no Motorola com `bundletool` (`build-apks --connected-device` e
   `install-apks`) ou, mais simples, suba o AAB num teste interno e instale pela Play Store.

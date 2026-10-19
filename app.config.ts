@@ -69,7 +69,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       package: BUNDLE_ID,
       // Número do build enviado ao Play Console. Cada AAB enviado precisa de um número maior que o
       // anterior (a `version` pode continuar igual). Ver docs/PLAY-STORE.md.
-      versionCode: 1,
+      versionCode: 2,
       adaptiveIcon: {
         backgroundColor: '#0B5FA5',
         foregroundImage: './assets/android-icon-foreground.png',
@@ -117,6 +117,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             // então esta opção faz o prebuild registrar o ExpoAppSceneDelegate. Foi o motivo da rejeição do
             // build 5 pela Apple (crash em iPadOS 27). Pode sair ao migrar para o SDK 58, que já traz isso.
             enableSceneSupport: true,
+          },
+          android: {
+            // R8 nos builds de release (AAB da loja): ofusca e encolhe o código Java/Kotlin. O Play Console
+            // avisou em 19/10/2026 que a versão 1.1.2 tinha 2% de ofuscação e pede ao menos 25% até fev/2027.
+            // O mapeamento (mapping.txt) vai dentro do AAB, então o Console desofusca os relatórios de erro
+            // sozinho. Os módulos do Expo e do React Native trazem as próprias regras de ProGuard; se algum
+            // recurso quebrar só no build de loja, acrescente a regra em `extraProguardRules`.
+            enableMinifyInReleaseBuilds: true,
+            enableShrinkResourcesInReleaseBuilds: true,
           },
         },
       ],
