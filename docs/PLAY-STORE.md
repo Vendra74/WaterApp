@@ -95,7 +95,7 @@ npx eas-cli@latest build --local --profile production --platform android --outpu
   `mapping.txt` à parte; ele também fica em `android/app/build/outputs/mapping/release/` após o build.
   Por causa do R8, teste o AAB num aparelho real (teste interno) antes de promover: um recurso que
   funcione no build de desenvolvimento e falhe só na loja pede uma regra em `extraProguardRules`.
-- Cada envio novo precisa de `android.versionCode` maior em `app.config.ts` (hoje `2`); a `version`
+- Cada envio novo precisa de `android.versionCode` maior em `app.config.ts` (hoje `3`); a `version`
   (`0.1.0`) só muda quando quiser mostrar uma versão nova na ficha.
 - Antes de enviar, instale o AAB no Motorola com `bundletool` (`build-apks --connected-device` e
   `install-apks`) ou, mais simples, suba o AAB num teste interno e instale pela Play Store.
