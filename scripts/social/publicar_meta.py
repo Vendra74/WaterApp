@@ -13,7 +13,9 @@ Variáveis de ambiente (nunca gravar no repositório):
   META_IG_USER_ID     id da conta profissional do Instagram
   META_PAGE_ID        opcional: id de uma Página do Facebook para publicar o mesmo post lá (exige token
                       do Login do Facebook com pages_manage_posts; sem ela, só o Instagram é publicado)
-  META_GRAPH_HOST     opcional: graph.instagram.com (padrão, Login do Instagram) ou graph.facebook.com
+  META_GRAPH_HOST     opcional: graph.instagram.com (tokens "IGAA…", Login do Instagram) ou graph.facebook.com
+                      (tokens "EAA…", gerados no painel da Meta). Sem a variável, o script escolhe pelo prefixo do token.
+  META_APP_ID / META_APP_SECRET  opcionais: só para --renovar com token "EAA…" (troca por token de longa duração)
   SOCIAL_BASE_URL     URL pública onde as imagens/vídeos estão hospedados,
                       ex.: https://vendra74.github.io/WaterApp/social
   SOCIAL_CALENDARIO   caminho do calendario.json (padrão: docs/social/calendario.json deste repositório)
@@ -25,8 +27,18 @@ O calendário e as imagens são gerados em /mnt/project-files/cuidar/social/ e c
 """
 import argparse, datetime, json, os, sys, time, urllib.parse, urllib.request
 
-IG_GRAPH = "https://" + os.environ.get("META_GRAPH_HOST", "graph.instagram.com") + "/v22.0"
 FB_GRAPH = "https://graph.facebook.com/v22.0"
+
+
+def graph_host():
+    """Tokens "EAA…" são do Graph do Facebook; tokens "IGAA…" são do Login do Instagram."""
+    host = os.environ.get("META_GRAPH_HOST")
+    if not host:
+        host = "graph.facebook.com" if os.environ.get("META_ACCESS_TOKEN", "").startswith("EAA") else "graph.instagram.com"
+    return host
+
+
+IG_GRAPH = "https://" + graph_host() + "/v22.0"
 
 
 def call(method, path, graph=None, **params):
@@ -100,13 +112,30 @@ def main():
     ap.add_argument("--data", help="YYYY-MM-DD (padrão: hoje em America/Sao_Paulo)")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--so", choices=["instagram", "facebook"], help="publicar só numa rede")
-    ap.add_argument("--renovar", action="store_true", help="renovar o token de longa duração do Login do Instagram")
+    ap.add_argument("--renovar", action="store_true", help="renovar o token de longa duração")
+    ap.add_argument("--verificar", action="store_true", help="só testar o token: mostra a conta e a cota de publicação")
     a = ap.parse_args()
 
     if a.renovar:
-        r = call("GET", "refresh_access_token", grant_type="ig_refresh_token")
+        if graph_host() == "graph.facebook.com":
+            app_id, secret = os.environ.get("META_APP_ID"), os.environ.get("META_APP_SECRET")
+            if not (app_id and secret):
+                raise SystemExit("Token EAA…: para renovar, defina META_APP_ID e META_APP_SECRET (Meta for Developers → "
+                                 "Configurações do app → Básico) ou gere um token novo no painel.")
+            r = call("GET", "oauth/access_token", grant_type="fb_exchange_token", client_id=app_id,
+                     client_secret=secret, fb_exchange_token=os.environ["META_ACCESS_TOKEN"])
+        else:
+            r = call("GET", "refresh_access_token", grant_type="ig_refresh_token")
         dias = int(r.get("expires_in", 0)) // 86400
         print(f"Novo token (válido por {dias} dias); grave em META_ACCESS_TOKEN no ambiente:\n{r['access_token']}")
+        return 0
+
+    if a.verificar:
+        ig = os.environ["META_IG_USER_ID"]
+        conta = call("GET", ig, fields="id,username,name,media_count")
+        cota = call("GET", f"{ig}/content_publishing_limit")
+        print(f"Token OK via {graph_host()}: @{conta.get('username')} ({conta.get('name')}), "
+              f"{conta.get('media_count')} publicações; usadas hoje na API: {cota['data'][0].get('quota_usage')} de 25")
         return 0
 
     here = os.path.dirname(os.path.abspath(__file__))
