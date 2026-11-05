@@ -1,0 +1,293 @@
+{
+  "inicio_sugerido": "2026-11-05",
+  "perfil": {
+    "app": "Cuidar: água e remédios",
+    "site": "https://vendra74.github.io/WaterApp/",
+    "app_store": "https://apps.apple.com/br/app/id6818542770",
+    "play_store": "https://play.google.com/store/apps/details?id=br.com.vendra.cuidar",
+    "cta_padrao": "Disponível para iPhone e Android: baixe grátis na App Store ou na Play Store (links na bio).",
+    "hashtags_base": "#Cuidar #AppCuidar #LembreteDeRemédio #LembreteDeÁgua #Idosos #Cuidadores #CuidarDeQuemCuida #TerceiraIdade #AppGratuito #iPhone #Android",
+    "aviso": "Calendário aprovado pelo Andre em 04/11/2026. App no ar na App Store e na Play Store. Todos os posts citam as duas lojas."
+  },
+  "posts": [
+    {
+      "dia": 1,
+      "data": "2026-11-05",
+      "formato": "imagem",
+      "pilar": "apresentação",
+      "titulo": "Conheça o Cuidar",
+      "imagem": {
+        "destaque": "Remédio na hora.\nÁgua ao longo do dia.",
+        "apoio": "Lembretes simples, com letras grandes e botões fáceis de tocar.",
+        "rodape": "Grátis na App Store e na Play Store"
+      },
+      "legenda": "Chegou o Cuidar, para iPhone e Android: um app de lembretes de água e de medicamentos feito para pessoas idosas e para quem cuida delas.\n\nTela simples, letras grandes, botões fáceis de tocar e avisos que chegam na hora certa, mesmo com a tela bloqueada.\n\nSem conta, sem anúncios e com seus dados guardados só no seu aparelho.\n\n{cta}\n\n{hashtags}"
+    },
+    {
+      "dia": 2,
+      "data": "2026-11-06",
+      "formato": "reel",
+      "pilar": "funcionalidade",
+      "reel": "reel-01-tela-bloqueada",
+      "titulo": "O lembrete chega mesmo com a tela bloqueada",
+      "imagem": {
+        "destaque": "Toca na hora.\nMesmo com a tela bloqueada.",
+        "apoio": "O lembrete de medicamento aparece na tela de bloqueio, com os botões “Tomei” e “Lembrar depois”.",
+        "rodape": "Veja no reel"
+      },
+      "legenda": "Lembrete que só funciona com o app aberto não é lembrete.\n\nNo Cuidar, o aviso de medicamento chega na tela bloqueada, no horário que você cadastrou, e dá para confirmar com um toque sem nem desbloquear o celular.\n\n{cta}\n\n{hashtags}"
+    },
+    {
+      "dia": 3,
+      "data": "2026-11-07",
+      "formato": "imagem",
+      "pilar": "acessibilidade",
+      "titulo": "Letras grandes e botões fáceis",
+      "imagem": {
+        "destaque": "Letras grandes.\nBotões que a mão acerta.",
+        "apoio": "Tamanho do texto ajustável e alto contraste, para ler sem esforço.",
+        "rodape": "Feito para ser fácil"
+      },
+      "legenda": "Muita gente deixa de usar um app porque a letra é pequena e o botão é miúdo.\n\nO Cuidar foi desenhado ao contrário: texto grande que você pode aumentar ainda mais, alto contraste e botões largos, fáceis de acertar.\n\nSe alguém da sua família reclama que “não enxerga nada no celular”, mostre este app para essa pessoa.\n\n{cta}\n\n{hashtags} #Acessibilidade"
+    },
+    {
+      "dia": 4,
+      "data": "2026-11-08",
+      "formato": "imagem",
+      "pilar": "dica",
+      "titulo": "Cadastre o remédio pela foto da receita",
+      "imagem": {
+        "destaque": "Fotografou a receita?\nO cadastro vem pronto.",
+        "apoio": "O app preenche um rascunho com nome, dose e horários. Você confere e salva.",
+        "rodape": "Dica do dia"
+      },
+      "legenda": "DICA: na hora de cadastrar um medicamento, toque em “Preencher pela foto” e fotografe a receita ou a caixa.\n\nO Cuidar monta um rascunho com o nome, a dose e os horários. Você confere tudo antes de salvar, e a foto não fica guardada.\n\nÉ opcional: quem preferir digita tudo à mão, como sempre.\n\n{cta}\n\n{hashtags} #DicaDoDia"
+    },
+    {
+      "dia": 5,
+      "data": "2026-11-09",
+      "formato": "imagem",
+      "pilar": "cuidadores",
+      "titulo": "Botão Preciso de ajuda",
+      "imagem": {
+        "destaque": "“Preciso de ajuda”.\nUm toque, e o telefone liga.",
+        "apoio": "Escolha os contatos. O botão fica sempre à mão na tela principal.",
+        "rodape": "Para quem cuida e para quem é cuidado"
+      },
+      "legenda": "Quem cuida de alguém sabe: o medo não é só esquecer o remédio, é não estar por perto quando precisa.\n\nPor isso o Cuidar tem o botão “Preciso de ajuda” na tela principal. Você cadastra os contatos de confiança, e um toque faz a ligação.\n\nNão substitui os serviços de emergência, mas deixa a família a um toque de distância.\n\n{cta}\n\n{hashtags}"
+    },
+    {
+      "dia": 6,
+      "data": "2026-11-10",
+      "formato": "imagem",
+      "pilar": "engajamento",
+      "titulo": "Qual horário você mais esquece?",
+      "imagem": {
+        "destaque": "Qual remédio\nvocê mais esquece?",
+        "apoio": "O da manhã, o do almoço ou o de antes de dormir?",
+        "rodape": "Conta pra gente nos comentários"
+      },
+      "legenda": "Pergunta sincera: qual horário de remédio é o mais fácil de esquecer na sua casa?\n\nA) O da manhã, na correria\nB) O do almoço, fora de casa\nC) O de antes de dormir\n\nResponde nos comentários. A gente usa essas respostas para melhorar os lembretes do Cuidar.\n\nO Cuidar é grátis, para iPhone e Android (App Store e Play Store, links na bio).\n\n{hashtags}"
+    },
+    {
+      "dia": 7,
+      "data": "2026-11-11",
+      "formato": "reel",
+      "pilar": "funcionalidade",
+      "reel": "reel-02-bebi-na-notificacao",
+      "titulo": "Registre a água sem abrir o app",
+      "imagem": {
+        "destaque": "Bebeu? Toque em “Bebi”.\nSem abrir o app.",
+        "apoio": "O lembrete de água tem o botão na própria notificação.",
+        "rodape": "Veja no reel"
+      },
+      "legenda": "Chegou o lembrete de água? Segure o aviso e toque em “Bebi”. Pronto, registrado, sem abrir o app.\n\nO mesmo vale para o remédio: “Tomei” ou “Lembrar depois”, direto na notificação.\n\n{cta}\n\n{hashtags}"
+    },
+    {
+      "dia": 8,
+      "data": "2026-11-12",
+      "formato": "imagem",
+      "pilar": "privacidade",
+      "titulo": "Sem conta, sem anúncios",
+      "imagem": {
+        "destaque": "Sem conta.\nSem anúncios.\nSem enviar seus dados.",
+        "apoio": "Tudo fica no seu aparelho. Nada vai para o desenvolvedor.",
+        "rodape": "Privacidade de verdade"
+      },
+      "legenda": "Para usar o Cuidar você não cria conta, não informa e-mail e não vê anúncio.\n\nOs registros de água e de medicamentos ficam guardados só no seu celular. A única coisa que sai do aparelho é a foto da receita, se você escolher usar a leitura por foto, e ela é descartada depois da transcrição.\n\nPolítica de privacidade completa no link da bio.\n\n{hashtags} #Privacidade"
+    },
+    {
+      "dia": 9,
+      "data": "2026-11-13",
+      "formato": "imagem",
+      "pilar": "dica",
+      "titulo": "A tela Hoje mostra o que falta",
+      "imagem": {
+        "destaque": "O que ainda falta hoje?\nEstá na tela Hoje.",
+        "apoio": "Doses pendentes e água registrada, tudo num lugar só.",
+        "rodape": "Dica do dia"
+      },
+      "legenda": "DICA: abriu o app e não sabe se já tomou o remédio das 14h? A tela Hoje mostra só o que ainda falta no dia.\n\nTomou, aparece como feito. Esqueceu, continua ali esperando. Simples assim.\n\n{cta}\n\n{hashtags} #DicaDoDia"
+    },
+    {
+      "dia": 10,
+      "data": "2026-11-14",
+      "formato": "reel",
+      "pilar": "demonstração",
+      "reel": "reel-03-cadastro-30s",
+      "titulo": "Cadastrando um remédio em 30 segundos",
+      "imagem": {
+        "destaque": "Cadastro de remédio\nem 30 segundos.",
+        "apoio": "Nome, dose, horários. Salvou, está pronto.",
+        "rodape": "Veja no reel"
+      },
+      "legenda": "Quanto tempo leva para cadastrar um remédio no Cuidar? Cronometramos: menos de 30 segundos.\n\nNome, dose, horários, salvar. A partir daí o lembrete toca todo dia, sozinho.\n\n{cta}\n\n{hashtags}"
+    },
+    {
+      "dia": 11,
+      "data": "2026-11-15",
+      "formato": "imagem",
+      "pilar": "funcionalidade",
+      "titulo": "Água silenciosa, remédio não",
+      "imagem": {
+        "destaque": "No Não Perturbe,\na água fica quieta.\nO remédio, não.",
+        "apoio": "O lembrete de medicamento toca mesmo no modo silencioso.",
+        "rodape": "Pensado nos detalhes"
+      },
+      "legenda": "Detalhe que faz diferença: no modo Não Perturbe, o lembrete de água fica em silêncio, para não incomodar.\n\nJá o lembrete de medicamento toca mesmo assim, porque esse não pode esperar.\n\n(No iPhone, basta deixar “Notificações relevantes” ligado no Foco.)\n\n{cta}\n\n{hashtags}"
+    },
+    {
+      "dia": 12,
+      "data": "2026-11-16",
+      "formato": "imagem",
+      "pilar": "bastidores",
+      "titulo": "Feito no Brasil, pensado para os nossos avós",
+      "imagem": {
+        "destaque": "Feito no Brasil,\npensado para pais e avós.",
+        "apoio": "Um app pequeno, sem enrolação, que faz uma coisa bem feita.",
+        "rodape": "Bastidores"
+      },
+      "legenda": "O Cuidar nasceu de uma necessidade de família: alguém que precisava lembrar dos remédios e beber mais água, e um celular cheio de apps complicados demais.\n\nA regra desde o início foi uma só: cada tela tem que ser entendida por quem nunca usou app nenhum.\n\nSe você tem alguém assim em casa, instale e conte para a gente o que achou.\n\n{cta}\n\n{hashtags} #FeitoNoBrasil"
+    },
+    {
+      "dia": 13,
+      "data": "2026-11-17",
+      "formato": "imagem",
+      "pilar": "acessibilidade",
+      "titulo": "Leitura em voz alta",
+      "imagem": {
+        "destaque": "Não quer ler?\nO app lê para você.",
+        "apoio": "A tela Hoje pode ser lida em voz alta, com um toque.",
+        "rodape": "Feito para ser fácil"
+      },
+      "legenda": "Para quem tem dificuldade de leitura, ou só esqueceu os óculos, a tela Hoje do Cuidar pode ser lida em voz alta.\n\nUm toque, e o celular diz o que ainda falta no dia.\n\n{cta}\n\n{hashtags} #Acessibilidade"
+    },
+    {
+      "dia": 14,
+      "data": "2026-11-18",
+      "formato": "reel",
+      "pilar": "cuidadores",
+      "reel": "reel-04-preciso-de-ajuda",
+      "titulo": "Como funciona o botão Preciso de ajuda",
+      "imagem": {
+        "destaque": "Um toque.\nO telefone liga.",
+        "apoio": "Veja como configurar os contatos do botão “Preciso de ajuda”.",
+        "rodape": "Veja no reel"
+      },
+      "legenda": "Como configurar o botão “Preciso de ajuda” no celular de quem você cuida: entre em Perfil, cadastre os contatos de confiança e pronto. O botão fica na tela principal, grande, impossível de errar.\n\n{cta}\n\n{hashtags}"
+    },
+    {
+      "dia": 15,
+      "data": "2026-11-19",
+      "formato": "imagem",
+      "pilar": "funcionalidade",
+      "titulo": "Histórico dos dias anteriores",
+      "imagem": {
+        "destaque": "Tomou ontem?\nO Histórico responde.",
+        "apoio": "Veja as doses e a água dos dias anteriores.",
+        "rodape": "Para consultar com calma"
+      },
+      "legenda": "“Mãe, a senhora tomou o remédio ontem?” Agora a resposta está no Histórico do Cuidar: doses confirmadas, adiadas ou puladas e a água registrada, dia a dia.\n\nÚtil na consulta médica e para quem acompanha de longe.\n\n{cta}\n\n{hashtags}"
+    },
+    {
+      "dia": 16,
+      "data": "2026-11-20",
+      "formato": "imagem",
+      "pilar": "cuidadores",
+      "titulo": "Checklist para instalar no celular de quem você cuida",
+      "imagem": {
+        "destaque": "Vai instalar no celular\nda sua mãe ou do seu pai?",
+        "apoio": "1. Instale e permita as notificações\n2. Cadastre os remédios\n3. Escolha os horários de água\n4. Cadastre os contatos de ajuda\n5. Aumente a letra em Perfil",
+        "rodape": "Salve este post"
+      },
+      "legenda": "Checklist para deixar o Cuidar pronto no celular de quem você cuida:\n\n1. Instale e permita as notificações quando o app pedir.\n2. Cadastre os remédios com horário e dose (ou fotografe a receita).\n3. Escolha os horários dos lembretes de água.\n4. Cadastre os contatos do botão “Preciso de ajuda”.\n5. Em Perfil, aumente o tamanho da letra.\n\nLeva uns dez minutos e depois é só deixar o app trabalhar. Salve este post para fazer no fim de semana.\n\n{cta}\n\n{hashtags}"
+    },
+    {
+      "dia": 17,
+      "data": "2026-11-21",
+      "formato": "reel",
+      "pilar": "acessibilidade",
+      "reel": "reel-05-letras-grandes",
+      "titulo": "Ligando letras grandes e alto contraste",
+      "imagem": {
+        "destaque": "Letra pequena?\nAumente em dois toques.",
+        "apoio": "Veja como ligar letras grandes e alto contraste.",
+        "rodape": "Veja no reel"
+      },
+      "legenda": "Dois toques para deixar o app do jeito que os olhos pedem: Perfil, Acessibilidade, letras grandes e alto contraste.\n\nMostra este reel para quem reclama que “não enxerga nada no celular”.\n\n{cta}\n\n{hashtags} #Acessibilidade"
+    },
+    {
+      "dia": 18,
+      "data": "2026-11-22",
+      "formato": "imagem",
+      "pilar": "funcionalidade",
+      "titulo": "Em português e em inglês",
+      "imagem": {
+        "destaque": "Fala português.\nFala inglês também.",
+        "apoio": "Segue o idioma do aparelho, ou você escolhe em Mais → Idioma.",
+        "rodape": "Disponível no Brasil e nos EUA"
+      },
+      "legenda": "O Cuidar está disponível em português e em inglês. Ele segue o idioma do celular, ou você escolhe o que preferir em Mais → Idioma.\n\nBom para famílias com gente morando fora, ou para o cuidador que fala um idioma e a pessoa cuidada, outro.\n\n{cta}\n\n{hashtags}"
+    },
+    {
+      "dia": 19,
+      "data": "2026-11-23",
+      "formato": "imagem",
+      "pilar": "engajamento",
+      "titulo": "Conte para a gente",
+      "imagem": {
+        "destaque": "Já usa o Cuidar?\nConta pra gente.",
+        "apoio": "O que ajudou, o que faltou, o que mudaria.",
+        "rodape": "A gente lê tudo"
+      },
+      "legenda": "Se você já instalou o Cuidar, queremos saber: o que ajudou, o que faltou, o que você mudaria?\n\nO app é pequeno e feito com cuidado, e cada comentário vira melhoria. Escreve aqui ou manda mensagem.\n\nO Cuidar é grátis, para iPhone e Android (App Store e Play Store, links na bio).\n\n{hashtags}"
+    },
+    {
+      "dia": 20,
+      "data": "2026-11-24",
+      "formato": "imagem",
+      "pilar": "engajamento",
+      "titulo": "Marque quem vive esquecendo de beber água",
+      "imagem": {
+        "destaque": "Marque aquela pessoa\nque vive esquecendo\nde beber água.",
+        "apoio": "O lembrete chega. Ela só precisa tocar em “Bebi”.",
+        "rodape": "Sem julgamento, só carinho"
+      },
+      "legenda": "Todo mundo tem alguém que passa o dia inteiro sem lembrar de beber água. Marque essa pessoa aqui (com carinho).\n\nNo Cuidar, ela escolhe os horários e a frequência dos lembretes, e registra cada copo com um toque.\n\n{cta}\n\n{hashtags}"
+    },
+    {
+      "dia": 21,
+      "data": "2026-11-25",
+      "formato": "reel",
+      "pilar": "apresentação",
+      "reel": "reel-06-sete-coisas",
+      "titulo": "Sete coisas que o Cuidar faz",
+      "imagem": {
+        "destaque": "7 coisas que o Cuidar\nfaz por você.",
+        "apoio": "Lembretes, foto da receita, Hoje, Histórico, voz alta, ajuda, idiomas. Para iPhone e Android.",
+        "rodape": "Veja no reel"
+      },
+      "legenda": "Sete coisas que o Cuidar faz:\n\n1. Lembra do remédio na hora, mesmo com a tela bloqueada\n2. Lembra de beber água, nos horários que você escolhe\n3. Preenche o cadastro pela foto da receita\n4. Mostra o que falta no dia na tela Hoje\n5. Guarda o Histórico dos dias anteriores\n6. Lê a tela em voz alta\n7. Liga para a família pelo botão “Preciso de ajuda”\n\nE o que ele não faz: não cria conta, não mostra anúncio, não envia seus dados.\n\n{cta}\n\n{hashtags}"
+    }
+  ]
+}
