@@ -7,9 +7,12 @@ Uso:
   python3 publicar_meta.py                       # publica de verdade (precisa das variáveis abaixo)
 
 Variáveis de ambiente (nunca gravar no repositório):
-  META_ACCESS_TOKEN   token de usuário do sistema (Business Manager) ou token de página de longa duração
+  META_ACCESS_TOKEN   token de longa duração do "Login do Instagram" (Instagram API with Instagram Login);
+                      conta profissional (Criador ou Empresa), sem Página do Facebook nem Business Manager
   META_IG_USER_ID     id da conta profissional do Instagram
-  META_PAGE_ID        id da Página do Facebook ligada à conta do Instagram
+  META_PAGE_ID        opcional: id de uma Página do Facebook para publicar o mesmo post lá (exige token
+                      do Login do Facebook com pages_manage_posts; sem ela, só o Instagram é publicado)
+  META_GRAPH_HOST     opcional: graph.instagram.com (padrão, Login do Instagram) ou graph.facebook.com
   SOCIAL_BASE_URL     URL pública onde as imagens/vídeos estão hospedados,
                       ex.: https://vendra74.github.io/WaterApp/social
   SOCIAL_CALENDARIO   caminho do calendario.json (padrão: docs/social/calendario.json deste repositório)
@@ -21,14 +24,14 @@ O calendário e as imagens são gerados em /mnt/project-files/cuidar/social/ e c
 """
 import argparse, datetime, json, os, sys, time, urllib.parse, urllib.request
 
-GRAPH = "https://graph.facebook.com/v22.0"
+IG_GRAPH = "https://" + os.environ.get("META_GRAPH_HOST", "graph.instagram.com") + "/v22.0"
+FB_GRAPH = "https://graph.facebook.com/v22.0"
 
 
-def call(method, path, **params):
-    tok = os.environ["META_ACCESS_TOKEN"]
-    params["access_token"] = tok
+def call(method, path, graph=None, **params):
+    params["access_token"] = os.environ["META_ACCESS_TOKEN"]
     data = urllib.parse.urlencode(params).encode()
-    url = f"{GRAPH}/{path}"
+    url = f"{graph or IG_GRAPH}/{path}"
     if method == "GET":
         url += "?" + data.decode(); data = None
     req = urllib.request.Request(url, data=data, method=method)
@@ -59,7 +62,7 @@ def esperar_container(cid):
         st = call("GET", cid, fields="status_code,status")
         if st.get("status_code") == "FINISHED":
             return
-        if st.get("status_code") == "ERROR":
+        if st.get("status_code") in ("ERROR", "EXPIRED"):
             raise SystemExit(f"Container {cid} com erro: {st}")
         time.sleep(10)
     raise SystemExit(f"Container {cid} não ficou pronto a tempo")
@@ -71,9 +74,9 @@ def publicar_instagram(p, texto, base):
     if p["formato"] == "reel":
         video = p.get("video") or f"reels/cartela-reel-{n}.mp4"
         c = call("POST", f"{ig}/media", media_type="REELS", video_url=f"{base}/{video}",
-                 cover_url=f"{base}/imagens/dia-{n}-story.png", caption=texto, share_to_feed="true")
+                 cover_url=f"{base}/imagens/dia-{n}-story.jpg", caption=texto, share_to_feed="true")
     else:
-        c = call("POST", f"{ig}/media", image_url=f"{base}/imagens/dia-{n}-feed.png", caption=texto)
+        c = call("POST", f"{ig}/media", image_url=f"{base}/imagens/dia-{n}-feed.jpg", caption=texto)
     esperar_container(c["id"])
     r = call("POST", f"{ig}/media_publish", creation_id=c["id"])
     return r["id"]
@@ -84,9 +87,9 @@ def publicar_facebook(p, texto, base):
     n = f"{p['dia']:02d}"
     if p["formato"] == "reel":
         video = p.get("video") or f"reels/cartela-reel-{n}.mp4"
-        r = call("POST", f"{page}/videos", file_url=f"{base}/{video}", description=texto)
+        r = call("POST", f"{page}/videos", graph=FB_GRAPH, file_url=f"{base}/{video}", description=texto)
     else:
-        r = call("POST", f"{page}/photos", url=f"{base}/imagens/dia-{n}-feed.png", message=texto)
+        r = call("POST", f"{page}/photos", graph=FB_GRAPH, url=f"{base}/imagens/dia-{n}-feed.jpg", message=texto)
     return r.get("post_id") or r.get("id")
 
 
@@ -123,7 +126,7 @@ def main():
     log = {}
     if a.so in (None, "instagram"):
         log["instagram"] = publicar_instagram(p, texto, base)
-    if a.so in (None, "facebook"):
+    if a.so in (None, "facebook") and os.environ.get("META_PAGE_ID"):
         log["facebook"] = publicar_facebook(p, texto, base)
     print("Publicado:", json.dumps(log))
     hist = os.environ.get("SOCIAL_LOG") or os.path.join(os.path.dirname(cal_path), "publicados.jsonl")
