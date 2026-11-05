@@ -5,6 +5,7 @@ Uso:
   python3 publicar_meta.py --dry-run            # mostra o que seria publicado hoje
   python3 publicar_meta.py --dia 3 --dry-run     # idem, para o dia 3 do calendário
   python3 publicar_meta.py                       # publica de verdade (precisa das variáveis abaixo)
+  python3 publicar_meta.py --renovar             # renova o token de longa duração (60 dias) e imprime o novo
 
 Variáveis de ambiente (nunca gravar no repositório):
   META_ACCESS_TOKEN   token de longa duração do "Login do Instagram" (Instagram API with Instagram Login);
@@ -99,7 +100,14 @@ def main():
     ap.add_argument("--data", help="YYYY-MM-DD (padrão: hoje em America/Sao_Paulo)")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--so", choices=["instagram", "facebook"], help="publicar só numa rede")
+    ap.add_argument("--renovar", action="store_true", help="renovar o token de longa duração do Login do Instagram")
     a = ap.parse_args()
+
+    if a.renovar:
+        r = call("GET", "refresh_access_token", grant_type="ig_refresh_token")
+        dias = int(r.get("expires_in", 0)) // 86400
+        print(f"Novo token (válido por {dias} dias); grave em META_ACCESS_TOKEN no ambiente:\n{r['access_token']}")
+        return 0
 
     here = os.path.dirname(os.path.abspath(__file__))
     candidatos = [os.environ.get("SOCIAL_CALENDARIO"),
