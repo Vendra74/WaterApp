@@ -1,5 +1,6 @@
 import { confirmTaken, materializeOccurrences, occurrenceId, pendingOccurrencesToday, plannedTimesFor, snooze, markUnconfirmedIfLate, correctStatus, markNotTaken, staleOccurrencesAfterEdit } from '../medication/occurrences';
 import { addDays, formatTimeBR, toISODate } from '../time/time';
+import { buildNotificationPlan } from '../notifications/planner';
 import { makeMedication, NOW } from './fixtures';
 
 describe('ocorrências de medicamentos', () => {
@@ -164,6 +165,30 @@ describe('edição da prescrição (inclusive sugestão de horário aceita)', ()
     const stale = staleOccurrencesAfterEdit(after, withRecords, now, 14);
     expect(stale.map((o) => o.id)).not.toContain(taken.id);
     expect(stale.map((o) => o.id)).not.toContain(tomorrowNotTaken.id);
+  });
+
+  // Caso relatado em 06/11/2026 no iPhone: dose das 10:07 adiada para 10:37; às 10:32 a pessoa muda o
+  // horário para 13:45 e o lembrete das 10:37 continuava chegando (a dose adiada ficava no banco).
+  it('remove a dose de hoje adiada do horário antigo, e o lembrete do adiamento some do plano', () => {
+    const at1032 = new Date(2026, 10, 6, 10, 32, 0, 0);
+    const old = makeMedication({ times: ['10:07'] });
+    const edited = { ...old, times: ['13:45'] };
+    const existing = materializeOccurrences(old, [], addDays(at1032, -1), 3, at1032);
+    const todayOld = existing.find((o) => o.id === occurrenceId(old.id, new Date(2026, 10, 6, 10, 7)))!;
+    const snoozed = snooze(todayOld, new Date(2026, 10, 6, 10, 7), 30);
+    const withSnooze = existing.map((o) => (o.id === snoozed.id ? snoozed : o));
+    expect(pendingOccurrencesToday(withSnooze, at1032).map((o) => o.status)).toEqual(['snoozed']);
+
+    const stale = new Set(staleOccurrencesAfterEdit(edited, withSnooze, at1032, 14).map((o) => o.id));
+    expect(stale.has(snoozed.id)).toBe(true);
+    const kept = withSnooze.filter((o) => !stale.has(o.id));
+    const next = materializeOccurrences(edited, kept, addDays(at1032, -1), 15, at1032);
+    expect(pendingOccurrencesToday(next, at1032).map((o) => `${formatTimeBR(new Date(o.plannedAt))} ${o.status}`)).toEqual(['13:45 scheduled']);
+
+    const plan = buildNotificationPlan({ now: at1032, hydrationSlots: [], medications: [edited], occurrences: next, settings: { showDetailsOnLockScreen: false }, preferredName: '' });
+    const fireTimes = plan.filter((p) => p.kind === 'medication' && toISODate(new Date(p.fireAt)) === '2026-11-06').map((p) => formatTimeBR(new Date(p.fireAt)));
+    expect(fireTimes).not.toContain('10:37');
+    expect(fireTimes).toContain('13:45');
   });
 
   it('não mexe em nada quando a prescrição não muda os horários', () => {
