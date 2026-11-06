@@ -35,7 +35,8 @@
         "apoio": "O lembrete de medicamento aparece na tela de bloqueio, com os botões “Tomei” e “Lembrar depois”.",
         "rodape": "Veja no reel"
       },
-      "legenda": "Lembrete que só funciona com o app aberto não é lembrete.\n\nNo Cuidar, o aviso de medicamento chega na tela bloqueada, no horário que você cadastrou, e dá para confirmar com um toque sem nem desbloquear o celular.\n\n{cta}\n\n{hashtags}"
+      "legenda": "Lembrete que só funciona com o app aberto não é lembrete.\n\nNo Cuidar, o aviso de medicamento chega na tela bloqueada, no horário que você cadastrou, e dá para confirmar com um toque sem nem desbloquear o celular.\n\n{cta}\n\n{hashtags}",
+      "video": "reels/reel-02.mp4"
     },
     {
       "dia": 3,
@@ -101,7 +102,8 @@
         "apoio": "O lembrete de água tem o botão na própria notificação.",
         "rodape": "Veja no reel"
       },
-      "legenda": "Chegou o lembrete de água? Segure o aviso e toque em “Bebi”. Pronto, registrado, sem abrir o app.\n\nO mesmo vale para o remédio: “Tomei” ou “Lembrar depois”, direto na notificação.\n\n{cta}\n\n{hashtags}"
+      "legenda": "Chegou o lembrete de água? Segure o aviso e toque em “Bebi”. Pronto, registrado, sem abrir o app.\n\nO mesmo vale para o remédio: “Tomei” ou “Lembrar depois”, direto na notificação.\n\n{cta}\n\n{hashtags}",
+      "video": "reels/reel-07.mp4"
     },
     {
       "dia": 8,
@@ -141,7 +143,8 @@
         "apoio": "Nome, dose, horários. Salvou, está pronto.",
         "rodape": "Veja no reel"
       },
-      "legenda": "Quanto tempo leva para cadastrar um remédio no Cuidar? Cronometramos: menos de 30 segundos.\n\nNome, dose, horários, salvar. A partir daí o lembrete toca todo dia, sozinho.\n\n{cta}\n\n{hashtags}"
+      "legenda": "Quanto tempo leva para cadastrar um remédio no Cuidar? Cronometramos: menos de 30 segundos.\n\nNome, dose, horários, salvar. A partir daí o lembrete toca todo dia, sozinho.\n\n{cta}\n\n{hashtags}",
+      "video": "reels/reel-10.mp4"
     },
     {
       "dia": 11,
@@ -194,7 +197,8 @@
         "apoio": "Veja como configurar os contatos do botão “Preciso de ajuda”.",
         "rodape": "Veja no reel"
       },
-      "legenda": "Como configurar o botão “Preciso de ajuda” no celular de quem você cuida: entre em Perfil, cadastre os contatos de confiança e pronto. O botão fica na tela principal, grande, impossível de errar.\n\n{cta}\n\n{hashtags}"
+      "legenda": "Como configurar o botão “Preciso de ajuda” no celular de quem você cuida: entre em Perfil, cadastre os contatos de confiança e pronto. O botão fica na tela principal, grande, impossível de errar.\n\n{cta}\n\n{hashtags}",
+      "video": "reels/reel-14.mp4"
     },
     {
       "dia": 15,
@@ -234,7 +238,8 @@
         "apoio": "Veja como ligar letras grandes e alto contraste.",
         "rodape": "Veja no reel"
       },
-      "legenda": "Dois toques para deixar o app do jeito que os olhos pedem: Perfil, Acessibilidade, letras grandes e alto contraste.\n\nMostra este reel para quem reclama que “não enxerga nada no celular”.\n\n{cta}\n\n{hashtags} #Acessibilidade"
+      "legenda": "Dois toques para deixar o app do jeito que os olhos pedem: Perfil, Acessibilidade, letras grandes e alto contraste.\n\nMostra este reel para quem reclama que “não enxerga nada no celular”.\n\n{cta}\n\n{hashtags} #Acessibilidade",
+      "video": "reels/reel-17.mp4"
     },
     {
       "dia": 18,
@@ -287,7 +292,8 @@
         "apoio": "Lembretes, foto da receita, Hoje, Histórico, voz alta, ajuda, idiomas. Para iPhone e Android.",
         "rodape": "Veja no reel"
       },
-      "legenda": "Sete coisas que o Cuidar faz:\n\n1. Lembra do remédio na hora, mesmo com a tela bloqueada\n2. Lembra de beber água, nos horários que você escolhe\n3. Preenche o cadastro pela foto da receita\n4. Mostra o que falta no dia na tela Hoje\n5. Guarda o Histórico dos dias anteriores\n6. Lê a tela em voz alta\n7. Liga para a família pelo botão “Preciso de ajuda”\n\nE o que ele não faz: não cria conta, não mostra anúncio, não envia seus dados.\n\n{cta}\n\n{hashtags}"
+      "legenda": "Sete coisas que o Cuidar faz:\n\n1. Lembra do remédio na hora, mesmo com a tela bloqueada\n2. Lembra de beber água, nos horários que você escolhe\n3. Preenche o cadastro pela foto da receita\n4. Mostra o que falta no dia na tela Hoje\n5. Guarda o Histórico dos dias anteriores\n6. Lê a tela em voz alta\n7. Liga para a família pelo botão “Preciso de ajuda”\n\nE o que ele não faz: não cria conta, não mostra anúncio, não envia seus dados.\n\n{cta}\n\n{hashtags}",
+      "video": "reels/reel-21.mp4"
     }
   ]
 }
