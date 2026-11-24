@@ -34,7 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: APP_DISPLAY_NAME,
     slug: APP_SLUG,
-    version: '1.1.2',
+    version: '1.2.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     scheme: APP_SLUG,
@@ -45,7 +45,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier: BUNDLE_ID,
       // Número do build enviado ao App Store Connect/TestFlight. Cada envio precisa de um número maior
       // que o anterior (a `version` pode continuar igual). Ver docs/TESTFLIGHT.md.
-      buildNumber: '9',
+      buildNumber: '10',
       // iPad desligado na primeira versão da loja: o layout nunca foi validado em tablet e a Apple
       // exigiria capturas de iPad na ficha (ver docs/APP-STORE.md).
       supportsTablet: false,
@@ -69,7 +69,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       package: BUNDLE_ID,
       // Número do build enviado ao Play Console. Cada AAB enviado precisa de um número maior que o
       // anterior (a `version` pode continuar igual). Ver docs/PLAY-STORE.md.
-      versionCode: 3,
+      versionCode: 4,
       adaptiveIcon: {
         backgroundColor: '#0B5FA5',
         foregroundImage: './assets/android-icon-foreground.png',
