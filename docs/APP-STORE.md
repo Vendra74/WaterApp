@@ -86,7 +86,16 @@ PRIVACIDADE
 O Cuidar é uma ferramenta de apoio à rotina. Não faz diagnóstico, não prescreve, não calcula doses nem metas e não substitui a orientação de profissionais de saúde. Não é um serviço de emergência.
 ```
 
-### Novidades desta versão (1.1.2)
+### Novidades desta versão (1.2.0)
+
+```
+• Remédio que não é todo dia: escolha “A cada X dias” (ex.: de 14 em 14 dias) e a data da primeira dose. Os lembretes seguem só esses dias.
+• Ao mudar o horário de um remédio, o lembrete do horário antigo deixa de aparecer.
+• Nomes padrão de copos e refeições aparecem no idioma do app.
+• Correções e textos revisados.
+```
+
+Texto da 1.1.2 (build 9), para referência:
 
 ```
 • Na notificação do lembrete, “Tomei” e “Bebi” registram na hora, sem precisar abrir o app (segure o aviso para ver os botões).
@@ -168,7 +177,16 @@ PRIVACY
 Cuidar is a tool to support your routine. It does not diagnose, prescribe, calculate doses or goals, and does not replace guidance from health professionals. It is not an emergency service.
 ```
 
-### What's New in This Version (1.1.2)
+### What's New in This Version (1.2.0)
+
+```
+• Medication that is not daily: choose “Every X days” (e.g. every 14 days) and the date of the first dose. Reminders follow only those days.
+• When you change a medication time, the reminder for the old time no longer shows up.
+• Default names of cups and meals appear in the app language.
+• Fixes and revised texts.
+```
+
+Text for 1.1.2 (build 9), for reference:
 
 ```
 • In the reminder notification, “Taken” and “I drank” record right away, without opening the app (press and hold the notification to see the buttons).
@@ -279,7 +297,7 @@ Quem já tem o app recebe a versão nova pela App Store (automático, se a pesso
 automáticas ligadas). O fluxo, a cada versão:
 
 1. **No código:** suba `version` em `app.config.ts` (e em `package.json`) e `ios.buildNumber` para um
-   número ainda não usado no App Store Connect. A 1.1.0 usa o build 6 (o 4 foi um build local do Xcode; o 5 foi rejeitado, ver o topo); a 1.1.1 usa o 7; a 1.1.2 usa o 9 (o 8 foi enviado e trocado pelo 9 antes da revisão). Uma versão já aprovada não aceita build novo: para corrigir algo depois da aprovação, suba o `version` (ex.: 1.1.1).
+   número ainda não usado no App Store Connect. A 1.1.0 usa o build 6 (o 4 foi um build local do Xcode; o 5 foi rejeitado, ver o topo); a 1.1.1 usa o 7; a 1.1.2 usa o 9 (o 8 foi enviado e trocado pelo 9 antes da revisão); a 1.2.0 usa o 10. Uma versão já aprovada não aceita build novo: para corrigir algo depois da aprovação, suba o `version` (ex.: 1.1.1).
 2. **Build no Mac:** gere o archive a partir da `main` (ver [TESTFLIGHT.md](TESTFLIGHT.md)) e envie ao
    App Store Connect. O build aparece em TestFlight em alguns minutos, depois de processar. Se o
    build for feito num clone novo, copie antes o `.env` do projeto para ele: sem as credenciais do
