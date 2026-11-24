@@ -59,6 +59,7 @@ export async function loadDemoData(): Promise<void> {
     intervalHours: null,
     intervalAnchor: null,
     weekdays: [],
+    intervalDays: null,
     startDate: null,
     endDate: null,
     instructions: 'Exemplo fictício. Não é uma prescrição.',

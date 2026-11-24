@@ -43,6 +43,13 @@ export function addDays(date: Date, days: number): Date {
   return d;
 }
 
+/** Dias de calendário entre dois dias locais (b − a), robusto a horário de verão. */
+export function daysBetween(a: Date, b: Date): number {
+  const utcA = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+  const utcB = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.round((utcB - utcA) / 86_400_000);
+}
+
 export function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60_000);
 }

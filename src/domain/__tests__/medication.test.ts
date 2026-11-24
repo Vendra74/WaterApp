@@ -196,3 +196,44 @@ describe('edição da prescrição (inclusive sugestão de horário aceita)', ()
     expect(staleOccurrencesAfterEdit(before, existing, now, 14)).toEqual([]);
   });
 });
+
+describe('uso a cada N dias (ex.: domingo sim, domingo não)', () => {
+  // Domingo 27/09/2026 é a primeira dose; NOW é terça 29/09.
+  const quinzenal = makeMedication({ times: ['09:00'], intervalDays: 14, startDate: '2026-09-27' });
+
+  it('gera doses só nos dias múltiplos de N a partir da primeira dose', () => {
+    const planned = plannedTimesFor(quinzenal, addDays(NOW, -3), 60).map((d) => toISODate(d));
+    expect(planned).toEqual(['2026-09-27', '2026-10-11', '2026-10-25', '2026-11-08', '2026-11-22']);
+    expect(plannedTimesFor(quinzenal, addDays(NOW, -3), 60).every((d) => d.getDay() === 0)).toBe(true);
+  });
+
+  it('não gera doses antes da primeira dose nem após o término', () => {
+    const planned = plannedTimesFor({ ...quinzenal, endDate: '2026-10-12' }, new Date(2026, 8, 1), 60).map((d) => toISODate(d));
+    expect(planned).toEqual(['2026-09-27', '2026-10-11']);
+  });
+
+  it('sem data da primeira dose, nenhum dia conta (não há como saber qual domingo)', () => {
+    expect(plannedTimesFor({ ...quinzenal, startDate: null }, NOW, 60)).toEqual([]);
+  });
+
+  it('ignora dias da semana marcados e mantém a contagem através do horário de verão', () => {
+    const med = makeMedication({ times: ['09:00'], intervalDays: 14, startDate: '2026-10-25', weekdays: [1] });
+    const planned = plannedTimesFor(med, new Date(2026, 9, 20), 50).map((d) => toISODate(d));
+    expect(planned).toEqual(['2026-10-25', '2026-11-08', '2026-11-22', '2026-12-06']);
+  });
+
+  it('semanal (7 dias) e diário (1 ou null) continuam funcionando', () => {
+    const semanal = makeMedication({ times: ['09:00'], intervalDays: 7, startDate: '2026-09-27' });
+    expect(plannedTimesFor(semanal, addDays(NOW, -3), 16).map((d) => toISODate(d))).toEqual(['2026-09-27', '2026-10-04', '2026-10-11']);
+    const diario = makeMedication({ times: ['09:00'], intervalDays: 1, startDate: '2026-09-27' });
+    expect(plannedTimesFor(diario, addDays(NOW, -2), 3)).toHaveLength(3);
+  });
+
+  it('ao mudar de diário para quinzenal, as doses pendentes dos dias que saíram são removidas', () => {
+    const diario = makeMedication({ times: ['09:00'] });
+    const existing = materializeOccurrences(diario, [], NOW, 14, NOW);
+    const stale = staleOccurrencesAfterEdit({ ...diario, intervalDays: 14, startDate: '2026-09-29' }, existing, NOW, 14);
+    const keptDays = existing.filter((o) => !stale.some((s) => s.id === o.id)).map((o) => toISODate(new Date(o.plannedAt)));
+    expect(keptDays).toEqual(['2026-09-29']);
+  });
+});

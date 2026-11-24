@@ -1,5 +1,5 @@
 import type { ISODateTime, Medication, MedicationOccurrence, OccurrenceStatus } from '../types';
-import { addDays, atLocalTime, iso, parseISODate, startOfLocalDay, toISODate, weekdayOf } from '../time/time';
+import { addDays, atLocalTime, daysBetween, iso, parseISODate, startOfLocalDay, toISODate, weekdayOf } from '../time/time';
 import { strings } from '@/i18n';
 
 export function occurrenceId(medicationId: string, plannedAt: Date): string {
@@ -26,7 +26,7 @@ export function plannedTimesFor(med: Medication, from: Date, days: number): Date
     const day = addDays(startOfLocalDay(from), d);
     if (start && day.getTime() < start.getTime()) continue;
     if (end && day.getTime() > end.getTime()) continue;
-    if (med.weekdays.length > 0 && !med.weekdays.includes(weekdayOf(day))) continue;
+    if (!isUsageDay(med, day, start)) continue;
 
     if (med.scheduleType === 'fixed_times') {
       for (const t of med.times) result.push(atLocalTime(day, t));
@@ -40,6 +40,21 @@ export function plannedTimesFor(med: Medication, from: Date, days: number): Date
   }
   result.sort((a, b) => a.getTime() - b.getTime());
   return result.filter((t, i) => (!notBefore || t.getTime() >= notBefore.getTime()) && (i === 0 || t.getTime() !== result[i - 1]!.getTime()));
+}
+
+/**
+ * O dia faz parte da prescrição? Com uso a cada N dias (N ≥ 2), só os dias que distam um múltiplo
+ * de N da data de início (dia da primeira dose) contam; sem data de início, nenhum dia conta, pois
+ * não há como saber qual é o "domingo sim". Caso contrário, valem os dias da semana marcados
+ * (nenhum = todos).
+ */
+export function isUsageDay(med: Medication, day: Date, start: Date | null = med.startDate ? parseISODate(med.startDate) : null): boolean {
+  if (med.intervalDays && med.intervalDays >= 2) {
+    if (!start) return false;
+    const diff = daysBetween(start, day);
+    return diff >= 0 && diff % med.intervalDays === 0;
+  }
+  return med.weekdays.length === 0 || med.weekdays.includes(weekdayOf(day));
 }
 
 /**
