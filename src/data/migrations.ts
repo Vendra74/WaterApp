@@ -94,4 +94,6 @@ export const MIGRATIONS: string[] = [
     last_error TEXT
   );
   `,
+  // v2 — uso a cada N dias (ex.: de 14 em 14), contados a partir de start_date
+  `ALTER TABLE medications ADD COLUMN interval_days INTEGER;`,
 ];

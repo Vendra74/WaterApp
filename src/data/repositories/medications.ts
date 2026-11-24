@@ -4,7 +4,7 @@ import { enqueue } from './hydration';
 
 interface MedRow {
   id: string; name: string; presentation: string; dose_amount: string; dose_unit: string; route: string;
-  schedule_type: string; times: string; interval_hours: number | null; interval_anchor: string | null; weekdays: string;
+  schedule_type: string; times: string; interval_hours: number | null; interval_anchor: string | null; weekdays: string; interval_days: number | null;
   start_date: string | null; end_date: string | null; instructions: string; photo_uri: string | null; active: number;
   created_at: string; updated_at: string;
 }
@@ -21,6 +21,7 @@ const medFromRow = (r: MedRow): Medication => ({
   intervalHours: r.interval_hours,
   intervalAnchor: r.interval_anchor,
   weekdays: JSON.parse(r.weekdays),
+  intervalDays: r.interval_days,
   startDate: r.start_date,
   endDate: r.end_date,
   instructions: r.instructions,
@@ -37,14 +38,14 @@ export async function listMedications(db: DB): Promise<Medication[]> {
 
 export async function upsertMedication(db: DB, m: Medication): Promise<void> {
   await db.runAsync(
-    `INSERT INTO medications(id, name, presentation, dose_amount, dose_unit, route, schedule_type, times, interval_hours, interval_anchor, weekdays, start_date, end_date, instructions, photo_uri, active, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO medications(id, name, presentation, dose_amount, dose_unit, route, schedule_type, times, interval_hours, interval_anchor, weekdays, interval_days, start_date, end_date, instructions, photo_uri, active, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET name=excluded.name, presentation=excluded.presentation, dose_amount=excluded.dose_amount, dose_unit=excluded.dose_unit,
        route=excluded.route, schedule_type=excluded.schedule_type, times=excluded.times, interval_hours=excluded.interval_hours, interval_anchor=excluded.interval_anchor,
-       weekdays=excluded.weekdays, start_date=excluded.start_date, end_date=excluded.end_date, instructions=excluded.instructions, photo_uri=excluded.photo_uri,
+       weekdays=excluded.weekdays, interval_days=excluded.interval_days, start_date=excluded.start_date, end_date=excluded.end_date, instructions=excluded.instructions, photo_uri=excluded.photo_uri,
        active=excluded.active, updated_at=excluded.updated_at`,
     m.id, m.name, m.presentation, m.doseAmount, m.doseUnit, m.route, m.scheduleType, JSON.stringify(m.times), m.intervalHours, m.intervalAnchor,
-    JSON.stringify(m.weekdays), m.startDate, m.endDate, m.instructions, m.photoUri, m.active ? 1 : 0, m.createdAt, m.updatedAt,
+    JSON.stringify(m.weekdays), m.intervalDays, m.startDate, m.endDate, m.instructions, m.photoUri, m.active ? 1 : 0, m.createdAt, m.updatedAt,
   );
   await enqueue(db, 'medication', m.id, 'upsert', { ...m, photoUri: null }); // fotos não são enviadas ao servidor
 }

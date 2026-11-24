@@ -12,7 +12,7 @@ import { useTheme } from '@/ui/theme';
 import { useAppStore } from '@/state/appStore';
 import type { Medication, Weekday } from '@/domain/types';
 import { newId } from '@/domain/ids';
-import { isValidHHmm } from '@/domain/time/time';
+import { isValidHHmm, toISODate } from '@/domain/time/time';
 import { applyPrescriptionDraft, describePrescriptionDraft } from '@/domain/medication/prescriptionDraft';
 import { FORM_DOSE_UNITS, formDoseUnit, storedDoseUnit } from '@/domain/medication/dose';
 import { consentTextAi, hasAiConsent, isPrescriptionReadingAvailable, readPrescriptionPhoto, setAiConsent } from '@/services/ai/prescriptionReader';
@@ -23,7 +23,7 @@ function blank(): Medication {
   const now = new Date().toISOString();
   return {
     id: newId('m-'), name: '', presentation: '', doseAmount: '1', doseUnit: strings().medicationForm.defaultDoseUnit, route: 'oral', scheduleType: 'fixed_times', times: ['08:00'],
-    intervalHours: null, intervalAnchor: null, weekdays: [], startDate: null, endDate: null, instructions: '', photoUri: null, active: true, createdAt: now, updatedAt: now,
+    intervalHours: null, intervalAnchor: null, weekdays: [], intervalDays: null, startDate: null, endDate: null, instructions: '', photoUri: null, active: true, createdAt: now, updatedAt: now,
   };
 }
 
@@ -48,6 +48,8 @@ export function MedicationFormScreen() {
     if (canRead) void hasAiConsent().then(setConsent);
   }, [canRead]);
   const set = (patch: Partial<Medication>) => setM((x) => ({ ...x, ...patch }));
+  /** Uso a cada N dias (ex.: de 14 em 14) em vez de todos os dias/dias da semana. */
+  const [everyDays, setEveryDays] = useState(() => (existing?.intervalDays ?? 0) >= 2);
 
   /** Pede a autorização uma vez; fica guardada até a pessoa retirar em Meus dados. */
   const ensureConsent = () =>
@@ -107,11 +109,15 @@ export function MedicationFormScreen() {
     } else if (!m.intervalHours || m.intervalHours <= 0 || m.intervalHours > 24 || !m.intervalAnchor) {
       return setError(f.errInterval);
     }
+    if (everyDays) {
+      if (!m.intervalDays || m.intervalDays < 2 || m.intervalDays > 365) return setError(f.errIntervalDays);
+      if (!m.startDate || !/^\d{4}-\d{2}-\d{2}$/.test(m.startDate)) return setError(f.errFirstDoseDate);
+    }
     if (m.startDate && !/^\d{4}-\d{2}-\d{2}$/.test(m.startDate)) return setError(f.errStartDate);
     if (m.endDate && !/^\d{4}-\d{2}-\d{2}$/.test(m.endDate)) return setError(f.errEndDate);
     setBusy(true);
     try {
-      await upsertMedication({ ...m, name: m.name.trim() });
+      await upsertMedication({ ...m, name: m.name.trim(), weekdays: everyDays ? [] : m.weekdays, intervalDays: everyDays ? m.intervalDays : null });
       nav.goBack();
     } finally {
       setBusy(false);
@@ -204,14 +210,35 @@ export function MedicationFormScreen() {
         </View>
       )}
       <ChoiceGroup
-        label={f.weekdays}
-        hint={f.weekdaysHint}
-        multi
-        options={([0, 1, 2, 3, 4, 5, 6] as Weekday[]).map((d) => ({ value: String(d), label: weekdayShort(d) }))}
-        value={m.weekdays.map(String)}
-        onChange={(v) => set({ weekdays: (v as string[]).map(Number).sort() as Weekday[] })}
+        label={f.frequency}
+        options={[{ value: 'daily', label: f.frequencyDaily }, { value: 'every_days', label: f.frequencyEveryDays }]}
+        value={everyDays ? 'every_days' : 'daily'}
+        onChange={(v) => {
+          const on = v === 'every_days';
+          setEveryDays(on);
+          // A primeira dose costuma ser o dia do cadastro; a pessoa pode corrigir a data.
+          if (on) set({ intervalDays: m.intervalDays && m.intervalDays >= 2 ? m.intervalDays : 14, startDate: m.startDate ?? toISODate(new Date()) });
+        }}
       />
-      <TextField label={f.startDate} hint={f.dateHint} value={m.startDate ?? ''} onChangeText={(v) => set({ startDate: v.trim() || null })} />
+      {everyDays ? (
+        <View style={{ gap: 12 }}>
+          <TextField label={f.everyHowManyDays} hint={f.everyHowManyDaysHint} keyboardType="number-pad" value={m.intervalDays ? String(m.intervalDays) : ''} onChangeText={(v) => set({ intervalDays: v ? Number(v.replace(/\D/g, '')) : null })} />
+          <TextField label={f.firstDoseDate} hint={f.firstDoseDateHint} value={m.startDate ?? ''} onChangeText={(v) => set({ startDate: v.trim() || null })} />
+          <BigButton kind="secondary" compact label={f.today} onPress={() => set({ startDate: toISODate(new Date()) })} />
+        </View>
+      ) : (
+        <View style={{ gap: 12 }}>
+          <ChoiceGroup
+            label={f.weekdays}
+            hint={f.weekdaysHint}
+            multi
+            options={([0, 1, 2, 3, 4, 5, 6] as Weekday[]).map((d) => ({ value: String(d), label: weekdayShort(d) }))}
+            value={m.weekdays.map(String)}
+            onChange={(v) => set({ weekdays: (v as string[]).map(Number).sort() as Weekday[] })}
+          />
+          <TextField label={f.startDate} hint={f.dateHint} value={m.startDate ?? ''} onChangeText={(v) => set({ startDate: v.trim() || null })} />
+        </View>
+      )}
       <TextField label={f.endDate} hint={f.dateHint} value={m.endDate ?? ''} onChangeText={(v) => set({ endDate: v.trim() || null })} />
       <TextField label={f.instructions} hint={f.instructionsHint} value={m.instructions} onChangeText={(v) => set({ instructions: v })} multiline />
       <View style={{ gap: 8 }}>

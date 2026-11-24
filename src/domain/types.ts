@@ -136,6 +136,12 @@ export interface Medication {
   intervalHours: number | null; // interval_hours
   intervalAnchor: HHmm | null; // primeiro horário do dia para intervalos
   weekdays: Weekday[];
+  /**
+   * Uso a cada N dias (ex.: 14 = "domingo sim, domingo não"), contados a partir de `startDate`,
+   * que é o dia da primeira dose. null ou 1 = todos os dias (ou os dias da semana marcados).
+   * Com N ≥ 2, `weekdays` é ignorado.
+   */
+  intervalDays: number | null;
   startDate: ISODate | null;
   endDate: ISODate | null;
   instructions: string; // instruções do profissional (inclui relação com refeições)

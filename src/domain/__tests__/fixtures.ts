@@ -79,6 +79,7 @@ export function makeMedication(overrides: Partial<Medication> = {}): Medication 
     intervalHours: null,
     intervalAnchor: null,
     weekdays: [],
+    intervalDays: null,
     startDate: null,
     endDate: null,
     instructions: 'Após o café',

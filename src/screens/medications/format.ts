@@ -4,7 +4,12 @@ import { formatHHmm, formatISODate, weekdayShort } from '@/i18n/format';
 
 export function describeSchedule(m: Medication): string {
   const s = strings().schedule;
-  const days = m.weekdays.length === 0 || m.weekdays.length === 7 ? s.everyDay : m.weekdays.map(weekdayShort).join(', ');
+  const days =
+    m.intervalDays && m.intervalDays >= 2
+      ? s.everyDays(m.intervalDays, m.startDate ? formatISODate(m.startDate) : '')
+      : m.weekdays.length === 0 || m.weekdays.length === 7
+        ? s.everyDay
+        : m.weekdays.map(weekdayShort).join(', ');
   const when =
     m.scheduleType === 'fixed_times'
       ? s.atTimes(m.times.map(formatHHmm).join(', '))
